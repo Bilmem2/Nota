@@ -922,9 +922,17 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
         <div className="p-4 border-t border-indigo-800 hidden md:flex flex-col gap-2 shrink-0">
           <button
             onClick={() => { setSettingsApiKey(''); setShowSettings(true); }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
+            className="w-full flex items-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
           >
-            <Key size={18} /> Ayarlar ({provider === 'groq' ? 'Groq' : 'Gemini'})
+            <Key size={18} />
+            <span className="flex-1 text-left">
+              {provider === 'groq' ? 'Groq' : 'Gemini'}
+            </span>
+            {apiKey && (
+              <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+                {apiKey.slice(0, 6)}…
+              </span>
+            )}
           </button>
           <button
             onClick={toggleFullScreen}
@@ -932,6 +940,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
           >
             {isFullscreen ? <><Minimize size={18} /> Normal Ekran</> : <><Maximize size={18} /> Tam Ekran (Focus)</>}
           </button>
+          <div className="pt-2 text-center text-indigo-500 text-xs leading-relaxed">
+            <div>Yapay Öğretmen v1.0</div>
+            <div>© Can Sevilmiş</div>
+          </div>
         </div>
       </aside>
 
