@@ -8,6 +8,20 @@
   color: #e2e8f0;
 }
 
+/* Catch-all: any element inside dark that has an explicit dark text color */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #f1f5f9 !important;
+}
+.dark p, .dark span, .dark li, .dark label, .dark div {
+  color: inherit;
+}
+/* Force readable text on dark backgrounds */
+.dark .bg-white *:not(button):not(a):not([class*="text-"]),
+.dark .bg-slate-50 *:not(button):not(a):not([class*="text-"]),
+.dark .bg-slate-100 *:not(button):not(a):not([class*="text-"]) {
+  color: #cbd5e1;
+}
+
 /* Cards & panels */
 .dark .bg-white {
   background-color: #1e293b !important;
@@ -40,6 +54,12 @@
 }
 .dark .text-slate-400 {
   color: #475569 !important;
+}
+.dark .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+.dark .text-black {
+  color: #e2e8f0 !important;
 }
 
 /* Borders */
