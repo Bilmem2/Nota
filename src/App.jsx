@@ -45,6 +45,7 @@ import { playSound } from './utils/sound';
 import { handlePrint } from './utils/print';
 import OnboardingScreen from './components/OnboardingScreen';
 import VisualSummaryComponent from './components/VisualSummaryComponent';
+import MindMapComponent from './components/MindMapComponent';
 
 // --- I18N ---
 const T = {
@@ -55,8 +56,7 @@ const T = {
     settings: 'Ayarlar', darkMode: 'Karanlık Tema', language: 'Dil', fullscreen: 'Tam Ekran',
     normalScreen: 'Normal Ekran', newStudy: 'Yeni Çalışma', importFile: 'İçeri Aktar',
     saveMaterial: 'Materyali Kaydet ve Analiz Et', generating: 'Oluşturuluyor...',
-    generate: 'Oluştur', podcast: 'Podcast', podcastPlay: 'Dinle', podcastStop: 'Durdur',
-    podcastGenerating: 'Podcast hazırlanıyor...', podcastReady: 'Podcast hazır, dinlemek için ▶ bas.',
+    generate: 'Oluştur', mindMap: 'Kavram Haritası',
     chatPlaceholder: 'Konuyla ilgili kafanıza takılanı sorun...',
     chatWelcome: 'Ben senin yapay öğretmeninim. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.',
     chatMaterialLoaded: 'Yeni materyal başarıyla sisteme aktarıldı. Hazırsan çalışmaya başlayalım.',
@@ -101,9 +101,14 @@ const T = {
     // Quiz
     quizPageTitle: 'İnteraktif Sınav', prevResults: 'Önceki Sınav Performansları',
     attempt: (n) => `Deneme ${n}`, score: (s) => `%${s} Başarı`,
-    // Podcast
-    podcastTitle: 'Podcast Modu', podcastDesc: 'Materyalinizi dinleyerek öğrenin.',
-    podcastGenerateBtn: 'Podcast Oluştur',
+    // Mind Map
+    mindMap: 'Kavram Haritası',
+    mindMapTitle: 'Kavram Haritası',
+    mindMapDesc: 'Yapay zeka materyaldeki kavramları ve aralarındaki ilişkileri interaktif bir haritada gösterir.',
+    mindMapGenerate: 'Haritayı Oluştur',
+    mindMapGenerating: 'Kavram haritası oluşturuluyor...',
+    mindMapRegen: 'Yeniden Oluştur',
+    mindMapHint: 'Düğümlere tıklayarak detayları gör · Kaydır ve yakınlaştır',
     // Session card
     importedSuffix: ' (İçe Aktarıldı)',
     fileTypeAlert: 'Lütfen .txt veya .pdf formatında bir dosya yükleyin.',
@@ -151,10 +156,6 @@ const T = {
     quizCancelConfirmMock: 'Sınavı iptal etmek istediğine emin misin?',
     // Chat
     chatTitle: 'Akademik Sohbet', chatTyping: 'Asistanınız yanıtlıyor...',
-    // Podcast
-    podcastTurnInto: "Materyalini podcast'a dönüştür",
-    podcastSubDesc: 'Yapay zeka materyalini Hoca ve Öğrenci arasında geçen doğal bir diyaloğa çevirir, sonra sesli okur.',
-    podcastRegen: 'Yeniden Oluştur',
     // Lesson/Notes/Visual inline strings
     lessonBolum: (n) => `Bölüm ${n}`,
     lessonSynthBtn: 'Tüm Bölümleri Sentezle',
@@ -170,8 +171,7 @@ const T = {
     settings: 'Settings', darkMode: 'Dark Mode', language: 'Language', fullscreen: 'Fullscreen',
     normalScreen: 'Exit Fullscreen', newStudy: 'New Study', importFile: 'Import',
     saveMaterial: 'Save & Analyze Material', generating: 'Generating...',
-    generate: 'Generate', podcast: 'Podcast', podcastPlay: 'Listen', podcastStop: 'Stop',
-    podcastGenerating: 'Preparing podcast...', podcastReady: 'Podcast ready — press ▶ to listen.',
+    generate: 'Generate', mindMap: 'Concept Map',
     chatPlaceholder: 'Ask anything about the material...',
     chatWelcome: 'I am your AI teacher. Feel free to ask me anything about the material you uploaded.',
     chatMaterialLoaded: 'New material loaded successfully. Ready to start whenever you are.',
@@ -216,9 +216,14 @@ const T = {
     // Quiz
     quizPageTitle: 'Interactive Quiz', prevResults: 'Previous Quiz Results',
     attempt: (n) => `Attempt ${n}`, score: (s) => `${s}% Score`,
-    // Podcast
-    podcastTitle: 'Podcast Mode', podcastDesc: 'Learn by listening to your material.',
-    podcastGenerateBtn: 'Generate Podcast',
+    // Mind Map
+    mindMap: 'Concept Map',
+    mindMapTitle: 'Concept Map',
+    mindMapDesc: 'AI analyzes the material and displays concepts and their relationships in an interactive map.',
+    mindMapGenerate: 'Generate Map',
+    mindMapGenerating: 'Building concept map...',
+    mindMapRegen: 'Regenerate',
+    mindMapHint: 'Click nodes to see details · Scroll to zoom · Drag to pan',
     // Session card
     importedSuffix: ' (Imported)',
     fileTypeAlert: 'Please upload a .txt or .pdf file.',
@@ -267,9 +272,6 @@ const T = {
     // Chat
     chatTitle: 'Academic Chat', chatTyping: 'Your assistant is responding...',
     // Podcast
-    podcastTurnInto: 'Turn your material into a podcast',
-    podcastSubDesc: 'AI rewrites your material as a dialogue between a Host and a Student, then reads it aloud.',
-    podcastRegen: 'Regenerate',
     // Lesson/Notes/Visual inline strings
     lessonBolum: (n) => `Section ${n}`,
     lessonSynthBtn: 'Synthesize All Sections',
@@ -291,10 +293,7 @@ export default function App() {
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
   const [appLang, setAppLang] = useState(() => localStorage.getItem('app_lang') || 'tr');
-  const [podcastLines, setPodcastLines] = useState([]); // [{speaker:'Hoca'|'Öğrenci', text:'...'}]
-  const [podcastPlaying, setPodcastPlaying] = useState(false);
-  const [podcastActiveIndex, setPodcastActiveIndex] = useState(-1);
-  const podcastCancelRef = useRef(false);
+  const [mindMapData, setMindMapData] = useState(null);
 
   const t = T[appLang];
 
@@ -328,7 +327,7 @@ export default function App() {
     visual: false,
     quiz: false,
     chat: false,
-    podcast: false,
+    mindmap: false,
   });
 
   const [quizConfig, setQuizConfig] = useState({
@@ -1009,144 +1008,78 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     setLoading((prev) => ({ ...prev, chat: false }));
   };
 
-  const generatePodcast = async () => {
+  const generateMindMap = async () => {
     if (!savedMaterial) return;
-    setPodcastLines([]);
-    setPodcastPlaying(false);
-    setPodcastActiveIndex(-1);
-    podcastCancelRef.current = false;
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setLoading(prev => ({ ...prev, podcast: true }));
+    setMindMapData(null);
+    setLoading(prev => ({ ...prev, mindmap: true }));
     const isEn = appLang === 'en';
-    const hostName = isEn ? 'Host' : 'Hoca';
-    const studentName = isEn ? 'Student' : 'Öğrenci';
     const prompt = isEn
-      ? `Convert the following academic material into a natural podcast dialogue between two people: "${hostName}" (an enthusiastic academic expert who explains concepts clearly with analogies and examples) and "${studentName}" (a curious student who asks insightful questions and occasionally expresses confusion or surprise). 
+      ? `Analyze the following academic material and produce a detailed concept map as JSON.
 
-Rules:
-- Start with ${hostName} giving a brief intro to the topic
-- ${studentName} asks genuine questions that deepen understanding
-- Use analogies and real-world examples
-- End with ${hostName} summarizing 3 key takeaways
-- Keep each turn concise (2-4 sentences max)
-- Aim for 12-18 exchanges total
-- Output ONLY valid JSON array, no markdown, no explanation:
-[{"speaker":"${hostName}","text":"..."},{"speaker":"${studentName}","text":"..."}]
+Requirements:
+- "root": the main topic (string)
+- "rootDescription": 1-2 sentence overview of the entire topic
+- "nodes": array of 4-8 main categories, each with:
+  - "id": unique string (e.g. "cat1")
+  - "label": short name (max 4 words)
+  - "description": 2-4 sentences explaining this category clearly
+  - "example": a concrete real-world example (optional but preferred)
+  - "relation": relationship label from root to this node (e.g. "includes", "causes", "consists of")
+  - "children": array of 2-5 sub-concepts, each with:
+    - "id": unique string (e.g. "cat1_1")
+    - "label": short name
+    - "description": 1-3 sentences
+    - "example": concrete example if applicable
+    - "relation": relationship label from parent
+    - "children": array of 0-3 detail nodes (same structure, no further nesting)
+- "crossLinks": array of cross-concept relationships (optional):
+  - "from": node id
+  - "to": node id
+  - "label": relationship description (e.g. "leads to", "contrasts with")
+
+Output ONLY valid JSON, no markdown, no explanation.
 
 Material:
-${savedMaterial.slice(0, 6000)}`
-      : `Aşağıdaki akademik materyali iki kişi arasında doğal bir podcast diyaloğuna dönüştür: "${hostName}" (konuyu analoji ve örneklerle açıklayan hevesli bir akademisyen) ve "${studentName}" (meraklı sorular soran, zaman zaman şaşıran veya kafası karışan bir öğrenci).
+${savedMaterial.slice(0, 8000)}`
+      : `Aşağıdaki akademik materyali analiz et ve detaylı bir kavram haritası JSON'u üret.
 
-Kurallar:
-- ${hostName} konuya kısa bir girişle başlasın
-- ${studentName} anlamayı derinleştiren gerçek sorular sorsun
-- Analoji ve günlük hayattan örnekler kullan
-- ${hostName} sonunda 3 önemli çıkarımla bitirsin
-- Her tur kısa olsun (max 2-4 cümle)
-- Toplam 12-18 tur hedefle
-- SADECE geçerli JSON dizisi döndür, markdown veya açıklama ekleme:
-[{"speaker":"${hostName}","text":"..."},{"speaker":"${studentName}","text":"..."}]
+Gereksinimler:
+- "root": ana konu (string)
+- "rootDescription": tüm konuya 1-2 cümlelik genel bakış
+- "nodes": 4-8 ana kategori dizisi, her biri:
+  - "id": benzersiz string (örn. "cat1")
+  - "label": kısa isim (max 4 kelime)
+  - "description": bu kategoriyi net açıklayan 2-4 cümle
+  - "example": somut gerçek hayat örneği (opsiyonel ama tercih edilir)
+  - "relation": root'tan bu düğüme ilişki etiketi (örn. "içerir", "neden olur", "oluşur")
+  - "children": 2-5 alt kavram dizisi, her biri:
+    - "id": benzersiz string (örn. "cat1_1")
+    - "label": kısa isim
+    - "description": 1-3 cümle
+    - "example": varsa somut örnek
+    - "relation": ebeveynden ilişki etiketi
+    - "children": 0-3 detay düğümü dizisi (aynı yapı, daha fazla iç içe geçme yok)
+- "crossLinks": kavramlar arası çapraz ilişkiler dizisi (opsiyonel):
+  - "from": düğüm id
+  - "to": düğüm id
+  - "label": ilişki açıklaması (örn. "yol açar", "karşıtıdır", "destekler")
+
+SADECE geçerli JSON döndür, markdown veya açıklama ekleme.
 
 Materyal:
-${savedMaterial.slice(0, 6000)}`;
+${savedMaterial.slice(0, 8000)}`;
 
     try {
-      const result = await callGemini(prompt, isEn ? 'You are a podcast script writer. Output ONLY valid JSON.' : 'Sen bir podcast senaristi sin. SADECE geçerli JSON döndür.', apiKey, null, true, provider);
-      const parsed = JSON.parse(result.replace(/```json|```/g, '').trim());
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setPodcastLines(parsed);
-      } else {
-        throw new Error('Invalid format');
+      const result = await callGemini(prompt, isEn ? 'You are an expert knowledge mapper. Output ONLY valid JSON.' : 'Sen uzman bir bilgi haritalayıcısısın. SADECE geçerli JSON döndür.', apiKey, null, true, provider);
+      const cleaned = result.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      if (parsed.root && parsed.nodes) {
+        setMindMapData(parsed);
       }
     } catch (e) {
-      // Fallback: parse manually if JSON failed
-      const lines = [];
-      const raw = await callGemini(
-        `${isEn ? 'Convert to dialogue, each line format: SPEAKER: text' : 'Diyaloğa çevir, her satır formatı: KONUŞMACI: metin'}\n\n${savedMaterial.slice(0, 4000)}`,
-        isEn ? 'You are a podcast host.' : 'Sen bir podcast sunucususun.',
-        apiKey, null, false, provider
-      );
-      raw.split('\n').forEach(line => {
-        const hostMatch = line.match(/^(Hoca|Host):\s*(.+)/i);
-        const studentMatch = line.match(/^(Öğrenci|Student):\s*(.+)/i);
-        if (hostMatch) lines.push({ speaker: isEn ? 'Host' : 'Hoca', text: hostMatch[2] });
-        else if (studentMatch) lines.push({ speaker: isEn ? 'Student' : 'Öğrenci', text: studentMatch[2] });
-      });
-      if (lines.length > 0) setPodcastLines(lines);
+      console.error('Mind map parse error', e);
     }
-    setLoading(prev => ({ ...prev, podcast: false }));
-  };
-
-  const getVoices = () => {
-    return new Promise(resolve => {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length) { resolve(voices); return; }
-      window.speechSynthesis.onvoiceschanged = () => resolve(window.speechSynthesis.getVoices());
-    });
-  };
-
-  const handlePodcastPlay = async () => {
-    if (!podcastLines.length || !window.speechSynthesis) return;
-    if (podcastPlaying) {
-      podcastCancelRef.current = true;
-      window.speechSynthesis.cancel();
-      setPodcastPlaying(false);
-      setPodcastActiveIndex(-1);
-      return;
-    }
-
-    podcastCancelRef.current = false;
-    setPodcastPlaying(true);
-    const voices = await getVoices();
-    const lang = appLang === 'en' ? 'en' : 'tr';
-    const hostName = appLang === 'en' ? 'Host' : 'Hoca';
-
-    // Ses seçimi — dile göre öncelikli isimler
-    const langVoices = voices.filter(v => v.lang.startsWith(lang));
-    const allVoices = langVoices.length ? langVoices : voices; // fallback: tüm sesler
-
-    const femaleNames = /female|woman|zira|samantha|karen|moira|fiona|victoria|tessa|allison|ava|susan|kate/i;
-    const maleNames   = /male|man|tolga|daniel|alex|fred|jorge|david|mark|thomas|oliver|luca/i;
-
-    let femaleVoice = allVoices.find(v => femaleNames.test(v.name)) || null;
-    let maleVoice   = allVoices.find(v => maleNames.test(v.name)) || null;
-
-    // İkisi de bulunamadıysa veya aynıysa: farklı iki ses seç
-    if (!femaleVoice && !maleVoice) {
-      femaleVoice = allVoices[0] || null;
-      maleVoice   = allVoices[1] || allVoices[0] || null;
-    } else if (!femaleVoice) {
-      femaleVoice = allVoices.find(v => v !== maleVoice) || maleVoice;
-    } else if (!maleVoice) {
-      maleVoice = allVoices.find(v => v !== femaleVoice) || femaleVoice;
-    }
-
-    for (let i = 0; i < podcastLines.length; i++) {
-      if (podcastCancelRef.current) break;
-      const line = podcastLines[i];
-      const isHost = line.speaker === hostName;
-
-      await new Promise(resolve => {
-        if (podcastCancelRef.current) { resolve(); return; }
-        setPodcastActiveIndex(i);
-        const utt = new SpeechSynthesisUtterance(line.text);
-        utt.lang = appLang === 'en' ? 'en-US' : 'tr-TR';
-        utt.rate = 0.92;
-        if (isHost) {
-          utt.voice = maleVoice;
-          utt.pitch = 0.9;
-        } else {
-          utt.voice = femaleVoice;
-          utt.pitch = 1.3;
-        }
-        utt.onend = resolve;
-        utt.onerror = resolve;
-        window.speechSynthesis.speak(utt);
-      });
-    }
-
-    setPodcastPlaying(false);
-    setPodcastActiveIndex(-1);
+    setLoading(prev => ({ ...prev, mindmap: false }));
   };
 
   const tabs = [
@@ -1156,7 +1089,7 @@ ${savedMaterial.slice(0, 6000)}`;
     { id: 'notes', icon: <ClipboardList size={20} />, label: t.notes, requiresMaterial: true },
     { id: 'visual', icon: <PieChart size={20} />, label: t.visual, requiresMaterial: true },
     { id: 'quiz', icon: <GraduationCap size={20} />, label: t.quiz, requiresMaterial: true },
-    { id: 'podcast', icon: <Volume2 size={20} />, label: t.podcast, requiresMaterial: true },
+    { id: 'mindmap', icon: <Workflow size={20} />, label: t.mindMap, requiresMaterial: true },
     { id: 'chat', icon: <MessageSquare size={20} />, label: t.chat, requiresMaterial: true },
   ];
 
@@ -2410,94 +2343,49 @@ ${savedMaterial.slice(0, 6000)}`;
             </div>
           )}
 
-          {/* TAB: PODCAST */}
-          {activeTab === 'podcast' && (
+          {/* TAB: KAVRAM HARİTASI */}
+          {activeTab === 'mindmap' && (
             <div className="animate-in fade-in duration-500">
               <div className="flex items-center gap-3 mb-8 px-2">
-                <Volume2 size={32} className="text-violet-600" />
-                <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.podcast}</h2>
+                <Workflow size={32} className="text-violet-600" />
+                <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.mindMapTitle}</h2>
               </div>
-              <div className="bg-white dark:bg-slate-800 p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
-                {!podcastLines.length && !loading.podcast && (
+              <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+                {!mindMapData && !loading.mindmap && (
                   <div className="text-center py-12">
                     <div className="w-24 h-24 bg-violet-50 dark:bg-violet-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                      <Volume2 size={48} className="text-violet-500" />
+                      <Workflow size={48} className="text-violet-500" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
-                      {t.podcastTurnInto}
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                      {t.podcastSubDesc}
-                    </p>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">{t.mindMapTitle}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">{t.mindMapDesc}</p>
                     <button
-                      onClick={generatePodcast}
+                      onClick={generateMindMap}
                       className="inline-flex items-center gap-3 px-10 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-violet-600/20"
                     >
-                      <Volume2 size={22} /> {t.podcastGenerateBtn}
+                      <Workflow size={22} /> {t.mindMapGenerate}
                     </button>
                   </div>
                 )}
-                {loading.podcast && (
+                {loading.mindmap && (
                   <div className="flex flex-col items-center justify-center py-24 text-violet-600">
                     <Loader2 size={48} className="animate-spin mb-4" />
-                    <p className="font-bold text-lg animate-pulse">{t.podcastGenerating}</p>
+                    <p className="font-bold text-lg animate-pulse">{t.mindMapGenerating}</p>
                   </div>
                 )}
-                {podcastLines.length > 0 && !loading.podcast && (() => {
-                  const hostName = appLang === 'en' ? 'Host' : 'Hoca';
-                  return (
-                    <div>
-                      {/* Player bar */}
-                      <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 p-5 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-2xl">
-                        <button
-                          onClick={handlePodcastPlay}
-                          className={`flex items-center gap-3 px-8 py-3.5 font-bold text-base rounded-xl transition-all shadow-md ${podcastPlaying ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-violet-600 hover:bg-violet-700 text-white'}`}
-                        >
-                          {podcastPlaying ? <><VolumeX size={20} /> {t.podcastStop}</> : <><Volume2 size={20} /> {t.podcastPlay}</>}
-                        </button>
-                        <div className="flex-1 text-sm text-slate-500 dark:text-slate-400">
-                          {podcastPlaying && podcastActiveIndex >= 0
-                            ? `${podcastLines[podcastActiveIndex]?.speaker} konuşuyor...`
-                            : t.podcastReady}
-                        </div>
-                        <button
-                          onClick={() => { window.speechSynthesis?.cancel(); setPodcastPlaying(false); setPodcastActiveIndex(-1); setPodcastLines([]); }}
-                          className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
-                        >
-                          {t.podcastRegen}
-                        </button>
-                      </div>
-                      {/* Dialogue */}
-                      <div className="space-y-4">
-                        {podcastLines.map((line, idx) => {
-                          const isHost = line.speaker === hostName;
-                          const isActive = podcastActiveIndex === idx;
-                          return (
-                            <div key={idx} className={`flex gap-3 ${isHost ? '' : 'flex-row-reverse'}`}>
-                              {/* Avatar */}
-                              <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${isHost ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300' : 'bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300'}`}>
-                                {isHost ? '👨‍🏫' : '👩‍🎓'}
-                              </div>
-                              {/* Bubble */}
-                              <div className={`max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-300 ${
-                                isActive
-                                  ? isHost
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900 scale-[1.02]'
-                                    : 'bg-pink-500 text-white shadow-lg shadow-pink-200 dark:shadow-pink-900 scale-[1.02]'
-                                  : isHost
-                                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
-                                    : 'bg-pink-50 dark:bg-pink-900/30 text-slate-800 dark:text-slate-200'
-                              }`}>
-                                <span className={`block text-xs font-bold mb-1 ${isActive ? 'opacity-80' : 'opacity-50'}`}>{line.speaker}</span>
-                                {line.text}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                {mindMapData && !loading.mindmap && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{t.mindMapHint}</p>
+                      <button
+                        onClick={() => setMindMapData(null)}
+                        className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
+                      >
+                        {t.mindMapRegen}
+                      </button>
                     </div>
-                  );
-                })()}
+                    <MindMapComponent data={mindMapData} darkMode={darkMode} />
+                  </div>
+                )}
               </div>
             </div>
           )}
