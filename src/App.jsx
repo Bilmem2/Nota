@@ -1198,7 +1198,14 @@ ${savedMaterial.slice(0, 10000)}`;
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
-          const detectedProvider = key.startsWith('gsk_') ? 'groq' : prov;
+          const detectedProvider =
+            key.startsWith('gsk_')    ? 'groq'
+            : key.startsWith('sk-or-') ? 'openrouter'
+            : key.startsWith('sk-ant-') ? 'anthropic'
+            : key.startsWith('xai-')   ? 'xai'
+            : key.startsWith('AIzaSy') ? 'gemini'
+            : key.startsWith('pplx-')  ? 'perplexity'
+            : prov;
           localStorage.setItem('gemini_api_key', key);
           localStorage.setItem('ai_provider', detectedProvider);
           setApiKey(key);
