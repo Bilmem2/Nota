@@ -354,7 +354,7 @@ export default function App() {
   });
 
   const [chatMessages, setChatMessages] = useState([
-    { role: 'model', text: T[localStorage.getItem('app_lang') || 'tr'].chatWelcome },
+    { role: 'model', text: T[localStorage.getItem('app_lang') || 'tr'].chatWelcome, isSystem: true },
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
 
@@ -374,10 +374,21 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('app_lang', appLang);
-    // Sadece welcome mesajı varsa dil değişince güncelle
+    // Sistem mesajlarını dil değişince güncelle
     setChatMessages((prev) => {
+      const hasUserMessages = prev.some((m) => m.role === 'user');
+      if (hasUserMessages) return prev; // Gerçek konuşma varsa dokunma
       if (prev.length === 1 && prev[0].role === 'model') {
-        return [{ role: 'model', text: T[appLang].chatWelcome }];
+        // Hangi sistem mesajı olduğunu anlamak için içeriğe bak
+        const txt = prev[0].text;
+        const isMaterialLoaded =
+          txt === T.tr.chatMaterialLoaded || txt === T.en.chatMaterialLoaded;
+        const isNewSession =
+          txt === T.tr.chatNewSession || txt === T.en.chatNewSession;
+        if (isMaterialLoaded) return [{ role: 'model', text: T[appLang].chatMaterialLoaded, isSystem: true }];
+        if (isNewSession)     return [{ role: 'model', text: T[appLang].chatNewSession, isSystem: true }];
+        // welcome mesajı
+        return [{ role: 'model', text: T[appLang].chatWelcome, isSystem: true }];
       }
       return prev;
     });
@@ -428,7 +439,7 @@ export default function App() {
     setSavedMaterial('');
     setMaterialChunks([]);
     setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
-    setChatMessages([{ role: 'model', text: t.chatNewSession }]);
+    setChatMessages([{ role: 'model', text: t.chatNewSession, isSystem: true }]);
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
     setActiveTab('material');
@@ -739,9 +750,8 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
 
-    if (chatMessages.length <= 1) {
-      setChatMessages([{ role: 'model', text: t.chatMaterialLoaded }]);
-    }
+    // Materyal yüklenince her zaman chat'i sıfırla ve yeni dilde karşılama mesajı göster
+    setChatMessages([{ role: 'model', text: t.chatMaterialLoaded, isSystem: true }]);
     setActiveTab('lesson');
   };
 
