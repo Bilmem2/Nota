@@ -4,6 +4,7 @@
 
 # Yapay Öğretmen
 
+*Sınava kadar uyumaz.*
 
 **[→ Uygulamayı Aç](https://Bilmem2.github.io/yapay-ogretmen/)**
 

@@ -374,23 +374,20 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('app_lang', appLang);
-    // Sistem mesajlarını dil değişince güncelle
+    // Sistem mesajlarını dil değişince güncelle (kullanıcı mesajı yoksa)
     setChatMessages((prev) => {
       const hasUserMessages = prev.some((m) => m.role === 'user');
       if (hasUserMessages) return prev; // Gerçek konuşma varsa dokunma
-      if (prev.length === 1 && prev[0].role === 'model') {
-        // Hangi sistem mesajı olduğunu anlamak için içeriğe bak
-        const txt = prev[0].text;
-        const isMaterialLoaded =
-          txt === T.tr.chatMaterialLoaded || txt === T.en.chatMaterialLoaded;
-        const isNewSession =
-          txt === T.tr.chatNewSession || txt === T.en.chatNewSession;
-        if (isMaterialLoaded) return [{ role: 'model', text: T[appLang].chatMaterialLoaded, isSystem: true }];
-        if (isNewSession)     return [{ role: 'model', text: T[appLang].chatNewSession, isSystem: true }];
-        // welcome mesajı
-        return [{ role: 'model', text: T[appLang].chatWelcome, isSystem: true }];
-      }
-      return prev;
+      // Tüm sistem mesajlarını yeni dile çevir
+      return prev.map((msg) => {
+        if (!msg.isSystem) return msg;
+        const txt = msg.text;
+        const isMaterialLoaded = txt === T.tr.chatMaterialLoaded || txt === T.en.chatMaterialLoaded;
+        const isNewSession = txt === T.tr.chatNewSession || txt === T.en.chatNewSession;
+        if (isMaterialLoaded) return { ...msg, text: T[appLang].chatMaterialLoaded };
+        if (isNewSession) return { ...msg, text: T[appLang].chatNewSession };
+        return { ...msg, text: T[appLang].chatWelcome };
+      });
     });
   }, [appLang]);
 
