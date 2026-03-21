@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini } from './utils/gemini';
+import { callGemini, OPENROUTER_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -287,6 +287,7 @@ export default function App() {
   // API Key state - loaded from localStorage
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
+  const [openRouterModel, setOpenRouterModel] = useState(() => localStorage.getItem('openrouter_model') || OPENROUTER_MODELS[0].id);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
@@ -540,7 +541,7 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
 Öğrenci beklenen cevabın ana fikrini yakalamışsa isCorrect: true yap. Kısmen doğruysa tolerans gösterip doğru sayabilirsin ancak eksiklerini feedback kısmında kibarca belirt. Essay (kompozisyon) ise argümanların sağlamlığına ve beklenen anahtar noktalara değinip değinmediğine bak. Tamamen alakasızsa isCorrect: false yap. 
 Çıktın SADECE geçerli bir JSON olmalıdır.
 { "isCorrect": true/false, "feedback": "Öğrenciye özel değerlendirme cümlen" }`;
-        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider);
+        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider, openRouterModel);
         const parsed = parseJSON(result);
 
         const isCorr = parsed?.isCorrect ?? false;
@@ -601,7 +602,7 @@ Cevaplar:
 ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question.tip} | Soru: ${item.question.soru} | Beklenen: ${item.question.dogruCevap} | Verilen: ${item.answer}`).join('\n')}`;
 
       try {
-        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider);
+        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider, openRouterModel);
         const parsed = parseJSON(result);
         if (Array.isArray(parsed)) {
           parsed.forEach((res) => {
@@ -874,7 +875,7 @@ Format:
 Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider, openRouterModel);
         const finalData = parseJSON(result);
         if (!finalData) throw new Error('JSON parse edilemedi');
         setQuizState((p) => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
@@ -904,7 +905,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
-      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq';
+      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq' || apiKey.startsWith('sk-or-') || provider === 'openrouter';
 
       // Groq için önceki chunk context'i
       const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
@@ -990,7 +991,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       }
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson, provider);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson, provider, openRouterModel);
         let finalData = result;
         if (isJson) {
           finalData = parseJSON(result);
@@ -1048,7 +1049,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       .join('\n');
     const prompt = `Önceki Sohbet:\n${chatHistoryText}\n\nÖğrenci: ${userMsg}\n\nCevabın:`;
 
-    const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider);
+    const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, openRouterModel);
     setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
     setLoading((prev) => ({ ...prev, chat: false }));
   };
@@ -1123,7 +1124,7 @@ Materyal:
 ${savedMaterial.slice(0, 10000)}`;
 
     try {
-      const result = await callGemini(prompt, isEn ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else.' : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme.', apiKey, null, true, provider);
+      const result = await callGemini(prompt, isEn ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else.' : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme.', apiKey, null, true, provider, openRouterModel);
       const cleaned = result.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleaned);
       if (parsed.root && parsed.nodes) {
@@ -1192,9 +1193,11 @@ ${savedMaterial.slice(0, 10000)}`;
   // --- AYARLAR MODALİ ---
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
+    const [localModel, setLocalModel] = React.useState(openRouterModel);
     const providerInfo = {
       gemini: { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Dakikada 15 istek · Ücretsiz' },
       groq: { label: 'Groq', placeholder: 'gsk_...', hint: 'Dakikada 30 istek · Ücretsiz · Çok hızlı' },
+      openrouter: { label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler mevcut' },
     };
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -1210,7 +1213,7 @@ ${savedMaterial.slice(0, 10000)}`;
 
           {/* Sağlayıcı Seçimi */}
           <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-3 mb-5">
             {Object.entries(providerInfo).map(([key, val]) => (
               <button
                 key={key}
@@ -1238,15 +1241,41 @@ ${savedMaterial.slice(0, 10000)}`;
             placeholder={`Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
             className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
           />
+
+          {/* OpenRouter model seçimi */}
+          {settingsProvider === 'openrouter' && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-slate-600 mb-2">Model Seç</p>
+              <select
+                value={localModel}
+                onChange={(e) => setLocalModel(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              >
+                {OPENROUTER_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-400 mt-1">
+                Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">Tüm modeller →</a>
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => {
                 if (settingsApiKey.trim()) {
-                  const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq' : settingsProvider;
+                  const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq'
+                    : settingsApiKey.trim().startsWith('sk-or-') ? 'openrouter'
+                    : settingsProvider;
                   localStorage.setItem('gemini_api_key', settingsApiKey.trim());
                   localStorage.setItem('ai_provider', detectedProvider);
                   setApiKey(settingsApiKey.trim());
                   setProvider(detectedProvider);
+                  if (detectedProvider === 'openrouter') {
+                    localStorage.setItem('openrouter_model', localModel);
+                    setOpenRouterModel(localModel);
+                  }
                   setSettingsApiKey('');
                   setShowSettings(false);
                 }
@@ -1337,7 +1366,7 @@ ${savedMaterial.slice(0, 10000)}`;
           >
             <Key size={18} />
             <span className="flex-1 text-left">
-              {provider === 'groq' ? 'Groq' : 'Gemini'}
+              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : 'Gemini'}
             </span>
             {apiKey && (
               <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
@@ -2362,7 +2391,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                           return `Sınav ${idx + 1} (${qh.config.difficulty}, ${qh.quiz.length} soru):\nYanlış soruların konuları: ${wrongs.map(q => q.soru.slice(0, 80)).join(' | ') || 'Yok'}`;
                                         }).join('\n\n');
                                         const prompt = `Öğrencinin sınav geçmişi:\n${historyText}\n\nBu verilere dayanarak öğrencinin güçlü ve zayıf yönlerini analiz et. Hangi konularda tekrar çalışması gerektiğini somut olarak belirt. 3-4 cümle, Türkçe, samimi bir dille yaz.`;
-                                        const result = await callGemini(prompt, 'Sen bir akademik danışmansın. Kısa, net ve motive edici bir analiz yap.', apiKey, null, false, provider);
+                                        const result = await callGemini(prompt, 'Sen bir akademik danışmansın. Kısa, net ve motive edici bir analiz yap.', apiKey, null, false, provider, openRouterModel);
                                         setWeakAnalysis(result);
                                         setLoadingAnalysis(false);
                                       }}
