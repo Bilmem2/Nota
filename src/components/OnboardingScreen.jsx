@@ -168,11 +168,11 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
         {/* Logo + Başlık */}
         <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center mb-3">
-            <img src="/Nota/favicon.png" alt="Nota" className="w-[72px] h-[72px] rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
+            <img src="/Nota/favicon.png" alt="Nota" className="w-24 h-24 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
-          <p className="text-indigo-300 text-sm font-medium mb-2 italic">{t.tagline}</p>
-          <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">{t.desc}</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
+          <p className="text-indigo-300 text-base font-medium mb-2 italic">{t.tagline}</p>
+          <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto">{t.desc}</p>
           <div className="flex flex-wrap justify-center gap-1.5 mt-3">
             {t.features.map((f) => (
               <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-slate-300 font-medium">

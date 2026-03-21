@@ -51,6 +51,7 @@ import MindMapComponent from './components/MindMapComponent';
 const T = {
   tr: {
     appName: 'Nota',
+    tagline: 'Sınava kadar uyumaz.',
     myStudies: 'Çalışmalarım', addMaterial: 'Materyal Ekle', lesson: 'Ders Anlatımı',
     notes: 'Çalışma Rehberi', visual: 'Görsel Özet', quiz: 'Sınav Modu', chat: 'Soru Sor',
     settings: 'Ayarlar', darkMode: 'Karanlık Tema', language: 'Dil', fullscreen: 'Tam Ekran',
@@ -166,6 +167,7 @@ const T = {
   },
   en: {
     appName: 'Nota',
+    tagline: "Doesn't sleep until the exam.",
     myStudies: 'My Studies', addMaterial: 'Add Material', lesson: 'Lesson',
     notes: 'Study Guide', visual: 'Visual Summary', quiz: 'Quiz Mode', chat: 'Ask a Question',
     settings: 'Settings', darkMode: 'Dark Mode', language: 'Language', fullscreen: 'Fullscreen',
@@ -288,6 +290,10 @@ export default function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
   const [openRouterModel, setOpenRouterModel] = useState(() => localStorage.getItem('openrouter_model') || OPENROUTER_MODELS[0].id);
+  // Per-provider key storage: { gemini: 'AIza...', groq: 'gsk_...', ... }
+  const [providerKeys, setProviderKeys] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; }
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
@@ -1207,6 +1213,11 @@ ${savedMaterial.slice(0, 10000)}`;
         onApiKeySubmit={(key, prov) => {
           localStorage.setItem('gemini_api_key', key);
           localStorage.setItem('ai_provider', prov);
+          // Per-provider keys'e de kaydet
+          const existing = (() => { try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; } })();
+          const updated = { ...existing, [prov]: key };
+          localStorage.setItem('provider_keys', JSON.stringify(updated));
+          setProviderKeys(updated);
           setApiKey(key);
           setProvider(prov);
         }}
@@ -1218,50 +1229,103 @@ ${savedMaterial.slice(0, 10000)}`;
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
     const [keyWasReset, setKeyWasReset] = React.useState(false);
-    // localModel: mevcut provider için kayıtlı modeli başlangıç değeri olarak al
-    const getInitialModel = (prov) => {
-      const lists = {
-        gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
-        anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
-        zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS,
-      };
-      return lists[prov] ? (openRouterModel || lists[prov][0].id) : '';
+
+    const modelLists = {
+      gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
+      anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
+      zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS,
     };
-    const [localModel, setLocalModel] = React.useState(() => getInitialModel(provider));
+    const [localModel, setLocalModel] = React.useState(
+      () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
+    );
+    // Input field — boş başlar, kullanıcı yeni key girmek isterse doldurur
+    const [inputKey, setInputKey] = React.useState('');
 
     const providerInfo = {
       gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: '2.5 Flash ücretsiz · 2.5 Pro ücretli' },
-      groq:      { label: 'Groq', placeholder: 'gsk_...', hint: 'Ücretsiz · Llama 3.3 70B · Çok hızlı' },
-      openrouter:{ label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
-      openai:    { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-5, GPT-4o, o3...' },
-      anthropic: { label: 'Anthropic', placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
-      xai:       { label: 'xAI (Grok)', placeholder: 'xai-...', hint: 'Grok 4, Grok 3...' },
-      perplexity:{ label: 'Perplexity', placeholder: 'pplx-...', hint: 'Sonar Pro, web aramalı' },
-      zai:       { label: 'z.ai (GLM)', placeholder: 'Bearer ...', hint: 'GLM-4 Plus, Flash' },
-      kimi:      { label: 'Kimi AI', placeholder: 'sk-...', hint: 'Moonshot 128K, 32K...' },
-      qwen:      { label: 'Qwen', placeholder: 'sk-...', hint: 'Qwen Max, Plus, Turbo' },
-    };
-
-    const modelLists = {
-      gemini: GEMINI_MODELS,
-      openrouter: OPENROUTER_MODELS,
-      openai: OPENAI_MODELS,
-      anthropic: ANTHROPIC_MODELS,
-      xai: XAI_MODELS,
-      perplexity: PERPLEXITY_MODELS,
-      zai: ZAI_MODELS,
-      kimi: KIMI_MODELS,
-      qwen: QWEN_MODELS,
+      groq:      { label: 'Groq',          placeholder: 'gsk_...',   hint: 'Ücretsiz · Llama 3.3 70B · Çok hızlı' },
+      openrouter:{ label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
+      openai:    { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...' },
+      anthropic: { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
+      xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 3...' },
+      perplexity:{ label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro, web aramalı' },
+      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4 Plus, Flash' },
+      kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Moonshot 128K, 32K...' },
+      qwen:      { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo' },
     };
 
     const handleProviderChange = (key) => {
       setSettingsProvider(key);
-      setSettingsApiKey('');
+      setInputKey(''); // input'u temizle — kayıtlı key varsa masked gösterilecek
       const list = modelLists[key];
       setLocalModel(list ? list[0].id : '');
     };
 
     const currentModelList = modelLists[settingsProvider];
+    // Bu provider için kayıtlı key var mı?
+    const savedKeyForProvider = providerKeys[settingsProvider] || '';
+    const maskedKey = savedKeyForProvider
+      ? `${savedKeyForProvider.slice(0, 6)}${'•'.repeat(Math.min(10, savedKeyForProvider.length - 8))}${savedKeyForProvider.slice(-4)}`
+      : '';
+
+    // Mismatch uyarısı — input'taki key başka bir provider'a ait görünüyorsa
+    const detectedProvider = (() => {
+      const k = inputKey.trim();
+      if (k.startsWith('AIzaSy'))  return 'gemini';
+      if (k.startsWith('gsk_'))    return 'groq';
+      if (k.startsWith('sk-or-'))  return 'openrouter';
+      if (k.startsWith('sk-ant-')) return 'anthropic';
+      if (k.startsWith('xai-'))    return 'xai';
+      if (k.startsWith('pplx-'))   return 'perplexity';
+      return null;
+    })();
+    const hasMismatch = detectedProvider && detectedProvider !== settingsProvider;
+
+    // Kaydet butonu aktif mi?
+    // - Yeni key girilmişse → kaydet
+    // - Key girilmemiş ama bu provider için kayıtlı key varsa ve aktif provider değilse → geçiş yap
+    const hasNewKey = inputKey.trim().length > 0;
+    const canSwitch = !hasNewKey && savedKeyForProvider && settingsProvider !== provider;
+    const canSave = hasNewKey || canSwitch;
+
+    const handleSave = () => {
+      const newKey = inputKey.trim();
+
+      if (newKey) {
+        // Yeni key kaydediliyor
+        const updated = { ...providerKeys, [settingsProvider]: newKey };
+        localStorage.setItem('provider_keys', JSON.stringify(updated));
+        localStorage.setItem('gemini_api_key', newKey);
+        localStorage.setItem('ai_provider', settingsProvider);
+        if (currentModelList) {
+          localStorage.setItem('openrouter_model', localModel);
+          setOpenRouterModel(localModel);
+        }
+        setProviderKeys(updated);
+        setApiKey(newKey);
+        setProvider(settingsProvider);
+        setSettingsApiKey('');
+        setShowSettings(false);
+      } else if (canSwitch) {
+        // Key girilmedi ama bu provider için kayıtlı key var — hızlı geçiş
+        localStorage.setItem('gemini_api_key', savedKeyForProvider);
+        localStorage.setItem('ai_provider', settingsProvider);
+        if (currentModelList) {
+          localStorage.setItem('openrouter_model', localModel);
+          setOpenRouterModel(localModel);
+        }
+        setApiKey(savedKeyForProvider);
+        setProvider(settingsProvider);
+        setShowSettings(false);
+      } else if (keyWasReset && !newKey) {
+        setApiKey('');
+        setShowSettings(false);
+      }
+    };
+
+    const saveLabel = keyWasReset && !hasNewKey ? 'Giriş Ekranına Dön'
+      : canSwitch ? `${providerInfo[settingsProvider].label}'a Geç`
+      : 'Kaydet';
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -1277,61 +1341,63 @@ ${savedMaterial.slice(0, 10000)}`;
 
           <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
           <div className="grid grid-cols-3 gap-2 mb-5">
-            {Object.entries(providerInfo).map(([key, val]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleProviderChange(key)}
-                className={`p-3 rounded-xl border-2 text-left transition ${
-                  settingsProvider === key
-                    ? 'border-indigo-500 bg-indigo-50 text-slate-800'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                }`}
-              >
-                <div className="font-bold text-sm">{val.label}</div>
-                <div className="text-xs mt-1 opacity-70">{val.hint}</div>
-              </button>
-            ))}
+            {Object.entries(providerInfo).map(([key, val]) => {
+              const hasSavedKey = !!providerKeys[key];
+              const isActive = key === provider;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleProviderChange(key)}
+                  className={`p-3 rounded-xl border-2 text-left transition relative ${
+                    settingsProvider === key
+                      ? 'border-indigo-500 bg-indigo-50 text-slate-800'
+                      : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm pr-4">{val.label}</div>
+                  <div className="text-xs mt-1 opacity-70">{val.hint}</div>
+                  {/* Kayıtlı key badge */}
+                  {hasSavedKey && (
+                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-emerald-400'}`} title="Kayıtlı anahtar var" />
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <p className="text-sm font-medium text-slate-600 mb-2">
             {providerInfo[settingsProvider].label} API Anahtarı
           </p>
-          {apiKey && !keyWasReset && (
+
+          {/* Kayıtlı key gösterimi — bu provider'a özel */}
+          {savedKeyForProvider && !keyWasReset && (
             <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-              <span className="text-emerald-600 text-xs">✓ Kayıtlı anahtar:</span>
-              <span className="font-mono text-xs text-slate-600 tracking-wider">
-                {apiKey.slice(0, 6)}{'•'.repeat(Math.min(12, apiKey.length - 8))}{apiKey.slice(-4)}
-              </span>
+              <span className="text-emerald-600 text-xs">✓ Kayıtlı:</span>
+              <span className="font-mono text-xs text-slate-600 tracking-wider flex-1">{maskedKey}</span>
+              {settingsProvider === provider && (
+                <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-semibold">Aktif</span>
+              )}
             </div>
           )}
+
           <input
             type="text"
-            value={settingsApiKey}
-            onChange={(e) => setSettingsApiKey(e.target.value)}
-            placeholder={apiKey && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
+            value={inputKey}
+            onChange={(e) => setInputKey(e.target.value)}
+            placeholder={savedKeyForProvider && !keyWasReset
+              ? 'Değiştirmek için yeni anahtar girin...'
+              : `Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
             className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-1"
           />
-          {(() => {
-            const k = settingsApiKey.trim();
-            const detected =
-              k.startsWith('AIzaSy')  ? 'gemini'
-              : k.startsWith('gsk_')    ? 'groq'
-              : k.startsWith('sk-or-')  ? 'openrouter'
-              : k.startsWith('sk-ant-') ? 'anthropic'
-              : k.startsWith('xai-')    ? 'xai'
-              : k.startsWith('pplx-')   ? 'perplexity'
-              : null;
-            if (detected && detected !== settingsProvider) {
-              const detectedLabel = providerInfo[detected]?.label || detected;
-              return (
-                <p className="text-xs text-amber-600 mb-3">
-                  ⚠️ Bu anahtar <strong>{detectedLabel}</strong> sağlayıcısına ait görünüyor. Yine de {providerInfo[settingsProvider].label} ile devam edebilirsin.
-                </p>
-              );
-            }
-            return <div className="mb-3" />;
-          })()}
+
+          {hasMismatch && (
+            <p className="text-xs text-amber-600 mb-3">
+              ⚠️ Bu anahtar <strong>{providerInfo[detectedProvider]?.label || detectedProvider}</strong> sağlayıcısına ait görünüyor. Yine de {providerInfo[settingsProvider].label} ile devam edebilirsin.
+            </p>
+          )}
+          {!hasMismatch && <div className="mb-3" />}
+
           {currentModelList && (
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-600 mb-2">Model Seç</p>
@@ -1354,30 +1420,11 @@ ${savedMaterial.slice(0, 10000)}`;
 
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                const key = settingsApiKey.trim();
-                if (key) {
-                  // Yeni key girildi — kullanıcının seçtiği provider'a güven
-                  localStorage.setItem('gemini_api_key', key);
-                  localStorage.setItem('ai_provider', settingsProvider);
-                  setApiKey(key);
-                  setProvider(settingsProvider);
-                  if (currentModelList) {
-                    localStorage.setItem('openrouter_model', localModel);
-                    setOpenRouterModel(localModel);
-                  }
-                  setSettingsApiKey('');
-                  setShowSettings(false);
-                } else if (keyWasReset) {
-                  // Sıfırlama yapıldı ama yeni key girilmedi — welcome page'e at
-                  setApiKey('');
-                  setShowSettings(false);
-                }
-              }}
-              disabled={!settingsApiKey.trim() && !keyWasReset}
+              onClick={handleSave}
+              disabled={!canSave && !keyWasReset}
               className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-lg transition"
             >
-              {keyWasReset && !settingsApiKey.trim() ? 'Giriş Ekranına Dön' : 'Kaydet'}
+              {saveLabel}
             </button>
             <button
               onClick={() => setShowSettings(false)}
@@ -1396,9 +1443,11 @@ ${savedMaterial.slice(0, 10000)}`;
                     localStorage.removeItem('gemini_api_key');
                     localStorage.removeItem('ai_provider');
                     localStorage.removeItem('openrouter_model');
+                    localStorage.removeItem('provider_keys');
+                    setProviderKeys({});
                     setProvider('gemini');
                     setOpenRouterModel(OPENROUTER_MODELS[0].id);
-                    setSettingsApiKey('');
+                    setInputKey('');
                     setKeyWasReset(true);
                   }
                 }}
@@ -1457,7 +1506,7 @@ ${savedMaterial.slice(0, 10000)}`;
             <img src="/Nota/favicon.png" alt="logo" className="w-10 h-10 rounded-xl" />
             <div>
               <h1 className="text-xl font-extrabold tracking-wide leading-tight">{t.appName}</h1>
-              <p className="text-indigo-300 text-[10px] italic opacity-80 leading-tight">{t.tagline}</p>
+              <p className="text-indigo-300 text-xs italic opacity-80 leading-tight">{t.tagline}</p>
             </div>
           </div>
         </div>

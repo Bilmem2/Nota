@@ -332,17 +332,8 @@ async function callQwenAPI(prompt, systemInstruction, apiKey, model) {
  * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
-  // Kullanıcının seçtiği provider her zaman öncelikli.
-  // Sadece net prefix çelişkisi varsa override et (örn. gsk_ key ile gemini provider seçilmişse).
-  const prefixOverride =
-    apiKey.startsWith('gsk_')    ? 'groq'
-    : apiKey.startsWith('sk-or-') ? 'openrouter'
-    : apiKey.startsWith('sk-ant-') ? 'anthropic'
-    : apiKey.startsWith('xai-')   ? 'xai'
-    : apiKey.startsWith('AIzaSy') ? 'gemini'
-    : apiKey.startsWith('pplx-')  ? 'perplexity'
-    : null;
-  const effectiveProvider = prefixOverride || provider;
+  // Kullanıcının seçtiği provider her zaman öncelikli — prefix override yok.
+  const effectiveProvider = provider;
 
   const delays = [1000, 2000, 4000, 8000, 16000];
 
