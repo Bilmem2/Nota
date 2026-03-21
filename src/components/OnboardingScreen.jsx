@@ -70,12 +70,12 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
           <div className="inline-flex items-center justify-center mb-5">
             <img
               src="/yapay-ogretmen/favicon.png"
-              alt="Yapay Öğretmen"
+              alt="Nota"
               className="w-20 h-20 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10"
             />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
-            Yapay Öğretmen
+            Nota
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
             PDF veya ders notunu yükle — AI senin için ders anlatsın, rehber çıkarsın, sınav hazırlasın.
@@ -190,7 +190,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
           </p>
         </div>
 
-        <p className="text-center text-xs text-slate-600 mt-5">© Can Sevilmiş · Yapay Öğretmen v1.0</p>
+        <p className="text-center text-xs text-slate-600 mt-5">© Can Sevilmiş · Nota v1.0</p>
       </div>
     </div>
   );

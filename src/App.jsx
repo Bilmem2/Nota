@@ -49,7 +49,7 @@ import VisualSummaryComponent from './components/VisualSummaryComponent';
 // --- I18N ---
 const T = {
   tr: {
-    appName: 'Yapay Öğretmen',
+    appName: 'Nota',
     myStudies: 'Çalışmalarım', addMaterial: 'Materyal Ekle', lesson: 'Ders Anlatımı',
     notes: 'Çalışma Rehberi', visual: 'Görsel Özet', quiz: 'Sınav Modu', chat: 'Soru Sor',
     settings: 'Ayarlar', darkMode: 'Karanlık Tema', language: 'Dil', fullscreen: 'Tam Ekran',
@@ -65,8 +65,8 @@ const T = {
     chatDisclaimer: 'Bu yanıtlar yapay zeka tarafından üretilmektedir, daima ana kaynağınızı teyit edin.',
     mockSubmit: 'Gönder ve Değerlendir',
     aiEvaluating: 'AI Değerlendiriyor...',
-    pdfLoading: "Yapay Öğretmen PDF'i inceliyor, lütfen bekleyin...",
-    author: '© Can Sevilmiş', version: 'Yapay Öğretmen v1.0',
+    pdfLoading: "Nota PDF'i inceliyor, lütfen bekleyin...",
+    author: '© Can Sevilmiş', version: 'Nota v1.0',
     // Archive
     archiveTitle: 'Çalışma Arşivi', importBtn: 'İçeri Aktar', newStudyBtn: 'Yeni Çalışma',
     archiveEmpty: 'Henüz Kayıtlı Bir Çalışmanız Yok',
@@ -164,7 +164,7 @@ const T = {
     pdfAnalyzing: 'PDF Analiz Ediliyor...', pdfExtracting: 'Metinler çıkarılıyor ve işleniyor',
   },
   en: {
-    appName: 'AI Teacher',
+    appName: 'Nota',
     myStudies: 'My Studies', addMaterial: 'Add Material', lesson: 'Lesson',
     notes: 'Study Guide', visual: 'Visual Summary', quiz: 'Quiz Mode', chat: 'Ask a Question',
     settings: 'Settings', darkMode: 'Dark Mode', language: 'Language', fullscreen: 'Fullscreen',
@@ -180,8 +180,8 @@ const T = {
     chatDisclaimer: 'These responses are AI-generated. Always verify with your primary source.',
     mockSubmit: 'Submit & Evaluate',
     aiEvaluating: 'AI Evaluating...',
-    pdfLoading: "AI Teacher is reading the PDF, please wait...",
-    author: '© Can Sevilmiş', version: 'AI Teacher v1.0',
+    pdfLoading: "Nota is reading the PDF, please wait...",
+    author: '© Can Sevilmiş', version: 'Nota v1.0',
     // Archive
     archiveTitle: 'Study Archive', importBtn: 'Import', newStudyBtn: 'New Study',
     archiveEmpty: 'No Saved Studies Yet',

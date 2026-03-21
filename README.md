@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="public/favicon.png" alt="Yapay Öğretmen" width="72" />
+<img src="public/favicon.png" alt="Nota" width="72" />
 
-# Yapay Öğretmen
+# Nota
 
 *Sınava kadar uyumaz.*
 
