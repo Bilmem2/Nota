@@ -146,19 +146,19 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
       key={p.id}
       type="button"
       onClick={() => selectProvider(p.id)}
-      className={`p-3 rounded-xl border-2 text-left transition-all ${
+      className={`p-2 rounded-lg border-2 text-left transition-all ${
         provider === p.id
           ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-900/30'
           : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-700/40'
       }`}
     >
-      <div className="font-bold text-sm">{p.label}</div>
-      <div className="text-xs mt-0.5 opacity-60">{lang === 'tr' ? p.hintTr : p.hintEn}</div>
+      <div className="font-bold text-xs leading-tight">{p.label}</div>
+      <div className="text-[10px] mt-0.5 opacity-60 leading-tight">{lang === 'tr' ? p.hintTr : p.hintEn}</div>
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center p-4 py-6 overflow-y-auto">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl" />
@@ -166,16 +166,16 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
 
       <div className="relative w-full max-w-lg">
         {/* Logo + Başlık */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-5">
-            <img src="/Nota/favicon.png" alt="Nota" className="w-20 h-20 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center justify-center mb-3">
+            <img src="/Nota/favicon.png" alt="Nota" className="w-16 h-16 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
-          <p className="text-indigo-300 text-sm font-medium mb-3 italic">{t.tagline}</p>
-          <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto">{t.desc}</p>
-          <div className="flex flex-wrap justify-center gap-2 mt-5">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
+          <p className="text-indigo-300 text-sm font-medium mb-2 italic">{t.tagline}</p>
+          <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">{t.desc}</p>
+          <div className="flex flex-wrap justify-center gap-1.5 mt-3">
             {t.features.map((f) => (
-              <span key={f.label} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-slate-300 font-medium">
+              <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-slate-300 font-medium">
                 {f.icon} {f.label}
               </span>
             ))}
@@ -183,17 +183,17 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
         </div>
 
         {/* Kart */}
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/60 p-7">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/60 p-5">
 
           {/* Ücretsiz Sağlayıcılar */}
-          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-2">{t.freeLabel}</p>
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-1.5">{t.freeLabel}</p>
+          <div className="grid grid-cols-3 gap-1.5 mb-3">
             {FREE_PROVIDERS.map(p => <ProviderButton key={p.id} p={p} />)}
           </div>
 
           {/* Ücretli Sağlayıcılar */}
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">{t.paidLabel}</p>
-          <div className="grid grid-cols-3 gap-2 mb-6 sm:grid-cols-4 lg:grid-cols-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">{t.paidLabel}</p>
+          <div className="grid grid-cols-3 gap-1.5 mb-4 sm:grid-cols-4 lg:grid-cols-4">
             {PAID_PROVIDERS.map(p => <ProviderButton key={p.id} p={p} />)}
           </div>
 
