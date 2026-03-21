@@ -168,7 +168,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
         {/* Logo + Başlık */}
         <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center mb-3">
-            <img src="/Nota/favicon.png" alt="Nota" className="w-16 h-16 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
+            <img src="/Nota/favicon.png" alt="Nota" className="w-[72px] h-[72px] rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
           <p className="text-indigo-300 text-sm font-medium mb-2 italic">{t.tagline}</p>

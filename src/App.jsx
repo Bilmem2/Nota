@@ -1455,7 +1455,10 @@ ${savedMaterial.slice(0, 10000)}`;
         <div className="p-6 hidden md:flex items-center justify-between border-b border-indigo-800">
           <div className="flex items-center gap-3">
             <img src="/Nota/favicon.png" alt="logo" className="w-10 h-10 rounded-xl" />
-            <h1 className="text-xl font-extrabold tracking-wide">{t.appName}</h1>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-wide leading-tight">{t.appName}</h1>
+              <p className="text-indigo-300 text-[10px] italic opacity-80 leading-tight">{t.tagline}</p>
+            </div>
           </div>
         </div>
 
