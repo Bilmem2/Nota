@@ -949,8 +949,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       {/* Mobil Header */}
       <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white p-4 shadow-md z-20 shrink-0">
         <div className="flex items-center gap-2 font-bold text-xl">
-          <GraduationCap size={28} />
-          <span>Yapay Öğretmen</span>
+          <img src="/yapay-ogretmen/favicon.png" alt="logo" className="w-8 h-8 rounded-lg" />
+          <span>{t.appName}</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={toggleFullScreen} className="p-1 rounded-md hover:bg-indigo-700 transition-colors">
@@ -972,10 +972,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       >
         <div className="p-6 hidden md:flex items-center justify-between border-b border-indigo-800">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-500 text-white p-2 rounded-lg">
-              <GraduationCap size={28} />
-            </div>
-            <h1 className="text-xl font-extrabold tracking-wide">Yapay Öğretmen</h1>
+            <img src="/yapay-ogretmen/favicon.png" alt="logo" className="w-10 h-10 rounded-xl" />
+            <h1 className="text-xl font-extrabold tracking-wide">{t.appName}</h1>
           </div>
         </div>
 
