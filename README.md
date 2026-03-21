@@ -4,7 +4,6 @@
 
 # Yapay Öğretmen
 
-Ders notunu veya PDF'ini yükle — yapay zeka senin için ders anlatsın, özet çıkarsın, sınav hazırlasın.
 
 **[→ Uygulamayı Aç](https://Bilmem2.github.io/yapay-ogretmen/)**
 
