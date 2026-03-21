@@ -1198,14 +1198,15 @@ ${savedMaterial.slice(0, 10000)}`;
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
-          const detectedProvider =
+          const prefixProvider =
             key.startsWith('gsk_')    ? 'groq'
             : key.startsWith('sk-or-') ? 'openrouter'
             : key.startsWith('sk-ant-') ? 'anthropic'
             : key.startsWith('xai-')   ? 'xai'
             : key.startsWith('AIzaSy') ? 'gemini'
             : key.startsWith('pplx-')  ? 'perplexity'
-            : prov;
+            : null; // sk- gibi belirsiz prefix → kullanıcının seçtiği prov'a güven
+          const detectedProvider = prefixProvider || prov;
           localStorage.setItem('gemini_api_key', key);
           localStorage.setItem('ai_provider', detectedProvider);
           setApiKey(key);
@@ -1330,12 +1331,16 @@ ${savedMaterial.slice(0, 10000)}`;
               onClick={() => {
                 if (settingsApiKey.trim()) {
                   const key = settingsApiKey.trim();
-                  const detectedProvider = key.startsWith('gsk_') ? 'groq'
+                  // Kullanıcının seçtiği provider'a güven; prefix sadece net çelişki varsa override et
+                  const prefixProvider =
+                    key.startsWith('gsk_')    ? 'groq'
                     : key.startsWith('sk-or-') ? 'openrouter'
                     : key.startsWith('sk-ant-') ? 'anthropic'
-                    : key.startsWith('xai-') ? 'xai'
-                    : key.startsWith('sk-') ? 'openai'
-                    : settingsProvider;
+                    : key.startsWith('xai-')   ? 'xai'
+                    : key.startsWith('AIzaSy') ? 'gemini'
+                    : key.startsWith('pplx-')  ? 'perplexity'
+                    : null; // sk- gibi belirsiz prefix'ler için null → settingsProvider'a güven
+                  const detectedProvider = prefixProvider || settingsProvider;
                   localStorage.setItem('gemini_api_key', key);
                   localStorage.setItem('ai_provider', detectedProvider);
                   setApiKey(key);
