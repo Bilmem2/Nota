@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, OPENROUTER_MODELS, OPENAI_MODELS } from './utils/gemini';
+import { callGemini, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -1194,25 +1194,35 @@ ${savedMaterial.slice(0, 10000)}`;
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
     const [localModel, setLocalModel] = React.useState(openRouterModel);
-    const providerInfo = {
-      gemini: { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Dakikada 15 istek · Ücretsiz' },
-      groq: { label: 'Groq', placeholder: 'gsk_...', hint: 'Dakikada 30 istek · Ücretsiz · Çok hızlı' },
-      openrouter: { label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler mevcut' },
-      openai: { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-4o, o3, GPT-5 · Ücretli' },
-    };
-    const modelList = settingsProvider === 'openai' ? OPENAI_MODELS : OPENROUTER_MODELS;
-    const defaultModel = settingsProvider === 'openai' ? OPENAI_MODELS[0].id : OPENROUTER_MODELS[0].id;
 
-    // Provider değişince modeli sıfırla
+    const providerInfo = {
+      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Ücretsiz · 15 istek/dk' },
+      groq:      { label: 'Groq', placeholder: 'gsk_...', hint: 'Ücretsiz · Çok hızlı' },
+      openrouter:{ label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
+      openai:    { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-5, GPT-4o, o3...' },
+      anthropic: { label: 'Anthropic', placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
+      xai:       { label: 'xAI (Grok)', placeholder: 'xai-...', hint: 'Grok 4, Grok 3...' },
+    };
+
+    const modelLists = {
+      openrouter: OPENROUTER_MODELS,
+      openai: OPENAI_MODELS,
+      anthropic: ANTHROPIC_MODELS,
+      xai: XAI_MODELS,
+    };
+
     const handleProviderChange = (key) => {
       setSettingsProvider(key);
       setSettingsApiKey('');
-      setLocalModel(key === 'openai' ? OPENAI_MODELS[0].id : OPENROUTER_MODELS[0].id);
+      const list = modelLists[key];
+      setLocalModel(list ? list[0].id : '');
     };
+
+    const currentModelList = modelLists[settingsProvider];
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Key size={20} className="text-indigo-600" /> AI Sağlayıcı Ayarları
@@ -1222,9 +1232,8 @@ ${savedMaterial.slice(0, 10000)}`;
             </button>
           </div>
 
-          {/* Sağlayıcı Seçimi */}
           <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-2 mb-5">
             {Object.entries(providerInfo).map(([key, val]) => (
               <button
                 key={key}
@@ -1253,8 +1262,7 @@ ${savedMaterial.slice(0, 10000)}`;
             className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
           />
 
-          {/* Model seçimi — OpenRouter ve OpenAI için */}
-          {(settingsProvider === 'openrouter' || settingsProvider === 'openai') && (
+          {currentModelList && (
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-600 mb-2">Model Seç</p>
               <select
@@ -1262,18 +1270,13 @@ ${savedMaterial.slice(0, 10000)}`;
                 onChange={(e) => setLocalModel(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               >
-                {modelList.map((m) => (
+                {currentModelList.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </select>
               {settingsProvider === 'openrouter' && (
                 <p className="text-xs text-slate-400 mt-1">
                   Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">Tüm modeller →</a>
-                </p>
-              )}
-              {settingsProvider === 'openai' && (
-                <p className="text-xs text-slate-400 mt-1">
-                  Modeller ücretlidir. <a href="https://platform.openai.com/docs/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">OpenAI model listesi →</a>
                 </p>
               )}
             </div>
@@ -1283,15 +1286,18 @@ ${savedMaterial.slice(0, 10000)}`;
             <button
               onClick={() => {
                 if (settingsApiKey.trim()) {
-                  const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq'
-                    : settingsApiKey.trim().startsWith('sk-or-') ? 'openrouter'
-                    : settingsApiKey.trim().startsWith('sk-') ? 'openai'
+                  const key = settingsApiKey.trim();
+                  const detectedProvider = key.startsWith('gsk_') ? 'groq'
+                    : key.startsWith('sk-or-') ? 'openrouter'
+                    : key.startsWith('sk-ant-') ? 'anthropic'
+                    : key.startsWith('xai-') ? 'xai'
+                    : key.startsWith('sk-') ? 'openai'
                     : settingsProvider;
-                  localStorage.setItem('gemini_api_key', settingsApiKey.trim());
+                  localStorage.setItem('gemini_api_key', key);
                   localStorage.setItem('ai_provider', detectedProvider);
-                  setApiKey(settingsApiKey.trim());
+                  setApiKey(key);
                   setProvider(detectedProvider);
-                  if (detectedProvider === 'openrouter' || detectedProvider === 'openai') {
+                  if (currentModelList) {
                     localStorage.setItem('openrouter_model', localModel);
                     setOpenRouterModel(localModel);
                   }
@@ -1312,7 +1318,6 @@ ${savedMaterial.slice(0, 10000)}`;
             </button>
           </div>
 
-          {/* Sıfırlama seçenekleri */}
           <div className="mt-5 pt-5 border-t border-slate-200">
             <p className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wide">Sıfırlama Seçenekleri</p>
             <div className="flex gap-3">
@@ -1419,7 +1424,7 @@ ${savedMaterial.slice(0, 10000)}`;
           >
             <Key size={18} />
             <span className="flex-1 text-left">
-              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : provider === 'openai' ? 'OpenAI' : 'Gemini'}
+              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : provider === 'openai' ? 'OpenAI' : provider === 'anthropic' ? 'Anthropic' : provider === 'xai' ? 'xAI Grok' : 'Gemini'}
             </span>
             {apiKey && (
               <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
