@@ -36,6 +36,10 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
         body: JSON.stringify(payload)
       });
 
+      if (response.status === 429) {
+        return "İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.";
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
