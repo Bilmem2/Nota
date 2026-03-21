@@ -63,15 +63,15 @@ export function renderMarkdown(text) {
     // [TÜYO] — mor/indigo
     if (cleanLine.startsWith('[TÜYO]')) {
       elements.push(
-        <div key={i} className="my-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/60 dark:to-indigo-950/60 border border-purple-100 dark:border-purple-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+        <div key={i} className="my-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:bg-purple-950 dark:from-purple-950 dark:to-indigo-950 border border-purple-100 dark:border-purple-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0">
               <Lightbulb className="text-purple-600 dark:text-purple-400" size={24} />
             </div>
             <div>
-              <span className="font-extrabold text-purple-700 dark:text-purple-400 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Sınav Tüyosu</span>
-              <p className="text-purple-900 dark:text-purple-200 font-medium leading-relaxed">{formatInline(cleanLine.replace('[TÜYO]', '').trim())}</p>
+              <span className="font-extrabold text-purple-700 dark:text-purple-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Sınav Tüyosu</span>
+              <p className="text-purple-900 dark:text-purple-100 font-medium leading-relaxed">{formatInline(cleanLine.replace('[TÜYO]', '').trim())}</p>
             </div>
           </div>
         </div>
@@ -82,15 +82,15 @@ export function renderMarkdown(text) {
     // [DİKKAT] — kırmızı/rose
     if (cleanLine.startsWith('[DİKKAT]')) {
       elements.push(
-        <div key={i} className="my-6 bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/60 dark:to-red-950/60 border border-rose-100 dark:border-rose-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+        <div key={i} className="my-6 bg-gradient-to-br from-rose-50 to-red-50 dark:bg-rose-950 dark:from-rose-950 dark:to-red-950 border border-rose-100 dark:border-rose-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0">
               <AlertCircle className="text-rose-600 dark:text-rose-400" size={24} />
             </div>
             <div>
-              <span className="font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kavram Yanılgısı / Tuzak</span>
-              <p className="text-rose-900 dark:text-rose-200 font-medium leading-relaxed">{formatInline(cleanLine.replace('[DİKKAT]', '').trim())}</p>
+              <span className="font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kavram Yanılgısı / Tuzak</span>
+              <p className="text-rose-900 dark:text-rose-100 font-medium leading-relaxed">{formatInline(cleanLine.replace('[DİKKAT]', '').trim())}</p>
             </div>
           </div>
         </div>
@@ -101,15 +101,15 @@ export function renderMarkdown(text) {
     // [ÖNEMLİ] — yeşil/emerald
     if (cleanLine.startsWith('[ÖNEMLİ]')) {
       elements.push(
-        <div key={i} className="my-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/60 dark:to-teal-950/60 border border-emerald-100 dark:border-emerald-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+        <div key={i} className="my-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:bg-emerald-950 dark:from-emerald-950 dark:to-teal-950 border border-emerald-100 dark:border-emerald-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0">
               <Target className="text-emerald-600 dark:text-emerald-400" size={24} />
             </div>
             <div>
-              <span className="font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kritik Vurgu</span>
-              <p className="text-emerald-900 dark:text-emerald-200 font-medium leading-relaxed">{formatInline(cleanLine.replace('[ÖNEMLİ]', '').trim())}</p>
+              <span className="font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kritik Vurgu</span>
+              <p className="text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed">{formatInline(cleanLine.replace('[ÖNEMLİ]', '').trim())}</p>
             </div>
           </div>
         </div>

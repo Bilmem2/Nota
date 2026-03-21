@@ -1,28 +1,43 @@
+<div align="center">
+
+<img src="public/favicon.png" alt="Yapay Öğretmen" width="72" />
+
 # Yapay Öğretmen
 
-Google Gemini yapay zekası ile çalışan kişisel akademik çalışma asistanı.
+Ders notunu veya PDF'ini yükle — yapay zeka senin için ders anlatsın, özet çıkarsın, sınav hazırlasın.
 
-🔗 **[Uygulamayı Kullan → Bilmem2.github.io/yapay-ogretmen](https://Bilmem2.github.io/yapay-ogretmen/)**
+**[→ Uygulamayı Aç](https://Bilmem2.github.io/yapay-ogretmen/)**
+
+</div>
 
 ---
 
-## Ne Yapabilir?
-
-- **Ders Anlatımı** — Yüklediğiniz materyali üniversite düzeyinde detaylıca anlatır
-- **Çalışma Rehberi** — Kritik kavramlar, püf noktalar ve muhtemel sınav soruları çıkarır
-- **Görsel Özet** — Konuyu zaman çizelgesi, karşılaştırma tablosu veya kategori kartlarıyla görselleştirir
-- **Sınav Modu** — Çoktan seçmeli, doğru/yanlış, kısa cevap ve kompozisyon soruları üretir
-- **AI Sohbet** — Materyal hakkında soru sormanızı sağlar
-- **Karma Sınav** — Birden fazla konuyu birleştirerek vize/final sınavı hazırlar
-- **Çalışma Arşivi** — Oturumları otomatik kaydeder, `.akademik` dosyası olarak yedekler
-
 ## Nasıl Kullanılır?
 
-1. [Uygulamayı açın](https://Bilmem2.github.io/yapay-ogretmen/)
-2. [Google AI Studio](https://aistudio.google.com/app/apikey) adresinden ücretsiz bir Gemini API anahtarı alın
-3. Açılış ekranına API anahtarınızı girin — anahtar yalnızca tarayıcınızda saklanır, hiçbir sunucuya gönderilmez
-4. PDF veya TXT dosyanızı yükleyin ve çalışmaya başlayın
+1. [Uygulamayı aç](https://Bilmem2.github.io/yapay-ogretmen/)
+2. Ücretsiz bir API anahtarı al:
+   - **Gemini** → [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - **Groq** → [Groq Console](https://console.groq.com/keys) *(daha hızlı)*
+3. Açılış ekranına anahtarını yapıştır
+4. PDF veya metin dosyanı yükle, çalışmaya başla
 
-## Teknoloji
+> Anahtarın yalnızca tarayıcında saklanır. Hiçbir sunucuya gönderilmez.
 
-React · Vite · Tailwind CSS · Google Gemini API (gemini-2.0-flash)
+---
+
+## Neler Yapabilir?
+
+- **Ders Anlatımı** — Materyali üniversite düzeyinde detaylıca açıklar
+- **Çalışma Rehberi** — Kritik kavramlar, tuzaklar ve olası sınav soruları
+- **Görsel Özet** — Konuyu tablo, zaman çizelgesi veya karşılaştırma kartlarıyla gösterir
+- **Sınav Modu** — Çoktan seçmeli, kısa cevap ve kompozisyon soruları üretir; anında değerlendirir
+- **Karma Sınav** — Birden fazla konuyu birleştirerek vize/final sınavı hazırlar
+- **AI Sohbet** — Materyal hakkında soru sor, zayıf yönlerini analiz et
+- **Podcast** — Materyali sesli anlatıma dönüştürür
+- **Arşiv** — Çalışmalarını otomatik kaydeder, istediğin zaman kaldığın yerden devam et
+
+---
+
+<div align="center">
+  <sub>© Can Sevilmiş</sub>
+</div>

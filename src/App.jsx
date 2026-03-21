@@ -67,6 +67,47 @@ const T = {
     aiEvaluating: 'AI Değerlendiriyor...',
     pdfLoading: "Yapay Öğretmen PDF'i inceliyor, lütfen bekleyin...",
     author: '© Can Sevilmiş', version: 'Yapay Öğretmen v1.0',
+    // Archive
+    archiveTitle: 'Çalışma Arşivi', importBtn: 'İçeri Aktar', newStudyBtn: 'Yeni Çalışma',
+    archiveEmpty: 'Henüz Kayıtlı Bir Çalışmanız Yok',
+    archiveEmptyDesc: 'Sisteme yüklediğiniz her PDF veya ders notu, otomatik olarak buraya kaydedilecektir. Böylece sekmeyi kapatsanız bile kaldığınız yerden devam edebilirsiniz.',
+    archiveStart: 'İlk Çalışmanı Başlat', activeLabel: 'Aktif', openLabel: 'Aç',
+    // Material
+    materialTitle: 'Ders Materyali Yükle', materialDesc: 'Öğrenmek istediğiniz metni yapıştırın veya PDF yükleyin.',
+    filePickBtn: '.txt / .pdf Seç', studyTitleLabel: 'Çalışma Başlığı (Opsiyonel)',
+    studyTitlePlaceholder: 'Örn: Hafta 3 - Enzim Kinetiği',
+    materialTextPlaceholder: 'Üzerinde çalışacağımız ders notunu buraya yapıştır...',
+    charReady: (n) => `${n} karakter hazır.`, charMin: 'Çalışmaya başlamak için en az 50 karakter girilmeli.',
+    saveAndStart: 'Kaydet ve Derse Başla',
+    // Lesson
+    lessonTitle: 'Ders Anlatımı', lessonReadyTitle: 'Akademik Okuma Hazır',
+    lessonReadyDesc: 'Materyaliniz incelendi. Üniversite düzeyinde, kavramsal bağlantıları kuran detaylı bir okuma yapalım mı?',
+    synthesizeAll: 'Tüm Bölümleri Sentezle', downloadPdf: 'Tümünü PDF İndir',
+    chapterNav: 'Bölümler:', chapterLabel: (n) => `Bölüm ${n}`,
+    chapterSynthesizing: (cur, total) => `Bölüm ${cur} / ${total} sentezleniyor...`,
+    chapterSynthesizingNote: 'Önceki bölümleri okumaya başlayabilirsiniz, yenisi hazırlandığında buraya eklenecektir.',
+    askQuestion: 'Konuyu Tartışmak İçin Soru Sor',
+    // Notes
+    notesTitle: 'Sınav Çalışma Rehberi', notesReadyTitle: 'Sınav İçin Cheat Sheet Hazırlansın mı?',
+    notesReadyDesc: 'Yapay zeka bu metni analiz ederek senin için kritik kavramları, süreçleri, en çok düşülen tuzakları ve muhtemel sınav sorularını içeren yapılandırılmış bir rehber çıkaracak.',
+    noteSummarizing: (cur, total) => `Bölüm ${cur} / ${total} özetleniyor...`,
+    noteSummarizingNote: 'Rehber hazırlanırken ekranda okunabilir şekilde belirecektir.',
+    // Visual
+    visualTitle: 'Görsel Özet', visualReadyTitle: 'Metni Görselleştir',
+    visualReadyDesc: 'Yapay zeka metni analiz ederek senin için konunun yapısına en uygun Zaman Çizelgesi, Karşılaştırma, Veri Tablosu veya Kategori Kartlarını otomatik çizecek.',
+    visualizeAll: 'Tüm Bölümleri Görselleştir',
+    visualProcessing: (cur, total) => `Bölüm ${cur} / ${total} işleniyor...`,
+    visualProcessingNote: 'Şablon seçiliyor, veriler hizalanıyor.',
+    // Quiz
+    quizPageTitle: 'İnteraktif Sınav', prevResults: 'Önceki Sınav Performansları',
+    attempt: (n) => `Deneme ${n}`, score: (s) => `%${s} Başarı`,
+    // Podcast
+    podcastTitle: 'Podcast Modu', podcastDesc: 'Materyalinizi dinleyerek öğrenin.',
+    podcastGenerateBtn: 'Podcast Oluştur',
+    // Session card
+    importedSuffix: ' (İçe Aktarıldı)',
+    fileTypeAlert: 'Lütfen .txt veya .pdf formatında bir dosya yükleyin.',
+    deleteConfirm: 'Bu çalışmayı tamamen silmek istediğine emin misin?',
     // Quiz settings
     quizSettingsTitle: 'Sınav Ayarlarını Belirle',
     quizSettingsDesc: 'Kendini ne kadar zorlamak istediğini ve soru tipini seç.',
@@ -87,6 +128,40 @@ const T = {
     questionLabel: (cur, total) => `Soru ${cur} / ${total}`,
     completed: 'Tamamlandı', cancel: 'İptal',
     studiedOn: (date) => `${date} tarihinde çalışıldı`,
+    // Quiz result / interactive strings
+    quizCorrect: 'Tebrikler, Doğru Cevap!', quizWrong: 'Maalesef Yanlış Cevap.',
+    quizExamDone: 'Sınav Tamamlandı!', quizPerfSummary: 'Performans özetin aşağıda yer alıyor.',
+    quizCorrectLabel: 'Doğru', quizWrongLabel: 'Yanlış', quizEmptyLabel: 'Boş',
+    quizDetailTitle: 'Detaylı Soru Analizi',
+    quizYourAnswer: 'Cevabınız', quizExpected: 'Beklenen Cevap',
+    quizAiEval: 'AI Değerlendirmesi:', quizAcademic: 'Akademik Açıklama:',
+    quizAiFeedback: 'AI Geri Bildirimi:',
+    quizNewExam: 'Yeni Sınav Oluştur', quizBackSettings: 'Ayarlara Dön', quizDelete: 'Sınavı Sil',
+    quizDeleteConfirm: 'Bu sınavı geçmişten silmek istediğine emin misin?',
+    quizWeakBtn: 'Zayıf Yönlerimi Analiz Et', quizAnalyzing: 'Analiz yapılıyor...',
+    quizPerfAnalysis: 'Performans Analizi', quizClose: 'Kapat',
+    quizNextQ: 'Sonraki Soru', quizFinish: 'Sınavı Bitir',
+    quizCheckAnswer: 'Cevabı Kontrol Et', quizChecking: 'AI Kontrol Ediyor...',
+    quizHint: (n) => `İpucu İste (${n}/2)`, quizHint1: '1. İpucu:', quizHint2: '2. İpucu:',
+    quizEssayPlaceholder: 'Kompozisyon/Analiz cevabınızı yazın...',
+    quizAnswerPlaceholder: 'Cevabınızı yazın...',
+    quizEssayPlaceholderMock: 'Kompozisyonunuzu buraya yazın...',
+    quizMockDesc2: 'Gerçek Deneme Modu: Tüm soruları aşağıdan cevapla. Sınavı bitirdiğinde kompozisyon ve açık uçlu cevapların yapay zeka tarafından değerlendirilecek.',
+    quizCancelConfirm: 'Sınavı iptal etmek istediğine emin misin? İlerleme kaydedilmeyecek.',
+    quizCancelConfirmMock: 'Sınavı iptal etmek istediğine emin misin?',
+    // Chat
+    chatTitle: 'Akademik Sohbet', chatTyping: 'Asistanınız yanıtlıyor...',
+    // Podcast
+    podcastTurnInto: "Materyalini podcast'a dönüştür",
+    podcastSubDesc: 'Yapay zeka materyalini doğal bir anlatıma çevirir, sonra sesli okur.',
+    podcastRegen: 'Yeniden Oluştur',
+    // Lesson/Notes/Visual inline strings
+    lessonBolum: (n) => `Bölüm ${n}`,
+    lessonSynthBtn: 'Tüm Bölümleri Sentezle',
+    notesCheatBtn: 'Tüm Bölümleri Sentezle',
+    visualVisBtn: 'Tüm Bölümleri Görselleştir',
+    // Material overlay
+    pdfAnalyzing: 'PDF Analiz Ediliyor...', pdfExtracting: 'Metinler çıkarılıyor ve işleniyor',
   },
   en: {
     appName: 'AI Teacher',
@@ -107,6 +182,47 @@ const T = {
     aiEvaluating: 'AI Evaluating...',
     pdfLoading: "AI Teacher is reading the PDF, please wait...",
     author: '© Can Sevilmiş', version: 'AI Teacher v1.0',
+    // Archive
+    archiveTitle: 'Study Archive', importBtn: 'Import', newStudyBtn: 'New Study',
+    archiveEmpty: 'No Saved Studies Yet',
+    archiveEmptyDesc: 'Every PDF or lecture note you upload will be automatically saved here, so you can pick up right where you left off even after closing the tab.',
+    archiveStart: 'Start Your First Study', activeLabel: 'Active', openLabel: 'Open',
+    // Material
+    materialTitle: 'Upload Study Material', materialDesc: 'Paste the text you want to learn or upload a PDF.',
+    filePickBtn: '.txt / .pdf Select', studyTitleLabel: 'Study Title (Optional)',
+    studyTitlePlaceholder: 'e.g. Week 3 - Enzyme Kinetics',
+    materialTextPlaceholder: 'Paste the lecture notes we will work on here...',
+    charReady: (n) => `${n} characters ready.`, charMin: 'At least 50 characters required to start.',
+    saveAndStart: 'Save & Start Lesson',
+    // Lesson
+    lessonTitle: 'Lesson', lessonReadyTitle: 'Academic Reading Ready',
+    lessonReadyDesc: 'Your material has been reviewed. Shall we do a detailed university-level reading that builds conceptual connections?',
+    synthesizeAll: 'Synthesize All Sections', downloadPdf: 'Download All as PDF',
+    chapterNav: 'Sections:', chapterLabel: (n) => `Section ${n}`,
+    chapterSynthesizing: (cur, total) => `Synthesizing section ${cur} / ${total}...`,
+    chapterSynthesizingNote: 'You can start reading previous sections; new ones will appear here when ready.',
+    askQuestion: 'Ask a Question to Discuss the Topic',
+    // Notes
+    notesTitle: 'Exam Study Guide', notesReadyTitle: 'Generate a Cheat Sheet for the Exam?',
+    notesReadyDesc: 'The AI will analyze this text and produce a structured guide with critical concepts, processes, common traps, and likely exam questions.',
+    noteSummarizing: (cur, total) => `Summarizing section ${cur} / ${total}...`,
+    noteSummarizingNote: 'The guide will appear on screen as it is being prepared.',
+    // Visual
+    visualTitle: 'Visual Summary', visualReadyTitle: 'Visualize the Text',
+    visualReadyDesc: 'The AI will analyze the text and automatically draw the most suitable Timeline, Comparison, Data Table, or Category Cards for the topic.',
+    visualizeAll: 'Visualize All Sections',
+    visualProcessing: (cur, total) => `Processing section ${cur} / ${total}...`,
+    visualProcessingNote: 'Selecting template, aligning data.',
+    // Quiz
+    quizPageTitle: 'Interactive Quiz', prevResults: 'Previous Quiz Results',
+    attempt: (n) => `Attempt ${n}`, score: (s) => `${s}% Score`,
+    // Podcast
+    podcastTitle: 'Podcast Mode', podcastDesc: 'Learn by listening to your material.',
+    podcastGenerateBtn: 'Generate Podcast',
+    // Session card
+    importedSuffix: ' (Imported)',
+    fileTypeAlert: 'Please upload a .txt or .pdf file.',
+    deleteConfirm: 'Are you sure you want to permanently delete this study?',
     // Quiz settings
     quizSettingsTitle: 'Configure Your Quiz',
     quizSettingsDesc: 'Choose how challenging you want it and the question format.',
@@ -127,6 +243,40 @@ const T = {
     questionLabel: (cur, total) => `Question ${cur} / ${total}`,
     completed: 'Completed', cancel: 'Cancel',
     studiedOn: (date) => `Studied on ${date}`,
+    // Quiz result / interactive strings
+    quizCorrect: 'Correct!', quizWrong: 'Incorrect.',
+    quizExamDone: 'Exam Completed!', quizPerfSummary: 'Your performance summary is below.',
+    quizCorrectLabel: 'Correct', quizWrongLabel: 'Wrong', quizEmptyLabel: 'Blank',
+    quizDetailTitle: 'Detailed Question Analysis',
+    quizYourAnswer: 'Your Answer', quizExpected: 'Expected Answer',
+    quizAiEval: 'AI Evaluation:', quizAcademic: 'Academic Explanation:',
+    quizAiFeedback: 'AI Feedback:',
+    quizNewExam: 'Generate New Quiz', quizBackSettings: 'Back to Settings', quizDelete: 'Delete Quiz',
+    quizDeleteConfirm: 'Are you sure you want to delete this quiz from history?',
+    quizWeakBtn: 'Analyze My Weak Points', quizAnalyzing: 'Analyzing...',
+    quizPerfAnalysis: 'Performance Analysis', quizClose: 'Close',
+    quizNextQ: 'Next Question', quizFinish: 'Finish Quiz',
+    quizCheckAnswer: 'Check Answer', quizChecking: 'AI Checking...',
+    quizHint: (n) => `Hint (${n}/2)`, quizHint1: 'Hint 1:', quizHint2: 'Hint 2:',
+    quizEssayPlaceholder: 'Write your essay/detailed analysis here...',
+    quizAnswerPlaceholder: 'Type your answer here...',
+    quizEssayPlaceholderMock: 'Write your detailed essay here...',
+    quizMockDesc2: 'Mock Exam Mode: Answer all questions below. Your answers will be submitted for holistic AI evaluation at the very end.',
+    quizCancelConfirm: 'Cancel the quiz? Progress will not be saved.',
+    quizCancelConfirmMock: 'Are you sure you want to cancel the quiz?',
+    // Chat
+    chatTitle: 'Academic Chat', chatTyping: 'Your assistant is responding...',
+    // Podcast
+    podcastTurnInto: 'Turn your material into a podcast',
+    podcastSubDesc: 'AI will rewrite your material as a natural spoken script, then read it aloud.',
+    podcastRegen: 'Regenerate',
+    // Lesson/Notes/Visual inline strings
+    lessonBolum: (n) => `Section ${n}`,
+    lessonSynthBtn: 'Synthesize All Sections',
+    notesCheatBtn: 'Synthesize All Sections',
+    visualVisBtn: 'Visualize All Sections',
+    // Material overlay
+    pdfAnalyzing: 'Analyzing PDF...', pdfExtracting: 'Extracting and processing text',
   },
 };
 
@@ -184,7 +334,6 @@ export default function App() {
     count: 10,
     difficulty: 'Orta',
     examMode: 'interactive',
-    language: 'Turkish',
     onlyMultipleChoice: false,
     onlyEssay: false,
     quizScope: 'current',
@@ -225,6 +374,13 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('app_lang', appLang);
+    // Sadece welcome mesajı varsa dil değişince güncelle
+    setChatMessages((prev) => {
+      if (prev.length === 1 && prev[0].role === 'model') {
+        return [{ role: 'model', text: T[appLang].chatWelcome }];
+      }
+      return prev;
+    });
   }, [appLang]);
 
   useEffect(() => {
@@ -295,7 +451,7 @@ export default function App() {
 
   const deleteSession = (id, e) => {
     e.stopPropagation();
-    if (window.confirm('Bu çalışmayı tamamen silmek istediğine emin misin?')) {
+    if (window.confirm(t.deleteConfirm)) {
       setSessionsList((prev) => {
         const newList = prev.filter((s) => s.id !== id);
         localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
@@ -331,7 +487,7 @@ export default function App() {
           throw new Error('Geçersiz format');
         }
         importedSession.id = Date.now().toString();
-        importedSession.title = importedSession.title + ' (İçe Aktarıldı)';
+        importedSession.title = importedSession.title + t.importedSuffix;
 
         setSessionsList((prev) => {
           const newList = [importedSession, ...prev];
@@ -643,7 +799,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       };
       reader.readAsArrayBuffer(file);
     } else {
-      alert('Lütfen .txt veya .pdf formatında bir dosya yükleyin.');
+      alert(t.fileTypeAlert);
     }
     e.target.value = null;
   };
@@ -880,7 +1036,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     if (materialChunks.length <= 1) return null;
     return (
       <div className="flex flex-wrap items-center gap-2 mb-8 p-2 bg-slate-100/80 rounded-2xl border border-slate-200/60 no-print">
-        <span className="text-sm font-bold text-slate-500 ml-2 mr-1">Bölümler:</span>
+        <span className="text-sm font-bold text-slate-500 ml-2 mr-1">{t.chapterNav}</span>
         {materialChunks.map((_, idx) => {
           const isActive = activeChunk[type] === idx;
           const isCompleted = !!content[type][idx];
@@ -895,7 +1051,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                 isActive ? 'bg-white text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-200 border border-transparent'
               }`}
             >
-              Bölüm {idx + 1}
+              {t.chapterLabel(idx + 1)}
               {isCompleted && <CheckCircle2 size={16} className={isActive ? 'text-emerald-500' : 'text-emerald-400'} />}
             </button>
           );
@@ -1118,14 +1274,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
                 <div className="flex items-center gap-3">
                   <Library size={32} className="text-indigo-700" />
-                  <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Çalışma Arşivi</h2>
+                  <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.archiveTitle}</h2>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => importFileRef.current?.click()}
                     className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
                   >
-                    <Upload size={18} /> <span className="hidden sm:inline">İçeri Aktar</span>
+                    <Upload size={18} /> <span className="hidden sm:inline">{t.importBtn}</span>
                   </button>
                   <input type="file" accept=".akademik" className="hidden" ref={importFileRef} onChange={handleImportFile} />
 
@@ -1133,7 +1289,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                     onClick={createNewSession}
                     className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-md"
                   >
-                    <PlusCircle size={18} /> Yeni Çalışma
+                    <PlusCircle size={18} /> {t.newStudyBtn}
                   </button>
                 </div>
               </div>
@@ -1143,15 +1299,15 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <div className="w-24 h-24 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
                     <FolderOpen size={40} className="text-slate-400 dark:text-slate-400" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">Henüz Kayıtlı Bir Çalışmanız Yok</h3>
+                  <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">{t.archiveEmpty}</h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                    Sisteme yüklediğiniz her PDF veya ders notu, otomatik olarak buraya kaydedilecektir. Böylece sekmeyi kapatsanız bile kaldığınız yerden devam edebilirsiniz.
+                    {t.archiveEmptyDesc}
                   </p>
                   <button
                     onClick={createNewSession}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md transition-all inline-flex items-center gap-2"
                   >
-                    <PlusCircle size={18} /> İlk Çalışmanı Başlat
+                    <PlusCircle size={18} /> {t.archiveStart}
                   </button>
                 </div>
               ) : (
@@ -1169,8 +1325,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       >
                         {isActive && (
                           <div className="absolute top-4 right-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">
-                            Aktif
-                          </div>
+                            {t.activeLabel}</div>
                         )}
                         <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
                           <BookOpen size={24} />
@@ -1197,7 +1352,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                             <Trash2 size={18} />
                           </button>
                           <div className="ml-auto text-indigo-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                            Aç <ChevronRight size={16} />
+                            {t.openLabel} <ChevronRight size={16} />
                           </div>
                         </div>
                       </div>
@@ -1216,8 +1371,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <UploadCloud size={28} />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Ders Materyali Yükle</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-base mt-1">Öğrenmek istediğiniz metni yapıştırın veya PDF yükleyin.</p>
+                  <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{t.materialTitle}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-base mt-1">{t.materialDesc}</p>
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -1225,18 +1380,18 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all border-2 border-slate-200 hover:border-indigo-300 disabled:opacity-50"
                 >
                   {isExtracting ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
-                  .txt / .pdf Seç
+                  {t.filePickBtn}
                 </button>
                 <input type="file" accept=".txt,.pdf,.pptx" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Çalışma Başlığı (Opsiyonel)</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t.studyTitleLabel}</label>
                 <input
                   type="text"
                   value={studyTitle}
                   onChange={(e) => setStudyTitle(e.target.value)}
-                  placeholder="Örn: Hafta 3 - Enzim Kinetiği"
+                  placeholder={t.studyTitlePlaceholder}
                   className="w-full p-4 text-lg rounded-xl border-2 border-slate-200 focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all outline-none font-medium"
                 />
               </div>
@@ -1246,14 +1401,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   value={materialText}
                   onChange={(e) => setMaterialText(e.target.value)}
                   disabled={isExtracting}
-                  placeholder="Üzerinde çalışacağımız ders notunu buraya yapıştır..."
+                  placeholder={t.materialTextPlaceholder}
                   className={`w-full h-[300px] md:h-[400px] p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none text-slate-700 text-lg leading-relaxed ${isExtracting ? 'opacity-50' : ''}`}
                 />
                 {isExtracting && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
                     <Loader2 size={48} className="text-indigo-600 animate-spin mb-4" />
-                    <p className="text-xl font-bold text-indigo-900">PDF Analiz Ediliyor...</p>
-                    <p className="text-indigo-600/80 mt-2 font-medium">Metinler çıkarılıyor ve işleniyor</p>
+                    <p className="text-xl font-bold text-indigo-900">{t.pdfAnalyzing}</p>
+                    <p className="text-indigo-600/80 mt-2 font-medium">{t.pdfExtracting}</p>
                   </div>
                 )}
               </div>
@@ -1262,10 +1417,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                 <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                   {materialText.length > 0 ? (
                     <>
-                      <CheckCircle2 size={18} className="text-emerald-500" /> {materialText.length} karakter hazır.
+                      <CheckCircle2 size={18} className="text-emerald-500" /> {t.charReady(materialText.length)}
                     </>
                   ) : (
-                    'Çalışmaya başlamak için en az 50 karakter girilmeli.'
+                    t.charMin
                   )}
                 </p>
                 <button
@@ -1280,7 +1435,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   `}
                 >
                   <BookOpen size={20} />
-                  Kaydet ve Derse Başla
+                  {t.saveAndStart}
                 </button>
               </div>
             </div>
@@ -1297,14 +1452,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
                     <div className="flex items-center gap-3">
                       <BookOpen size={32} className="text-indigo-700" />
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Ders Anlatımı</h2>
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">{t.lessonTitle}</h2>
                     </div>
                     {isFinished && (
                       <button
-                        onClick={() => handlePrint('lesson-content-area', 'Ders Anlatımı (Tüm Bölümler)')}
+                        onClick={() => handlePrint('lesson-content-area', t.lessonTitle)}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-indigo-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
                       >
-                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                        <Printer size={18} /> <span>{t.downloadPdf}</span>
                       </button>
                     )}
                   </div>
@@ -1315,9 +1470,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center mx-auto mb-8">
                           <GraduationCap size={48} className="text-indigo-600" />
                         </div>
-                        <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Akademik Okuma Hazır</h3>
+                        <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">{t.lessonReadyTitle}</h3>
                         <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto mb-10">
-                          Materyaliniz incelendi. Üniversite düzeyinde, kavramsal bağlantıları kuran detaylı bir okuma yapalım mı?
+                          {t.lessonReadyDesc}
                         </p>
                         <button
                           onClick={() => {
@@ -1326,7 +1481,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           }}
                           className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-indigo-600/20 transition-all flex items-center gap-3 mx-auto w-full sm:w-auto justify-center"
                         >
-                          Tüm Bölümleri Sentezle
+                          {t.synthesizeAll}
                         </button>
                       </div>
                     ) : (
@@ -1341,7 +1496,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                     <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
                                       {idx + 1}
                                     </div>
-                                    Bölüm {idx + 1}
+                                    {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
                                 {renderMarkdown(content.lesson[idx])}
@@ -1354,10 +1509,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           <div className="flex flex-col items-center justify-center py-12 text-indigo-600 border-2 border-dashed border-indigo-100 rounded-3xl mt-12 bg-indigo-50/50 no-print">
                             <Loader2 size={40} className="animate-spin mb-4" />
                             <p className="text-lg font-bold animate-pulse text-center">
-                              Bölüm {generatingIndex.lesson + 1} / {materialChunks.length} sentezleniyor...
+                              {t.chapterSynthesizing(generatingIndex.lesson + 1, materialChunks.length)}
                             </p>
                             <p className="text-indigo-600/60 mt-2 font-medium text-center px-4">
-                              Önceki bölümleri okumaya başlayabilirsiniz, yenisi hazırlandığında buraya eklenecektir.
+                              {t.chapterSynthesizingNote}
                             </p>
                           </div>
                         )}
@@ -1368,7 +1523,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                               onClick={() => setActiveTab('chat')}
                               className="text-indigo-700 hover:text-white font-bold flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-600 px-8 py-4 rounded-2xl transition-all shadow-sm w-full sm:w-auto"
                             >
-                              <MessageSquare size={20} /> Konuyu Tartışmak İçin Soru Sor
+                              <MessageSquare size={20} /> {t.askQuestion}
                             </button>
                           </div>
                         )}
@@ -1390,14 +1545,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
                     <div className="flex items-center gap-3">
                       <ClipboardList size={32} className="text-amber-600" />
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Sınav Çalışma Rehberi</h2>
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">{t.notesTitle}</h2>
                     </div>
                     {isFinished && (
                       <button
-                        onClick={() => handlePrint('notes-content-area', 'Çalışma Rehberi (Tüm Bölümler)')}
+                        onClick={() => handlePrint('notes-content-area', t.notesTitle)}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-amber-300 text-amber-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
                       >
-                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                        <Printer size={18} /> <span>{t.downloadPdf}</span>
                       </button>
                     )}
                   </div>
@@ -1407,9 +1562,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
                     {!isStarted ? (
                       <div className="text-center py-20 relative z-10">
-                        <h3 className="text-3xl font-bold text-amber-900 mb-4">Sınav İçin Cheat Sheet Hazırlansın mı?</h3>
+                        <h3 className="text-3xl font-bold text-amber-900 mb-4">{t.notesReadyTitle}</h3>
                         <p className="text-amber-800/80 text-lg mb-10 max-w-xl mx-auto">
-                          Yapay zeka bu metni analiz ederek senin için kritik kavramları, süreçleri, en çok düşülen tuzakları ve muhtemel sınav sorularını içeren yapılandırılmış bir rehber çıkaracak.
+                          {t.notesReadyDesc}
                         </p>
                         <button
                           onClick={() => {
@@ -1418,7 +1573,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           }}
                           className="bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-amber-500/20 transition-all w-full sm:w-auto justify-center flex"
                         >
-                          Tüm Bölümleri Sentezle
+                          {t.synthesizeAll}
                         </button>
                       </div>
                     ) : (
@@ -1434,7 +1589,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                     <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
                                       {idx + 1}
                                     </div>
-                                    Bölüm {idx + 1}
+                                    {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
                                 {renderMarkdown(content.notes[idx])}
@@ -1447,9 +1602,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           <div className="flex flex-col items-center justify-center py-12 text-amber-600 border-2 border-dashed border-amber-200 rounded-3xl mt-8 bg-amber-50/50 no-print">
                             <Loader2 size={40} className="animate-spin mb-4" />
                             <p className="text-lg font-bold animate-pulse text-center">
-                              Bölüm {generatingIndex.notes + 1} / {materialChunks.length} özetleniyor...
+                              {t.noteSummarizing(generatingIndex.notes + 1, materialChunks.length)}
                             </p>
-                            <p className="text-amber-700/60 mt-2 font-medium text-center px-4">Rehber hazırlanırken ekranda okunabilir şekilde belirecektir.</p>
+                            <p className="text-amber-700/60 mt-2 font-medium text-center px-4">{t.noteSummarizingNote}</p>
                           </div>
                         )}
                       </div>
@@ -1470,14 +1625,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
                     <div className="flex items-center gap-3">
                       <PieChart size={32} className="text-teal-600" />
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Görsel Özet</h2>
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">{t.visualTitle}</h2>
                     </div>
                     {isFinished && (
                       <button
-                        onClick={() => handlePrint('visual-content-area', 'Görsel Özetler (Tüm Bölümler)')}
+                        onClick={() => handlePrint('visual-content-area', t.visualTitle)}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-teal-300 text-teal-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
                       >
-                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                        <Printer size={18} /> <span>{t.downloadPdf}</span>
                       </button>
                     )}
                   </div>
@@ -1490,9 +1645,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         <div className="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-8">
                           <Layers size={48} className="text-teal-600" />
                         </div>
-                        <h3 className="text-3xl font-bold text-teal-900 mb-4">Metni Görselleştir</h3>
+                        <h3 className="text-3xl font-bold text-teal-900 mb-4">{t.visualReadyTitle}</h3>
                         <p className="text-teal-800/80 text-lg mb-10 max-w-xl mx-auto">
-                          Yapay zeka metni analiz ederek senin için konunun yapısına en uygun Zaman Çizelgesi, Karşılaştırma, Veri Tablosu veya Kategori Kartlarını otomatik çizecek.
+                          {t.visualReadyDesc}
                         </p>
                         <button
                           onClick={() => {
@@ -1501,7 +1656,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           }}
                           className="bg-teal-600 hover:bg-teal-700 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-teal-600/20 transition-all flex items-center justify-center w-full sm:w-auto mx-auto"
                         >
-                          Tüm Bölümleri Görselleştir
+                          {t.visualizeAll}
                         </button>
                       </div>
                     ) : (
@@ -1517,7 +1672,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                     <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
                                       {idx + 1}
                                     </div>
-                                    Bölüm {idx + 1}
+                                    {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
                                 <VisualSummaryComponent data={content.visual[idx]} />
@@ -1530,9 +1685,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           <div className="flex flex-col items-center justify-center py-12 text-teal-600 border-2 border-dashed border-teal-200 rounded-3xl mt-8 bg-teal-50/50 no-print">
                             <Loader2 size={40} className="animate-spin mb-4" />
                             <p className="text-lg font-bold animate-pulse text-center">
-                              Bölüm {generatingIndex.visual + 1} / {materialChunks.length} işleniyor...
+                              {t.visualProcessing(generatingIndex.visual + 1, materialChunks.length)}
                             </p>
-                            <p className="text-teal-700/60 mt-2 font-medium text-center px-4">Şablon seçiliyor, veriler hizalanıyor.</p>
+                            <p className="text-teal-700/60 mt-2 font-medium text-center px-4">{t.visualProcessingNote}</p>
                           </div>
                         )}
                       </div>
@@ -1547,7 +1702,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             <div className="animate-in fade-in duration-500">
               <div className="flex items-center gap-3 mb-8 px-2">
                 <GraduationCap size={32} className="text-rose-600" />
-                <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">İnteraktif Sınav</h2>
+                <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">{t.quizPageTitle}</h2>
               </div>
 
               <div className="bg-white dark:bg-slate-800 p-6 md:p-12 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -1556,7 +1711,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                     {content.quizHistory && content.quizHistory.length > 0 && (
                       <div className="mb-10 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
                         <h4 className="font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                          <Library size={20} /> Önceki Sınav Performansları
+                          <Library size={20} /> {t.prevResults}
                         </h4>
                         <div className="space-y-3">
                           {content.quizHistory.map((qh, idx) => {
@@ -1566,13 +1721,13 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                               <div key={idx} className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-indigo-50/50">
                                 <div>
                                   <p className="font-bold text-slate-800 text-sm">
-                                    Deneme {idx + 1}{' '}
+                                    {t.attempt(idx + 1)}{' '}
                                     <span className="text-slate-400 font-medium ml-2 hidden sm:inline">
-                                      ({qh.config.difficulty}, {qh.config.count} Soru)
+                                      ({qh.config.difficulty}, {qh.config.count} {appLang === 'en' ? 'Q' : 'Soru'})
                                     </span>
                                   </p>
                                 </div>
-                                <div className={`font-black ${score >= 70 ? 'text-emerald-600' : score >= 40 ? 'text-amber-500' : 'text-rose-600'}`}>%{score} Başarı</div>
+                                <div className={`font-black ${score >= 70 ? 'text-emerald-600' : score >= 40 ? 'text-amber-500' : 'text-rose-600'}`}>{t.score(score)}</div>
                               </div>
                             );
                           })}
@@ -1769,7 +1924,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                               <div className="flex items-center gap-3">
                                 <span className="text-rose-600">{Math.round((quizState.currentIndex / content.quiz.length) * 100)}% {t.completed}</span>
                                 <button
-                                  onClick={() => { if (window.confirm(appLang === 'en' ? 'Cancel the quiz? Progress will not be saved.' : 'Sınavı iptal etmek istediğine emin misin? İlerleme kaydedilmeyecek.')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
+                                  onClick={() => { if (window.confirm(t.quizCancelConfirm)) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
                                   className="text-xs text-slate-400 hover:text-rose-500 border border-slate-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition-colors font-medium"
                                 >
                                   {t.cancel}
@@ -1831,7 +1986,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                         disabled={quizState.isChecked || quizState.isEvaluating}
                                         value={uAns || ''}
                                         onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [p.currentIndex]: e.target.value } }))}
-                                        placeholder={quizConfig.language === 'English' ? 'Write your essay/detailed analysis here...' : 'Kompozisyon/Analiz cevabınızı yazın...'}
+                                        placeholder={t.quizEssayPlaceholder}
                                         className={`w-full h-48 p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 resize-none outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-red-500 bg-red-50 text-red-900') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
                                       />
                                     ) : (
@@ -1841,7 +1996,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                           disabled={quizState.isChecked || quizState.isEvaluating}
                                           value={uAns || ''}
                                           onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [p.currentIndex]: e.target.value } }))}
-                                          placeholder={quizConfig.language === 'English' ? 'Type your answer here...' : 'Cevabınızı yazın...'}
+                                          placeholder={t.quizAnswerPlaceholder}
                                           className={`w-full p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold' : 'border-red-500 bg-red-50 text-red-900 font-bold') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
                                         />
                                         {quizState.isChecked && isCurrentCorrect && <CheckCircle2 size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-emerald-500" />}
@@ -1855,12 +2010,12 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                   <div className="mb-8 space-y-3">
                                     <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3 text-amber-900 text-base animate-in fade-in">
                                       <Lightbulb size={24} className="shrink-0 text-amber-500" />
-                                      <p><strong>{quizConfig.language === 'English' ? 'Hint 1:' : '1. İpucu:'}</strong> {currentQ.ipucu1 || currentQ.ipucu}</p>
+                                      <p><strong>{t.quizHint1}</strong> {currentQ.ipucu1 || currentQ.ipucu}</p>
                                     </div>
                                     {quizState.hintLevel > 1 && currentQ.ipucu2 && (
                                       <div className="p-5 bg-amber-100 border border-amber-300 rounded-2xl flex gap-3 text-amber-950 text-base animate-in fade-in">
                                         <Lightbulb size={24} className="shrink-0 text-amber-600" />
-                                        <p><strong>{quizConfig.language === 'English' ? 'Hint 2:' : '2. İpucu:'}</strong> {currentQ.ipucu2}</p>
+                                        <p><strong>{t.quizHint2}</strong> {currentQ.ipucu2}</p>
                                       </div>
                                     )}
                                   </div>
@@ -1871,17 +2026,17 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                     {isCurrentCorrect ? <CheckCircle2 size={32} className="shrink-0 text-emerald-600" /> : <XIcon size={32} className="shrink-0 text-red-600" />}
                                     <div className="w-full">
                                       <p className="font-extrabold text-lg mb-2">
-                                        {isCurrentCorrect ? (quizConfig.language === 'English' ? 'Correct!' : 'Tebrikler, Doğru Cevap!') : (quizConfig.language === 'English' ? 'Incorrect.' : 'Maalesef Yanlış Cevap.')}
+                                        {isCurrentCorrect ? t.quizCorrect : t.quizWrong}
                                       </p>
                                       {currentVerdict?.feedback ? (
                                         <div className="space-y-3 mt-3">
                                           <div className="bg-white/60 p-4 rounded-xl border border-current/10">
-                                            <p className="font-bold mb-1 flex items-center gap-2"><Target size={16} /> AI Değerlendirmesi:</p>
+                                            <p className="font-bold mb-1 flex items-center gap-2"><Target size={16} /> {t.quizAiEval}</p>
                                             <p className="leading-relaxed">{currentVerdict.feedback}</p>
                                           </div>
                                           {!isCurrentCorrect && (
                                             <div className="pt-2 border-t border-current/10">
-                                              <p className="text-sm opacity-80 font-bold uppercase tracking-wider mb-1">Beklenen Cevap</p>
+                                              <p className="text-sm opacity-80 font-bold uppercase tracking-wider mb-1">{t.quizExpected}</p>
                                               <p className="font-medium">{currentQ.dogruCevap}</p>
                                             </div>
                                           )}
@@ -1897,21 +2052,21 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                   {!quizState.isChecked ? (
                                     <>
                                       <button onClick={() => { playSound('select', soundEnabled); setQuizState((p) => ({ ...p, hintLevel: p.hintLevel + 1 })); }} disabled={quizState.hintLevel >= 2 || quizState.isEvaluating} className="flex items-center justify-center gap-2 px-6 py-3 text-amber-700 font-bold hover:bg-amber-100 rounded-xl transition-colors disabled:opacity-50 text-lg w-full sm:w-auto">
-                                        <Lightbulb size={20} /> {quizConfig.language === 'English' ? `Hint (${quizState.hintLevel}/2)` : `İpucu İste (${quizState.hintLevel}/2)`}
+                                        <Lightbulb size={20} /> {t.quizHint(quizState.hintLevel)}
                                       </button>
                                       <button onClick={handleCheckAnswer} disabled={!uAns || uAns.toString().trim() === '' || quizState.isEvaluating} className="flex items-center gap-2 px-8 py-4 bg-rose-600 text-white font-bold text-lg rounded-xl hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-rose-600/20 w-full sm:w-auto justify-center">
-                                        {quizState.isEvaluating ? <><Loader2 size={20} className="animate-spin" /> AI Kontrol Ediyor...</> : <>Cevabı Kontrol Et <Check size={20} /></>}
+                                        {quizState.isEvaluating ? <><Loader2 size={20} className="animate-spin" /> {t.quizChecking}</> : <>{t.quizCheckAnswer} <Check size={20} /></>}
                                       </button>
                                     </>
                                   ) : (
                                     <div className="w-full flex justify-end">
                                       {quizState.currentIndex < content.quiz.length - 1 ? (
                                         <button onClick={() => { playSound('select', soundEnabled); setQuizState((p) => ({ ...p, currentIndex: p.currentIndex + 1, isChecked: false, hintLevel: 0, showHint: false })); }} className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 w-full sm:w-auto justify-center">
-                                          Sonraki Soru <ChevronRight size={20} />
+                                          {t.quizNextQ} <ChevronRight size={20} />
                                         </button>
                                       ) : (
                                         <button onClick={() => { playSound('finish', soundEnabled); setQuizState((p) => { const newState = { ...p, finished: true }; setContent((prev) => ({ ...prev, quizHistory: [...(prev.quizHistory || []), { quiz: content.quiz, state: newState, config: quizConfig, date: new Date().toISOString() }] })); return newState; }); }} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 text-white font-bold text-lg rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto justify-center">
-                                          Sınavı Bitir <GraduationCap size={20} />
+                                          {t.quizFinish} <GraduationCap size={20} />
                                         </button>
                                       )}
                                     </div>
@@ -1925,15 +2080,13 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                             <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-indigo-900 font-medium flex items-start justify-between gap-4">
                               <div className="flex items-start gap-3">
                                 <Target size={24} className="mb-2 text-indigo-500 shrink-0 mt-0.5" />
-                                <span>{quizConfig.language === 'English'
-                                  ? 'Mock Exam Mode: Answer all questions below. Your answers will be submitted for holistic AI evaluation at the very end.'
-                                  : 'Gerçek Deneme Modu: Tüm soruları aşağıdan cevapla. Sınavı bitirdiğinde kompozisyon ve açık uçlu cevapların yapay zeka tarafından değerlendirilecek.'}</span>
+                                <span>{appLang === 'en' ? t.quizMockDesc2 : t.quizMockDesc2}</span>
                               </div>
                               <button
-                                onClick={() => { if (window.confirm('Sınavı iptal etmek istediğine emin misin?')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
+                                onClick={() => { if (window.confirm(t.quizCancelConfirmMock)) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
                                 className="shrink-0 text-xs text-indigo-400 hover:text-rose-500 border border-indigo-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition-colors font-medium"
                               >
-                                İptal
+                                {t.cancel}
                               </button>
                             </div>
 
@@ -1958,9 +2111,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                         );
                                       })
                                     ) : q.tip === 'essay' ? (
-                                      <textarea disabled={quizState.isEvaluating} value={uAns || ''} onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [i]: e.target.value } }))} placeholder={quizConfig.language === 'English' ? 'Write your detailed essay here...' : 'Kompozisyonunuzu buraya yazın...'} className="w-full h-40 p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none resize-none" />
+                                      <textarea disabled={quizState.isEvaluating} value={uAns || ''} onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [i]: e.target.value } }))} placeholder={t.quizEssayPlaceholderMock} className="w-full h-40 p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none resize-none" />
                                     ) : (
-                                      <input type="text" disabled={quizState.isEvaluating} value={uAns || ''} onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [i]: e.target.value } }))} placeholder={quizConfig.language === 'English' ? 'Type your answer here...' : 'Cevabınızı yazın...'} className="w-full p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none" />
+                                      <input type="text" disabled={quizState.isEvaluating} value={uAns || ''} onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [i]: e.target.value } }))} placeholder={t.quizAnswerPlaceholder} className="w-full p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none" />
                                     )}
                                   </div>
                                 </div>
@@ -1995,27 +2148,27 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                   </svg>
                                   <span className="text-5xl font-black text-slate-800">{score}</span>
                                 </div>
-                                <h3 className="text-3xl font-extrabold text-slate-800 mb-2">{quizConfig.language === 'English' ? 'Exam Completed!' : 'Sınav Tamamlandı!'}</h3>
-                                <p className="text-slate-500 text-lg">Performans özetin aşağıda yer alıyor.</p>
+                                <h3 className="text-3xl font-extrabold text-slate-800 mb-2">{t.quizExamDone}</h3>
+                                <p className="text-slate-500 text-lg">{t.quizPerfSummary}</p>
                               </div>
 
                               <div className="grid grid-cols-3 gap-6 mb-12">
                                 <div className="bg-emerald-50 border-2 border-emerald-100 p-4 md:p-6 rounded-3xl text-center">
                                   <div className="text-3xl md:text-4xl font-black text-emerald-600 mb-2">{correctCount}</div>
-                                  <div className="text-sm md:text-base font-bold text-emerald-800 uppercase tracking-wide">Doğru</div>
+                                  <div className="text-sm md:text-base font-bold text-emerald-800 uppercase tracking-wide">{t.quizCorrectLabel}</div>
                                 </div>
                                 <div className="bg-rose-50 border-2 border-rose-100 p-4 md:p-6 rounded-3xl text-center">
                                   <div className="text-3xl md:text-4xl font-black text-rose-600 mb-2">{wrongCount}</div>
-                                  <div className="text-sm md:text-base font-bold text-rose-800 uppercase tracking-wide">Yanlış</div>
+                                  <div className="text-sm md:text-base font-bold text-rose-800 uppercase tracking-wide">{t.quizWrongLabel}</div>
                                 </div>
                                 <div className="bg-slate-50 border-2 border-slate-200 p-4 md:p-6 rounded-3xl text-center">
                                   <div className="text-3xl md:text-4xl font-black text-slate-600 mb-2">{emptyCount}</div>
-                                  <div className="text-sm md:text-base font-bold text-slate-800 uppercase tracking-wide">Boş</div>
+                                  <div className="text-sm md:text-base font-bold text-slate-800 uppercase tracking-wide">{t.quizEmptyLabel}</div>
                                 </div>
                               </div>
 
                               <div className="space-y-6">
-                                <h4 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"><FileText size={24} /> Detaylı Soru Analizi</h4>
+                                <h4 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"><FileText size={24} /> {t.quizDetailTitle}</h4>
                                 {content.quiz.map((q, i) => {
                                   const uAnswer = quizState.answers[i];
                                   const verdict = quizState.verdicts[i];
@@ -2031,8 +2184,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                         <div className={`flex items-start gap-3 ${isCorrect ? 'text-emerald-700' : isEmpty ? 'text-slate-500' : 'text-rose-700'}`}>
                                           <div className="mt-1">{isCorrect ? <CheckCircle2 size={20} /> : <XIcon size={20} />}</div>
                                           <div className="flex-1">
-                                            <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">Cevabınız</span>
-                                            <span className="font-medium whitespace-pre-wrap">{isEmpty ? 'Boş Bırakıldı' : uAnswer}</span>
+                                            <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">{t.quizYourAnswer}</span>
+                                            <span className="font-medium whitespace-pre-wrap">{isEmpty ? (appLang === 'en' ? 'Left Blank' : 'Boş Bırakıldı') : uAnswer}</span>
                                           </div>
                                         </div>
                                         {!isCorrect && (
@@ -2040,19 +2193,19 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                             <div className="flex items-start gap-3 text-emerald-700 mt-4 border-t-2 border-slate-200/60 pt-4">
                                               <CheckCircle2 size={20} className="mt-1 shrink-0" />
                                               <div>
-                                                <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">Beklenen Cevap</span>
+                                                <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">{t.quizExpected}</span>
                                                 <span className="font-bold text-lg whitespace-pre-wrap">{q.dogruCevap}</span>
                                               </div>
                                             </div>
                                             <div className="mt-5 p-5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-base">
-                                              <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> {verdict?.feedback ? 'AI Değerlendirmesi:' : 'Akademik Açıklama:'}</span>
+                                              <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> {verdict?.feedback ? t.quizAiEval : t.quizAcademic}</span>
                                               {verdict?.feedback || q.aciklama}
                                             </div>
                                           </>
                                         )}
                                         {isCorrect && verdict?.feedback && q.tip !== 'multiple_choice' && q.tip !== 'true_false' && (
                                           <div className="mt-5 p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 text-base">
-                                            <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> AI Geri Bildirimi:</span>
+                                            <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> {t.quizAiFeedback}</span>
                                             {verdict.feedback}
                                           </div>
                                         )}
@@ -2064,13 +2217,13 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
                               <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: quizConfig.examMode, currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); generateContent('quiz'); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 text-white font-bold text-lg rounded-2xl hover:bg-slate-900 transition-colors shadow-lg">
-                                  <RotateCw size={20} /> Yeni Sınav Oluştur
+                                  <RotateCw size={20} /> {t.quizNewExam}
                                 </button>
                                 <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
-                                  <Settings2 size={20} /> Ayarlara Dön
+                                  <Settings2 size={20} /> {t.quizBackSettings}
                                 </button>
                                 <button onClick={() => {
-                                  if (!window.confirm('Bu sınavı geçmişten silmek istediğine emin misin?')) return;
+                                  if (!window.confirm(t.quizDeleteConfirm)) return;
                                   playSound('select', soundEnabled);
                                   setWeakAnalysis(null);
                                   setContent((prev) => {
@@ -2079,7 +2232,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                   });
                                   setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
                                 }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-rose-200 text-rose-600 font-bold text-lg rounded-2xl hover:bg-rose-50 transition-colors shadow-sm">
-                                  <Trash2 size={20} /> Sınavı Sil
+                                  <Trash2 size={20} /> {t.quizDelete}
                                 </button>
                               </div>
 
@@ -2101,19 +2254,19 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                       }}
                                       className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-indigo-50 border-2 border-indigo-200 text-indigo-700 font-bold text-lg rounded-2xl hover:bg-indigo-100 transition-colors"
                                     >
-                                      <PieChart size={20} /> Zayıf Yönlerimi Analiz Et
+                                      <PieChart size={20} /> {t.quizWeakBtn}
                                     </button>
                                   )}
                                   {loadingAnalysis && (
                                     <div className="flex items-center justify-center gap-3 py-6 text-indigo-600 font-medium">
-                                      <Loader2 size={24} className="animate-spin" /> Analiz yapılıyor...
+                                      <Loader2 size={24} className="animate-spin" /> {t.quizAnalyzing}
                                     </div>
                                   )}
                                   {weakAnalysis && (
                                     <div className="p-6 bg-indigo-50 border-2 border-indigo-200 rounded-2xl animate-in fade-in">
-                                      <h4 className="font-bold text-indigo-900 flex items-center gap-2 mb-3"><PieChart size={20} /> Performans Analizi</h4>
+                                      <h4 className="font-bold text-indigo-900 flex items-center gap-2 mb-3"><PieChart size={20} /> {t.quizPerfAnalysis}</h4>
                                       <p className="text-indigo-800 leading-relaxed">{weakAnalysis}</p>
-                                      <button onClick={() => setWeakAnalysis(null)} className="mt-4 text-sm text-indigo-500 hover:text-indigo-700 underline">Kapat</button>
+                                      <button onClick={() => setWeakAnalysis(null)} className="mt-4 text-sm text-indigo-500 hover:text-indigo-700 underline">{t.quizClose}</button>
                                     </div>
                                   )}
                                 </div>
@@ -2143,16 +2296,16 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       <Volume2 size={48} className="text-violet-500" />
                     </div>
                     <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
-                      {appLang === 'en' ? 'Turn your material into a podcast' : 'Materyalini podcast\'a dönüştür'}
+                      {t.podcastTurnInto}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                      {appLang === 'en' ? 'AI will rewrite your material as a natural spoken script, then read it aloud.' : 'Yapay zeka materyalini doğal bir anlatıma çevirir, sonra sesli okur.'}
+                      {t.podcastSubDesc}
                     </p>
                     <button
                       onClick={generatePodcast}
                       className="inline-flex items-center gap-3 px-10 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-violet-600/20"
                     >
-                      <Volume2 size={22} /> {appLang === 'en' ? 'Generate Podcast' : 'Podcast Oluştur'}
+                      <Volume2 size={22} /> {t.podcastGenerateBtn}
                     </button>
                   </div>
                 )}
@@ -2177,7 +2330,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         onClick={() => { window.speechSynthesis?.cancel(); setPodcastPlaying(false); setPodcastText(''); }}
                         className="ml-auto text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
                       >
-                        {appLang === 'en' ? 'Regenerate' : 'Yeniden Oluştur'}
+                        {t.podcastRegen}
                       </button>
                     </div>
                     {/* Script */}
@@ -2195,7 +2348,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             <div className="animate-in fade-in duration-500 flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
               <div className="flex items-center gap-3 mb-6 px-2 shrink-0">
                 <MessageSquare size={32} className="text-indigo-600" />
-                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Akademik Sohbet</h2>
+                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.chatTitle}</h2>
               </div>
 
               <div className="flex-1 bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
@@ -2220,7 +2373,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                     <div className="flex justify-start">
                       <div className="bg-white border border-slate-200 text-slate-500 rounded-3xl rounded-tl-none p-5 shadow-sm flex items-center gap-3 font-medium">
                         <Loader2 size={20} className="animate-spin text-indigo-500" />
-                        <span>Asistanınız yanıtlıyor...</span>
+                        <span>{t.chatTyping}</span>
                       </div>
                     </div>
                   )}

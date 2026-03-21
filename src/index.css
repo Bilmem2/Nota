@@ -179,3 +179,69 @@
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+
+/* ===== CALLOUT BOXES DARK MODE ===== */
+
+/* [TÜYO] - amber/yellow callout */
+.dark .callout-tuyo {
+  background-color: #1c1003 !important;
+  border-color: #78350f !important;
+  color: #fde68a !important;
+}
+.dark .callout-tuyo strong,
+.dark .callout-tuyo span {
+  color: #fcd34d !important;
+}
+
+/* [DİKKAT] - rose/red callout */
+.dark .callout-dikkat {
+  background-color: #1f0a0a !important;
+  border-color: #991b1b !important;
+  color: #fca5a5 !important;
+}
+.dark .callout-dikkat strong,
+.dark .callout-dikkat span {
+  color: #f87171 !important;
+}
+
+/* [ÖNEMLİ] - indigo/blue callout */
+.dark .callout-onemli {
+  background-color: #1e1b4b !important;
+  border-color: #3730a3 !important;
+  color: #c7d2fe !important;
+}
+.dark .callout-onemli strong,
+.dark .callout-onemli span {
+  color: #a5b4fc !important;
+}
+
+/* ===== TABLE DARK MODE (inside lesson/notes) ===== */
+.dark table {
+  border-color: #334155 !important;
+}
+.dark table thead {
+  background-color: #1e293b !important;
+}
+.dark table thead th {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+.dark table tbody tr {
+  background-color: #0f172a !important;
+}
+.dark table tbody tr:nth-child(even) {
+  background-color: #1e293b !important;
+}
+.dark table tbody td {
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Notes tab amber background override in dark */
+.dark .bg-amber-50 {
+  background-color: #1c1003 !important;
+}
+.dark .border-amber-200\/60 {
+  border-color: #78350f !important;
+}
