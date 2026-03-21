@@ -1219,6 +1219,7 @@ ${savedMaterial.slice(0, 10000)}`;
   // --- AYARLAR MODALİ ---
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
+    const [keyWasReset, setKeyWasReset] = React.useState(false);
     // localModel: mevcut provider için kayıtlı modeli başlangıç değeri olarak al
     const getInitialModel = (prov) => {
       const lists = {
@@ -1329,9 +1330,9 @@ ${savedMaterial.slice(0, 10000)}`;
           <div className="flex gap-3">
             <button
               onClick={() => {
-                if (settingsApiKey.trim()) {
-                  const key = settingsApiKey.trim();
-                  // Kullanıcının seçtiği provider'a güven; prefix sadece net çelişki varsa override et
+                const key = settingsApiKey.trim();
+                if (key) {
+                  // Yeni key girildi
                   const prefixProvider =
                     key.startsWith('gsk_')    ? 'groq'
                     : key.startsWith('sk-or-') ? 'openrouter'
@@ -1339,7 +1340,7 @@ ${savedMaterial.slice(0, 10000)}`;
                     : key.startsWith('xai-')   ? 'xai'
                     : key.startsWith('AIzaSy') ? 'gemini'
                     : key.startsWith('pplx-')  ? 'perplexity'
-                    : null; // sk- gibi belirsiz prefix'ler için null → settingsProvider'a güven
+                    : null;
                   const detectedProvider = prefixProvider || settingsProvider;
                   localStorage.setItem('gemini_api_key', key);
                   localStorage.setItem('ai_provider', detectedProvider);
@@ -1351,12 +1352,16 @@ ${savedMaterial.slice(0, 10000)}`;
                   }
                   setSettingsApiKey('');
                   setShowSettings(false);
+                } else if (keyWasReset) {
+                  // Sıfırlama yapıldı ama yeni key girilmedi — welcome page'e at
+                  setApiKey('');
+                  setShowSettings(false);
                 }
               }}
-              disabled={!settingsApiKey.trim()}
+              disabled={!settingsApiKey.trim() && !keyWasReset}
               className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-lg transition"
             >
-              Kaydet
+              {keyWasReset && !settingsApiKey.trim() ? 'Giriş Ekranına Dön' : 'Kaydet'}
             </button>
             <button
               onClick={() => setShowSettings(false)}
@@ -1371,14 +1376,14 @@ ${savedMaterial.slice(0, 10000)}`;
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  if (window.confirm('API anahtarı ve sağlayıcı ayarları sıfırlanacak. Çalışmalarınız korunacak. Devam edilsin mi?')) {
+                  if (window.confirm('API anahtarı sıfırlanacak. Çalışmalarınız korunacak. Yeni anahtarı girmek için ayarlar açık kalacak.')) {
                     localStorage.removeItem('gemini_api_key');
                     localStorage.removeItem('ai_provider');
                     localStorage.removeItem('openrouter_model');
-                    setApiKey('');
                     setProvider('gemini');
                     setOpenRouterModel(OPENROUTER_MODELS[0].id);
-                    setShowSettings(false);
+                    setSettingsApiKey('');
+                    setKeyWasReset(true);
                   }
                 }}
                 className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-medium py-2 px-3 rounded-lg transition text-sm"
