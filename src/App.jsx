@@ -451,7 +451,17 @@ export default function App() {
     setMaterialText(session.savedMaterial);
     setMaterialChunks(session.materialChunks || []);
     setContent(session.content || { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
-    setChatMessages(session.chatMessages || []);
+    // Eski kayıtlarda isSystem flag'i olmayabilir — sistem mesajlarını normalize et
+    const normalizedMessages = (session.chatMessages || []).map(msg => {
+      if (msg.role === 'model' && !msg.isSystem) {
+        const isSysMsg = Object.values(T).some(lang =>
+          msg.text === lang.chatMaterialLoaded || msg.text === lang.chatNewSession || msg.text === lang.chatWelcome
+        );
+        if (isSysMsg) return { ...msg, isSystem: true };
+      }
+      return msg;
+    });
+    setChatMessages(normalizedMessages);
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
     setActiveTab('lesson');
