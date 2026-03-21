@@ -1205,8 +1205,8 @@ ${savedMaterial.slice(0, 10000)}`;
     const [localModel, setLocalModel] = React.useState(() => getInitialModel(provider));
 
     const providerInfo = {
-      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Gemini 2.5 Pro, 2.0 Flash...' },
-      groq:      { label: 'Groq', placeholder: 'gsk_...', hint: 'Ücretsiz · Çok hızlı' },
+      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: '2.5 Flash ücretsiz · 2.5 Pro ücretli' },
+      groq:      { label: 'Groq', placeholder: 'gsk_...', hint: 'Ücretsiz · Llama 3.3 70B · Çok hızlı' },
       openrouter:{ label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
       openai:    { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-5, GPT-4o, o3...' },
       anthropic: { label: 'Anthropic', placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },

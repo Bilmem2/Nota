@@ -10,10 +10,10 @@ const KIMI_URL = 'https://api.moonshot.cn/v1/chat/completions';
 const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 export const GEMINI_MODELS = [
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro ⭐ (En Güçlü)' },
-  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Hızlı)' },
-  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-  { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Ekonomik)' },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash ⭐ (Ücretsiz, Hızlı)' },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Ücretsiz, Kararlı)' },
+  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Ücretsiz, Eski)' },
 ];
 
 export const OPENROUTER_MODELS = [
