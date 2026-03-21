@@ -334,7 +334,7 @@ export default function App() {
   const handleCheckAnswer = async () => {
     const currentQ = content.quiz[quizState.currentIndex];
     const uAns = quizState.answers[quizState.currentIndex];
-    const langPrompt = quizConfig.language === 'English' ? 'Please evaluate in English.' : 'Lütfen Türkçe değerlendir.';
+    const langPrompt = appLang === 'en' ? 'Please evaluate in English.' : 'Lütfen Türkçe değerlendir.';
 
     if (!uAns || uAns.toString().trim() === '') return;
 
@@ -388,14 +388,14 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
     setQuizState((p) => ({ ...p, isEvaluating: true }));
     const newVerdicts = {};
     const questionsToEvaluate = [];
-    const langPrompt = quizConfig.language === 'English' ? 'Provide feedback in English.' : 'Geri bildirimi Türkçe ver.';
+    const langPrompt = appLang === 'en' ? 'Provide feedback in English.' : 'Geri bildirimi Türkçe ver.';
 
     content.quiz.forEach((q, i) => {
       const uAns = quizState.answers[i];
       const isEmpty = !uAns || uAns.toString().trim() === '';
 
       if (isEmpty) {
-        newVerdicts[i] = { isCorrect: false, feedback: quizConfig.language === 'English' ? 'Left blank.' : 'Boş bırakıldı.' };
+        newVerdicts[i] = { isCorrect: false, feedback: appLang === 'en' ? 'Left blank.' : 'Boş bırakıldı.' };
       } else if (q.tip === 'multiple_choice' || q.tip === 'true_false') {
         const isCorr = isAnswerCorrect(uAns, q.dogruCevap);
         newVerdicts[i] = { isCorrect: isCorr, feedback: null };
@@ -637,7 +637,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     setLoading((prev) => ({ ...prev, [type]: true }));
 
     if (type === 'quiz') {
-      const isEnglish = quizConfig.language === 'English';
+      const isEnglish = appLang === 'en';
       const langReq = isEnglish
         ? `IMPORTANT: The generated questions, options, hints, expected correct answers, and explanations MUST BE ENTIRELY IN ENGLISH.`
         : `Sınav dili tamamen Türkçe olmalıdır.`;
@@ -1568,40 +1568,40 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       <div className="w-24 h-24 bg-rose-50 dark:bg-rose-900/30 rounded-3xl rotate-6 flex items-center justify-center mx-auto mb-8 shadow-inner">
                         <GraduationCap size={48} className="text-rose-500 -rotate-6" />
                       </div>
-                      <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Sınav Ayarlarını Belirle</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-lg">Kendini ne kadar zorlamak istediğini ve soru tipini seç.</p>
+                      <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">{t.quizSettingsTitle}</h3>
+                      <p className="text-slate-500 dark:text-slate-400 text-lg">{t.quizSettingsDesc}</p>
                     </div>
 
                     <div className="space-y-8 bg-slate-50 dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-700 mb-10">
                       {/* Sınav Kapsamı */}
                       <div className="pb-6 border-b border-slate-200 dark:border-slate-700">
                         <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                          <BookOpen size={20} className="text-rose-500" /> Sınav Kapsamı (Müfredat)
+                          <BookOpen size={20} className="text-rose-500" /> {t.quizScope}
                         </label>
                         <div className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button
                               onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, quizScope: 'current' })); }}
-                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'current' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'current' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                             >
-                              <span className="block text-lg mb-1">Sadece Bu Çalışma</span>
-                              <span className="block text-sm font-medium opacity-80">Sadece açık olan nottan soru gelir.</span>
+                              <span className="block text-lg mb-1">{t.quizScopeCurrent}</span>
+                              <span className="block text-sm font-medium opacity-80">{t.quizScopeCurrentDesc}</span>
                             </button>
                             <button
                               onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, quizScope: 'mixed', selectedSessions: p.selectedSessions.length ? p.selectedSessions : [activeSessionId].filter(Boolean) })); }}
-                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'mixed' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'mixed' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                               disabled={sessionsList.length === 0}
                             >
-                              <span className="block text-lg mb-1">Karma Sınav (Vize/Final)</span>
-                              <span className="block text-sm font-medium opacity-80">Arşivdeki farklı haftaları birleştir.</span>
+                              <span className="block text-lg mb-1">{t.quizScopeMixed}</span>
+                              <span className="block text-sm font-medium opacity-80">{t.quizScopeMixedDesc}</span>
                             </button>
                           </div>
 
                           {quizConfig.quizScope === 'mixed' && sessionsList.length > 0 && (
-                            <div className="bg-white border-2 border-rose-200 rounded-xl p-5 max-h-56 overflow-y-auto space-y-2 mt-4 shadow-inner">
-                              <p className="text-sm font-bold text-slate-600 mb-3 border-b border-slate-100 pb-2">Sınava Dahil Edilecek Çalışmaları (Haftaları) Seçin:</p>
+                            <div className="bg-white dark:bg-slate-800 border-2 border-rose-200 dark:border-rose-900 rounded-xl p-5 max-h-56 overflow-y-auto space-y-2 mt-4 shadow-inner">
+                              <p className="text-sm font-bold text-slate-600 dark:text-slate-300 mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">{t.quizSelectTopics}</p>
                               {sessionsList.map((session) => (
-                                <label key={session.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                <label key={session.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
                                   <input
                                     type="checkbox"
                                     className="w-5 h-5 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer"
@@ -1616,8 +1616,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                                     }}
                                   />
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-800 text-sm truncate">{session.title}</p>
-                                    <p className="text-xs text-slate-400 truncate mt-0.5">{new Date(session.lastModified).toLocaleDateString('tr-TR')} tarihinde çalışıldı</p>
+                                    <p className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate">{session.title}</p>
+                                    <p className="text-xs text-slate-400 truncate mt-0.5">{t.studiedOn(new Date(session.lastModified).toLocaleDateString(appLang === 'en' ? 'en-US' : 'tr-TR'))}</p>
                                   </div>
                                 </label>
                               ))}
@@ -1629,43 +1629,22 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       {/* Sınav Tipi */}
                       <div className="pb-6 border-b border-slate-200 dark:border-slate-700">
                         <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                          <Layers size={20} className="text-rose-500" /> Sınav Formatı
+                          <Layers size={20} className="text-rose-500" /> {t.quizFormat}
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <button
                             onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, examMode: 'interactive' })); }}
-                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'interactive' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'interactive' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                           >
-                            <span className="block text-lg mb-1">İnteraktif Mod</span>
-                            <span className="block text-sm font-medium opacity-80">Soruları tek tek çözüp anında öğren.</span>
+                            <span className="block text-lg mb-1">{t.quizInteractive}</span>
+                            <span className="block text-sm font-medium opacity-80">{t.quizInteractiveDesc}</span>
                           </button>
                           <button
                             onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, examMode: 'mock' })); }}
-                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'mock' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'mock' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                           >
-                            <span className="block text-lg mb-1">Gerçek Deneme Sınavı</span>
-                            <span className="block text-sm font-medium opacity-80">Tüm soruları gör, sonunda toplu değerlendiril.</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Sınav Dili */}
-                      <div>
-                        <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                          <Globe size={20} className="text-rose-500" /> Sınav Dili
-                        </label>
-                        <div className="grid grid-cols-2 gap-4">
-                          <button
-                            onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, language: 'Turkish' })); }}
-                            className={`py-3 rounded-xl font-bold text-lg transition-all border-2 ${quizConfig.language === 'Turkish' ? 'bg-rose-100 border-rose-500 text-rose-800' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
-                          >
-                            Türkçe
-                          </button>
-                          <button
-                            onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, language: 'English' })); }}
-                            className={`py-3 rounded-xl font-bold text-lg transition-all border-2 ${quizConfig.language === 'English' ? 'bg-rose-100 border-rose-500 text-rose-800' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
-                          >
-                            English
+                            <span className="block text-lg mb-1">{t.quizMock}</span>
+                            <span className="block text-sm font-medium opacity-80">{t.quizMockDesc}</span>
                           </button>
                         </div>
                       </div>
@@ -1674,14 +1653,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                           <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                            <Settings2 size={20} className="text-rose-500" /> Soru Sayısı
+                            <Settings2 size={20} className="text-rose-500" /> {t.quizCount}
                           </label>
                           <div className="grid grid-cols-5 gap-2">
                             {[5, 10, 15, 20, 30].map((num) => (
                               <button
                                 key={num}
                                 onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, count: num })); }}
-                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                               >
                                 {num}
                               </button>
@@ -1690,14 +1669,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         </div>
                         <div>
                           <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                            <Target size={20} className="text-rose-500" /> Zorluk
+                            <Target size={20} className="text-rose-500" /> {t.quizDifficulty}
                           </label>
                           <div className="grid grid-cols-3 gap-2">
-                            {['Kolay', 'Orta', 'Zor'].map((diff) => (
+                            {t.difficulties.map((diff, idx) => (
                               <button
                                 key={diff}
-                                onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, difficulty: diff })); }}
-                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.difficulty === diff ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'}`}
+                                onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, difficulty: T.tr.difficulties[idx] })); }}
+                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.difficulty === T.tr.difficulties[idx] ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
                               >
                                 {diff}
                               </button>
@@ -1713,8 +1692,8 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                             <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${quizConfig.onlyMultipleChoice ? 'translate-x-3.5' : '-translate-x-3.5'}`}></div>
                           </div>
                           <div>
-                            <span className="block text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 transition-colors">Sadece Test Modu</span>
-                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">Tüm sorular çoktan seçmeli olur.</span>
+                            <span className="block text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 transition-colors">{t.quizOnlyMC}</span>
+                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">{t.quizOnlyMCDesc}</span>
                           </div>
                           <input type="checkbox" className="hidden" disabled={quizConfig.onlyEssay} checked={quizConfig.onlyMultipleChoice} onChange={(e) => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, onlyMultipleChoice: e.target.checked })); }} />
                         </label>
@@ -1725,9 +1704,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           </div>
                           <div>
                             <span className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 transition-colors">
-                              <FileText size={18} /> Sadece Kompozisyon (Essay) Modu
+                              <FileText size={18} /> {t.quizOnlyEssay}
                             </span>
-                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">Sınav sadece uzun açık uçlu analiz sorularından oluşur.</span>
+                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">{t.quizOnlyEssayDesc}</span>
                           </div>
                           <input type="checkbox" className="hidden" disabled={quizConfig.onlyMultipleChoice} checked={quizConfig.onlyEssay} onChange={(e) => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, onlyEssay: e.target.checked })); }} />
                         </label>
@@ -1738,9 +1717,9 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           </div>
                           <div>
                             <span className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">
-                              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />} Ses Efektleri
+                              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />} {t.soundEffects}
                             </span>
-                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">Geri bildirim seslerini açar veya kapatır.</span>
+                            <span className="block text-sm text-slate-500 dark:text-slate-400 font-medium">{t.soundEffectsDesc}</span>
                           </div>
                           <input type="checkbox" className="hidden" checked={soundEnabled} onChange={(e) => { setSoundEnabled(e.target.checked); if (e.target.checked) playSound('select', true); }} />
                         </label>
@@ -1752,7 +1731,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       disabled={quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length === 0}
                       className="w-full bg-rose-600 hover:bg-rose-700 text-white py-5 rounded-2xl font-bold text-xl shadow-xl shadow-rose-600/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length === 0 ? 'Lütfen Kapsam İçin Konu Seçin' : 'Sınavı Başlat'}
+                      {quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length === 0 ? t.selectTopicsFirst : t.startQuiz}
                     </button>
                   </div>
 
@@ -1760,7 +1739,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                   <div className="flex flex-col items-center justify-center py-32 text-rose-600">
                     <Loader2 size={56} className="animate-spin mb-6" />
                     <p className="text-xl font-bold animate-pulse text-center">
-                      {quizConfig.count} {quizConfig.language === 'English' ? 'English' : 'Türkçe'} soru hazırlanıyor...
+                      {t.quizGenerating(quizConfig.count)}
                     </p>
                   </div>
                 ) : Array.isArray(content.quiz) && (
@@ -1770,14 +1749,14 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         {quizState.activeMode === 'interactive' && (
                           <>
                             <div className="flex items-center justify-between text-base font-bold text-slate-500 mb-4">
-                              <span className="bg-slate-100 px-4 py-1.5 rounded-lg text-slate-700">Soru {quizState.currentIndex + 1} / {content.quiz.length}</span>
+                              <span className="bg-slate-100 dark:bg-slate-700 px-4 py-1.5 rounded-lg text-slate-700 dark:text-slate-200">{t.questionLabel(quizState.currentIndex + 1, content.quiz.length)}</span>
                               <div className="flex items-center gap-3">
-                                <span className="text-rose-600">{Math.round((quizState.currentIndex / content.quiz.length) * 100)}% Tamamlandı</span>
+                                <span className="text-rose-600">{Math.round((quizState.currentIndex / content.quiz.length) * 100)}% {t.completed}</span>
                                 <button
-                                  onClick={() => { if (window.confirm('Sınavı iptal etmek istediğine emin misin? İlerleme kaydedilmeyecek.')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
+                                  onClick={() => { if (window.confirm(appLang === 'en' ? 'Cancel the quiz? Progress will not be saved.' : 'Sınavı iptal etmek istediğine emin misin? İlerleme kaydedilmeyecek.')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
                                   className="text-xs text-slate-400 hover:text-rose-500 border border-slate-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition-colors font-medium"
                                 >
-                                  İptal
+                                  {t.cancel}
                                 </button>
                               </div>
                             </div>
