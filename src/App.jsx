@@ -58,6 +58,14 @@ const T = {
     generate: 'Oluştur', podcast: 'Podcast', podcastPlay: 'Dinle', podcastStop: 'Durdur',
     podcastGenerating: 'Podcast hazırlanıyor...', podcastReady: 'Podcast hazır, dinlemek için ▶ bas.',
     chatPlaceholder: 'Konuyla ilgili kafanıza takılanı sorun...',
+    chatWelcome: 'Ben senin yapay öğretmeninim. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.',
+    chatMaterialLoaded: 'Yeni materyal başarıyla sisteme aktarıldı. Hazırsan çalışmaya başlayalım.',
+    chatNewSession: 'Yeni çalışmaya hoş geldin! Sol menüden materyal yükleyerek başlayabilirsin.',
+    chatSend: 'Gönder',
+    chatDisclaimer: 'Bu yanıtlar yapay zeka tarafından üretilmektedir, daima ana kaynağınızı teyit edin.',
+    mockSubmit: 'Gönder ve Değerlendir',
+    aiEvaluating: 'AI Değerlendiriyor...',
+    pdfLoading: "Yapay Öğretmen PDF'i inceliyor, lütfen bekleyin...",
     author: '© Can Sevilmiş', version: 'Yapay Öğretmen v1.0',
     // Quiz settings
     quizSettingsTitle: 'Sınav Ayarlarını Belirle',
@@ -90,6 +98,14 @@ const T = {
     generate: 'Generate', podcast: 'Podcast', podcastPlay: 'Listen', podcastStop: 'Stop',
     podcastGenerating: 'Preparing podcast...', podcastReady: 'Podcast ready — press ▶ to listen.',
     chatPlaceholder: 'Ask anything about the material...',
+    chatWelcome: 'I am your AI teacher. Feel free to ask me anything about the material you uploaded.',
+    chatMaterialLoaded: 'New material loaded successfully. Ready to start whenever you are.',
+    chatNewSession: 'Welcome to your new study session! Upload material from the left menu to get started.',
+    chatSend: 'Send',
+    chatDisclaimer: 'These responses are AI-generated. Always verify with your primary source.',
+    mockSubmit: 'Submit & Evaluate',
+    aiEvaluating: 'AI Evaluating...',
+    pdfLoading: "AI Teacher is reading the PDF, please wait...",
     author: '© Can Sevilmiş', version: 'AI Teacher v1.0',
     // Quiz settings
     quizSettingsTitle: 'Configure Your Quiz',
@@ -189,7 +205,7 @@ export default function App() {
   });
 
   const [chatMessages, setChatMessages] = useState([
-    { role: 'model', text: 'Ben senin yapay öğretmeninim. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.' },
+    { role: 'model', text: T[localStorage.getItem('app_lang') || 'tr'].chatWelcome },
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
 
@@ -256,7 +272,7 @@ export default function App() {
     setSavedMaterial('');
     setMaterialChunks([]);
     setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
-    setChatMessages([{ role: 'model', text: 'Yeni çalışmaya hoş geldin! Sol menüden materyal yükleyerek başlayabilirsin.' }]);
+    setChatMessages([{ role: 'model', text: t.chatNewSession }]);
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
     setActiveTab('material');
@@ -568,7 +584,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
 
     if (chatMessages.length <= 1) {
-      setChatMessages([{ role: 'model', text: 'Yeni materyal başarıyla sisteme aktarıldı. Hazırsan çalışmaya başlayalım.' }]);
+      setChatMessages([{ role: 'model', text: t.chatMaterialLoaded }]);
     }
     setActiveTab('lesson');
   };
@@ -592,7 +608,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       reader.readAsText(file);
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       setIsExtracting(true);
-      setMaterialText('Yapay Öğretmen PDF\'i inceliyor, lütfen bekleyin...');
+      setMaterialText(t.pdfLoading);
 
       const reader = new FileReader();
       reader.onload = async (event) => {
@@ -1953,7 +1969,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
                             <div className="mt-12 text-center border-t-2 border-slate-200 pt-10">
                               <button onClick={handleMockExamSubmit} disabled={quizState.isEvaluating} className="inline-flex items-center justify-center gap-3 px-12 py-5 bg-rose-600 text-white font-bold text-xl rounded-2xl hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-rose-600/20 w-full sm:w-auto">
-                                {quizState.isEvaluating ? <><Loader2 size={24} className="animate-spin" /> AI Değerlendiriyor...</> : <>Gönder ve Değerlendir <CheckCircle2 size={24} /></>}
+                                {quizState.isEvaluating ? <><Loader2 size={24} className="animate-spin" /> {t.aiEvaluating}</> : <>{t.mockSubmit} <CheckCircle2 size={24} /></>}
                               </button>
                             </div>
                           </div>
@@ -2222,7 +2238,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           handleSendMessage(e);
                         }
                       }}
-                      placeholder="Konuyla ilgili kafanıza takılanı akademik asistana sorun..."
+                      placeholder={t.chatPlaceholder}
                       className="w-full bg-slate-100 border-none rounded-2xl pl-5 pr-14 py-4 focus:ring-4 focus:ring-indigo-500/20 resize-none min-h-[60px] max-h-[200px] text-lg text-slate-700 font-medium"
                       rows={1}
                     />
@@ -2234,7 +2250,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                       <Send size={20} />
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-3 text-center font-medium">Bu yanıtlar yapay zeka tarafından üretilmektedir, daima ana kaynağınızı teyit edin.</p>
+                  <p className="text-xs text-slate-400 mt-3 text-center font-medium">{t.chatDisclaimer}</p>
                 </form>
               </div>
             </div>
