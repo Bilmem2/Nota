@@ -153,7 +153,7 @@ const T = {
     chatTitle: 'Akademik Sohbet', chatTyping: 'Asistanınız yanıtlıyor...',
     // Podcast
     podcastTurnInto: "Materyalini podcast'a dönüştür",
-    podcastSubDesc: 'Yapay zeka materyalini doğal bir anlatıma çevirir, sonra sesli okur.',
+    podcastSubDesc: 'Yapay zeka materyalini Hoca ve Öğrenci arasında geçen doğal bir diyaloğa çevirir, sonra sesli okur.',
     podcastRegen: 'Yeniden Oluştur',
     // Lesson/Notes/Visual inline strings
     lessonBolum: (n) => `Bölüm ${n}`,
@@ -268,7 +268,7 @@ const T = {
     chatTitle: 'Academic Chat', chatTyping: 'Your assistant is responding...',
     // Podcast
     podcastTurnInto: 'Turn your material into a podcast',
-    podcastSubDesc: 'AI will rewrite your material as a natural spoken script, then read it aloud.',
+    podcastSubDesc: 'AI rewrites your material as a dialogue between a Host and a Student, then reads it aloud.',
     podcastRegen: 'Regenerate',
     // Lesson/Notes/Visual inline strings
     lessonBolum: (n) => `Section ${n}`,
@@ -291,9 +291,10 @@ export default function App() {
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
   const [appLang, setAppLang] = useState(() => localStorage.getItem('app_lang') || 'tr');
-  const [podcastText, setPodcastText] = useState('');
+  const [podcastLines, setPodcastLines] = useState([]); // [{speaker:'Hoca'|'Öğrenci', text:'...'}]
   const [podcastPlaying, setPodcastPlaying] = useState(false);
-  const podcastUtteranceRef = useRef(null);
+  const [podcastActiveIndex, setPodcastActiveIndex] = useState(-1);
+  const podcastCancelRef = useRef(false);
 
   const t = T[appLang];
 
@@ -1000,32 +1001,129 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
   const generatePodcast = async () => {
     if (!savedMaterial) return;
-    setPodcastText('');
+    setPodcastLines([]);
     setPodcastPlaying(false);
+    setPodcastActiveIndex(-1);
+    podcastCancelRef.current = false;
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     setLoading(prev => ({ ...prev, podcast: true }));
     const isEn = appLang === 'en';
-    const prompt = `${isEn ? 'Convert the following academic material into a natural, engaging podcast script. Write it as a single narrator speaking directly to a student. No headers, no bullet points — just flowing spoken language. Keep it educational but conversational.' : 'Aşağıdaki akademik materyali doğal, akıcı bir podcast anlatımına dönüştür. Tek bir anlatıcı öğrenciye doğrudan konuşuyor gibi yaz. Başlık veya madde işareti kullanma — sadece konuşma dili. Eğitici ama sohbet havasında olsun.'}\n\n${savedMaterial.slice(0, 6000)}`;
-    const result = await callGemini(prompt, isEn ? 'You are a friendly academic podcast host.' : 'Sen samimi bir akademik podcast sunucususun.', apiKey, null, false, provider);
-    setPodcastText(result);
+    const hostName = isEn ? 'Host' : 'Hoca';
+    const studentName = isEn ? 'Student' : 'Öğrenci';
+    const prompt = isEn
+      ? `Convert the following academic material into a natural podcast dialogue between two people: "${hostName}" (an enthusiastic academic expert who explains concepts clearly with analogies and examples) and "${studentName}" (a curious student who asks insightful questions and occasionally expresses confusion or surprise). 
+
+Rules:
+- Start with ${hostName} giving a brief intro to the topic
+- ${studentName} asks genuine questions that deepen understanding
+- Use analogies and real-world examples
+- End with ${hostName} summarizing 3 key takeaways
+- Keep each turn concise (2-4 sentences max)
+- Aim for 12-18 exchanges total
+- Output ONLY valid JSON array, no markdown, no explanation:
+[{"speaker":"${hostName}","text":"..."},{"speaker":"${studentName}","text":"..."}]
+
+Material:
+${savedMaterial.slice(0, 6000)}`
+      : `Aşağıdaki akademik materyali iki kişi arasında doğal bir podcast diyaloğuna dönüştür: "${hostName}" (konuyu analoji ve örneklerle açıklayan hevesli bir akademisyen) ve "${studentName}" (meraklı sorular soran, zaman zaman şaşıran veya kafası karışan bir öğrenci).
+
+Kurallar:
+- ${hostName} konuya kısa bir girişle başlasın
+- ${studentName} anlamayı derinleştiren gerçek sorular sorsun
+- Analoji ve günlük hayattan örnekler kullan
+- ${hostName} sonunda 3 önemli çıkarımla bitirsin
+- Her tur kısa olsun (max 2-4 cümle)
+- Toplam 12-18 tur hedefle
+- SADECE geçerli JSON dizisi döndür, markdown veya açıklama ekleme:
+[{"speaker":"${hostName}","text":"..."},{"speaker":"${studentName}","text":"..."}]
+
+Materyal:
+${savedMaterial.slice(0, 6000)}`;
+
+    try {
+      const result = await callGemini(prompt, isEn ? 'You are a podcast script writer. Output ONLY valid JSON.' : 'Sen bir podcast senaristi sin. SADECE geçerli JSON döndür.', apiKey, null, true, provider);
+      const parsed = JSON.parse(result.replace(/```json|```/g, '').trim());
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setPodcastLines(parsed);
+      } else {
+        throw new Error('Invalid format');
+      }
+    } catch (e) {
+      // Fallback: parse manually if JSON failed
+      const lines = [];
+      const raw = await callGemini(
+        `${isEn ? 'Convert to dialogue, each line format: SPEAKER: text' : 'Diyaloğa çevir, her satır formatı: KONUŞMACI: metin'}\n\n${savedMaterial.slice(0, 4000)}`,
+        isEn ? 'You are a podcast host.' : 'Sen bir podcast sunucususun.',
+        apiKey, null, false, provider
+      );
+      raw.split('\n').forEach(line => {
+        const hostMatch = line.match(/^(Hoca|Host):\s*(.+)/i);
+        const studentMatch = line.match(/^(Öğrenci|Student):\s*(.+)/i);
+        if (hostMatch) lines.push({ speaker: isEn ? 'Host' : 'Hoca', text: hostMatch[2] });
+        else if (studentMatch) lines.push({ speaker: isEn ? 'Student' : 'Öğrenci', text: studentMatch[2] });
+      });
+      if (lines.length > 0) setPodcastLines(lines);
+    }
     setLoading(prev => ({ ...prev, podcast: false }));
   };
 
-  const handlePodcastPlay = () => {
-    if (!podcastText || !window.speechSynthesis) return;
+  const getVoices = () => {
+    return new Promise(resolve => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length) { resolve(voices); return; }
+      window.speechSynthesis.onvoiceschanged = () => resolve(window.speechSynthesis.getVoices());
+    });
+  };
+
+  const handlePodcastPlay = async () => {
+    if (!podcastLines.length || !window.speechSynthesis) return;
     if (podcastPlaying) {
+      podcastCancelRef.current = true;
       window.speechSynthesis.cancel();
       setPodcastPlaying(false);
+      setPodcastActiveIndex(-1);
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(podcastText);
-    utterance.lang = appLang === 'en' ? 'en-US' : 'tr-TR';
-    utterance.rate = 0.95;
-    utterance.onend = () => setPodcastPlaying(false);
-    utterance.onerror = () => setPodcastPlaying(false);
-    podcastUtteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+
+    podcastCancelRef.current = false;
     setPodcastPlaying(true);
+    const voices = await getVoices();
+    const lang = appLang === 'en' ? 'en' : 'tr';
+    const hostName = appLang === 'en' ? 'Host' : 'Hoca';
+
+    // Ses seçimi
+    const trVoices = voices.filter(v => v.lang.startsWith(lang));
+    const femaleVoice = trVoices.find(v => /female|woman|zira|samantha|karen|moira|fiona|victoria/i.test(v.name))
+      || trVoices.find((_, i) => i === 1) || trVoices[0] || null;
+    const maleVoice = trVoices.find(v => /male|man|tolga|daniel|alex|fred|jorge/i.test(v.name))
+      || trVoices[0] || null;
+
+    for (let i = 0; i < podcastLines.length; i++) {
+      if (podcastCancelRef.current) break;
+      const line = podcastLines[i];
+      const isHost = line.speaker === hostName;
+
+      await new Promise(resolve => {
+        if (podcastCancelRef.current) { resolve(); return; }
+        setPodcastActiveIndex(i);
+        const utt = new SpeechSynthesisUtterance(line.text);
+        utt.lang = appLang === 'en' ? 'en-US' : 'tr-TR';
+        utt.rate = 0.92;
+        if (isHost) {
+          utt.voice = maleVoice;
+          utt.pitch = 0.9;
+        } else {
+          utt.voice = femaleVoice;
+          utt.pitch = 1.3;
+        }
+        utt.onend = resolve;
+        utt.onerror = resolve;
+        window.speechSynthesis.speak(utt);
+      });
+    }
+
+    setPodcastPlaying(false);
+    setPodcastActiveIndex(-1);
   };
 
   const tabs = [
@@ -2297,7 +2395,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                 <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.podcast}</h2>
               </div>
               <div className="bg-white dark:bg-slate-800 p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
-                {!podcastText && !loading.podcast && (
+                {!podcastLines.length && !loading.podcast && (
                   <div className="text-center py-12">
                     <div className="w-24 h-24 bg-violet-50 dark:bg-violet-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
                       <Volume2 size={48} className="text-violet-500" />
@@ -2322,30 +2420,61 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                     <p className="font-bold text-lg animate-pulse">{t.podcastGenerating}</p>
                   </div>
                 )}
-                {podcastText && !loading.podcast && (
-                  <div>
-                    {/* Player */}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 p-6 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-2xl">
-                      <button
-                        onClick={handlePodcastPlay}
-                        className={`flex items-center gap-3 px-8 py-4 font-bold text-lg rounded-xl transition-all shadow-md ${podcastPlaying ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-violet-600 hover:bg-violet-700 text-white'}`}
-                      >
-                        {podcastPlaying ? <><VolumeX size={22} /> {t.podcastStop}</> : <><Volume2 size={22} /> {t.podcastPlay}</>}
-                      </button>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">{t.podcastReady}</p>
-                      <button
-                        onClick={() => { window.speechSynthesis?.cancel(); setPodcastPlaying(false); setPodcastText(''); }}
-                        className="ml-auto text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
-                      >
-                        {t.podcastRegen}
-                      </button>
+                {podcastLines.length > 0 && !loading.podcast && (() => {
+                  const hostName = appLang === 'en' ? 'Host' : 'Hoca';
+                  return (
+                    <div>
+                      {/* Player bar */}
+                      <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 p-5 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-2xl">
+                        <button
+                          onClick={handlePodcastPlay}
+                          className={`flex items-center gap-3 px-8 py-3.5 font-bold text-base rounded-xl transition-all shadow-md ${podcastPlaying ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-violet-600 hover:bg-violet-700 text-white'}`}
+                        >
+                          {podcastPlaying ? <><VolumeX size={20} /> {t.podcastStop}</> : <><Volume2 size={20} /> {t.podcastPlay}</>}
+                        </button>
+                        <div className="flex-1 text-sm text-slate-500 dark:text-slate-400">
+                          {podcastPlaying && podcastActiveIndex >= 0
+                            ? `${podcastLines[podcastActiveIndex]?.speaker} konuşuyor...`
+                            : t.podcastReady}
+                        </div>
+                        <button
+                          onClick={() => { window.speechSynthesis?.cancel(); setPodcastPlaying(false); setPodcastActiveIndex(-1); setPodcastLines([]); }}
+                          className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
+                        >
+                          {t.podcastRegen}
+                        </button>
+                      </div>
+                      {/* Dialogue */}
+                      <div className="space-y-4">
+                        {podcastLines.map((line, idx) => {
+                          const isHost = line.speaker === hostName;
+                          const isActive = podcastActiveIndex === idx;
+                          return (
+                            <div key={idx} className={`flex gap-3 ${isHost ? '' : 'flex-row-reverse'}`}>
+                              {/* Avatar */}
+                              <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${isHost ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300' : 'bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300'}`}>
+                                {isHost ? '👨‍🏫' : '👩‍🎓'}
+                              </div>
+                              {/* Bubble */}
+                              <div className={`max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-300 ${
+                                isActive
+                                  ? isHost
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900 scale-[1.02]'
+                                    : 'bg-pink-500 text-white shadow-lg shadow-pink-200 dark:shadow-pink-900 scale-[1.02]'
+                                  : isHost
+                                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+                                    : 'bg-pink-50 dark:bg-pink-900/30 text-slate-800 dark:text-slate-200'
+                              }`}>
+                                <span className={`block text-xs font-bold mb-1 ${isActive ? 'opacity-80' : 'opacity-50'}`}>{line.speaker}</span>
+                                {line.text}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    {/* Script */}
-                    <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap text-base bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
-                      {podcastText}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}
