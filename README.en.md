@@ -1,7 +1,5 @@
 <div align="center">
 
-<sub>[🇹🇷 Türkçe](README.md)</sub>
-
 <img src="public/favicon.png" alt="Nota" width="72" />
 
 # Nota
@@ -41,5 +39,5 @@
 ---
 
 <div align="center">
-  <sub>© Can Sevilmiş</sub>
+  <sub>© Can Sevilmiş &nbsp;·&nbsp; <a href="README.md">🇹🇷 Türkçe</a></sub>
 </div>
