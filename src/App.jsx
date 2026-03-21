@@ -111,7 +111,7 @@ export default function App() {
   });
 
   const [chatMessages, setChatMessages] = useState([
-    { role: 'model', text: 'Ben senin akademik asistanınım. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.' },
+    { role: 'model', text: 'Ben senin yapay öğretmeninim. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.' },
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
 
@@ -500,36 +500,41 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       };
       reader.readAsText(file);
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('PDF dosyası çok büyük (5MB sınırı). Lütfen daha küçük bir bölüm yükleyin.');
-        e.target.value = null;
-        return;
-      }
       setIsExtracting(true);
-      setMaterialText('Akademik asistanınız PDF\'i inceliyor, lütfen bekleyin...');
+      setMaterialText('Yapay Öğretmen PDF\'i inceliyor, lütfen bekleyin...');
 
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const base64Data = event.target.result.split(',')[1];
-        const inlineData = { mimeType: 'application/pdf', data: base64Data };
         try {
-          const extractedText = await callGemini(
-            'Lütfen bu PDF dosyasının içindeki tüm okunabilir metni çıkar ve bana sadece düz metin olarak ver. Başka hiçbir açıklama yapma.',
-            'Sen yetenekli bir belge okuma asistanısın.',
-            apiKey,
-            inlineData,
-            false,
-            provider
-          );
-          setMaterialText(extractedText || 'PDF\'den metin okunamadı. Lütfen metin içeren bir PDF yükleyin.');
-          if (!studyTitle) setStudyTitle(file.name.replace('.pdf', ''));
+          const pdfjsLib = await import('pdfjs-dist');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+          const typedArray = new Uint8Array(event.target.result);
+          const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+
+          let fullText = '';
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item) => item.str).join(' ');
+            fullText += pageText + '\n\n';
+          }
+
+          const trimmed = fullText.trim();
+          if (!trimmed) {
+            setMaterialText('PDF\'den metin okunamadı. Taranmış (görüntü tabanlı) PDF\'ler desteklenmiyor, lütfen metin içeren bir PDF yükleyin.');
+          } else {
+            setMaterialText(trimmed);
+            if (!studyTitle) setStudyTitle(file.name.replace('.pdf', ''));
+          }
         } catch (err) {
-          setMaterialText('PDF okunurken bir hata oluştu.');
+          console.error('PDF parse error:', err);
+          setMaterialText('PDF okunurken bir hata oluştu. Lütfen farklı bir dosya deneyin.');
         } finally {
           setIsExtracting(false);
         }
       };
-      reader.readAsDataURL(file);
+      reader.readAsArrayBuffer(file);
     } else {
       alert('Lütfen .txt veya .pdf formatında bir dosya yükleyin.');
     }
@@ -863,7 +868,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white p-4 shadow-md z-20 shrink-0">
         <div className="flex items-center gap-2 font-bold text-xl">
           <GraduationCap size={28} />
-          <span>Akademik Asistan</span>
+          <span>Yapay Öğretmen</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={toggleFullScreen} className="p-1 rounded-md hover:bg-indigo-700 transition-colors">
@@ -888,7 +893,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             <div className="bg-indigo-500 text-white p-2 rounded-lg">
               <GraduationCap size={28} />
             </div>
-            <h1 className="text-xl font-extrabold tracking-wide">Akademik Asistan</h1>
+            <h1 className="text-xl font-extrabold tracking-wide">Yapay Öğretmen</h1>
           </div>
         </div>
 

@@ -8,7 +8,7 @@ export function handlePrint(elementId, title) {
     <html lang="tr">
       <head>
         <meta charset="UTF-8">
-        <title>${title} - Akademik Asistan</title>
+        <title>${title} - Yapay Öğretmen</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           @media print {
