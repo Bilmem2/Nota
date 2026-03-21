@@ -43,30 +43,33 @@ export const ANTHROPIC_MODELS = [
 
 export const XAI_MODELS = [
   { id: 'grok-4', label: 'Grok 4 ⭐ (En Güçlü)' },
+  { id: 'grok-4-fast', label: 'Grok 4 Fast (Hızlı)' },
   { id: 'grok-3', label: 'Grok 3' },
-  { id: 'grok-3-mini', label: 'Grok 3 Mini (Hızlı)' },
+  { id: 'grok-3-fast', label: 'Grok 3 Fast (Ekonomik)' },
 ];
 
 export const PERPLEXITY_MODELS = [
   { id: 'sonar-pro', label: 'Sonar Pro ⭐ (En Güçlü)' },
   { id: 'sonar', label: 'Sonar (Dengeli)' },
-  { id: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' },
+  { id: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro (CoT)' },
 ];
 
 export const ZAI_MODELS = [
-  { id: 'glm-4-plus', label: 'GLM-4 Plus ⭐ (En Güçlü)' },
+  { id: 'glm-4.7', label: 'GLM-4.7 ⭐ (En Güçlü, 200K)' },
+  { id: 'glm-4.6', label: 'GLM-4.6 (Dengeli)' },
   { id: 'glm-4-flash', label: 'GLM-4 Flash (Hızlı)' },
 ];
 
 export const KIMI_MODELS = [
-  { id: 'moonshot-v1-128k', label: 'Kimi v1 128K ⭐' },
-  { id: 'moonshot-v1-32k', label: 'Kimi v1 32K' },
-  { id: 'moonshot-v1-8k', label: 'Kimi v1 8K (Hızlı)' },
+  { id: 'kimi-k2', label: 'Kimi K2 ⭐ (En Güçlü, 128K)' },
+  { id: 'kimi-k2-thinking', label: 'Kimi K2 Thinking (Reasoning)' },
+  { id: 'moonshot-v1-128k', label: 'Moonshot v1 128K (Eski)' },
 ];
 
 export const QWEN_MODELS = [
-  { id: 'qwen-max', label: 'Qwen Max ⭐ (En Güçlü)' },
-  { id: 'qwen-plus', label: 'Qwen Plus (Dengeli)' },
+  { id: 'qwen3-max', label: 'Qwen3 Max ⭐ (En Güçlü)' },
+  { id: 'qwen-max-latest', label: 'Qwen Max Latest (Güncel)' },
+  { id: 'qwen-plus-latest', label: 'Qwen Plus Latest (Dengeli)' },
   { id: 'qwen-turbo', label: 'Qwen Turbo (Hızlı)' },
 ];
 
