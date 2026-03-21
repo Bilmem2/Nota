@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS } from './utils/gemini';
+import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -905,7 +905,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
-      const isGroq = apiKey.startsWith('gsk_') || apiKey.startsWith('sk-or-') || apiKey.startsWith('sk-') || provider === 'groq' || provider === 'openrouter' || provider === 'openai';
+      const isGroq = apiKey.startsWith('gsk_') || apiKey.startsWith('sk-or-') || apiKey.startsWith('sk-') || provider === 'groq' || provider === 'openrouter' || provider === 'openai' || provider === 'perplexity' || provider === 'zai' || provider === 'kimi' || provider === 'qwen';
 
       // Groq için önceki chunk context'i
       const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
@@ -1193,22 +1193,40 @@ ${savedMaterial.slice(0, 10000)}`;
   // --- AYARLAR MODALİ ---
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
-    const [localModel, setLocalModel] = React.useState(openRouterModel);
+    // localModel: mevcut provider için kayıtlı modeli başlangıç değeri olarak al
+    const getInitialModel = (prov) => {
+      const lists = {
+        gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
+        anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
+        zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS,
+      };
+      return lists[prov] ? (openRouterModel || lists[prov][0].id) : '';
+    };
+    const [localModel, setLocalModel] = React.useState(() => getInitialModel(provider));
 
     const providerInfo = {
-      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Ücretsiz · 15 istek/dk' },
+      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Gemini 2.5 Pro, 2.0 Flash...' },
       groq:      { label: 'Groq', placeholder: 'gsk_...', hint: 'Ücretsiz · Çok hızlı' },
       openrouter:{ label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
       openai:    { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-5, GPT-4o, o3...' },
       anthropic: { label: 'Anthropic', placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
       xai:       { label: 'xAI (Grok)', placeholder: 'xai-...', hint: 'Grok 4, Grok 3...' },
+      perplexity:{ label: 'Perplexity', placeholder: 'pplx-...', hint: 'Sonar Pro, web aramalı' },
+      zai:       { label: 'z.ai (GLM)', placeholder: 'Bearer ...', hint: 'GLM-4 Plus, Flash' },
+      kimi:      { label: 'Kimi AI', placeholder: 'sk-...', hint: 'Moonshot 128K, 32K...' },
+      qwen:      { label: 'Qwen', placeholder: 'sk-...', hint: 'Qwen Max, Plus, Turbo' },
     };
 
     const modelLists = {
+      gemini: GEMINI_MODELS,
       openrouter: OPENROUTER_MODELS,
       openai: OPENAI_MODELS,
       anthropic: ANTHROPIC_MODELS,
       xai: XAI_MODELS,
+      perplexity: PERPLEXITY_MODELS,
+      zai: ZAI_MODELS,
+      kimi: KIMI_MODELS,
+      qwen: QWEN_MODELS,
     };
 
     const handleProviderChange = (key) => {
@@ -1424,7 +1442,7 @@ ${savedMaterial.slice(0, 10000)}`;
           >
             <Key size={18} />
             <span className="flex-1 text-left">
-              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : provider === 'openai' ? 'OpenAI' : provider === 'anthropic' ? 'Anthropic' : provider === 'xai' ? 'xAI Grok' : 'Gemini'}
+              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : provider === 'openai' ? 'OpenAI' : provider === 'anthropic' ? 'Anthropic' : provider === 'xai' ? 'xAI Grok' : provider === 'perplexity' ? 'Perplexity' : provider === 'zai' ? 'z.ai GLM' : provider === 'kimi' ? 'Kimi AI' : provider === 'qwen' ? 'Qwen' : 'Gemini'}
             </span>
             {apiKey && (
               <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">

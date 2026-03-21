@@ -1,10 +1,20 @@
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const XAI_URL = 'https://api.x.ai/v1/chat/completions';
+const PERPLEXITY_URL = 'https://api.perplexity.ai/chat/completions';
+const ZAI_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+const KIMI_URL = 'https://api.moonshot.cn/v1/chat/completions';
+const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+
+export const GEMINI_MODELS = [
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro ⭐ (En Güçlü)' },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Hızlı)' },
+  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+  { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Ekonomik)' },
+];
 
 export const OPENROUTER_MODELS = [
   { id: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (Free) ⭐', free: true },
@@ -18,7 +28,7 @@ export const OPENROUTER_MODELS = [
 ];
 
 export const OPENAI_MODELS = [
-  { id: 'gpt-5', label: 'GPT-5 ⭐' },
+  { id: 'gpt-5', label: 'GPT-5 ⭐ (En Güçlü)' },
   { id: 'gpt-4o', label: 'GPT-4o' },
   { id: 'gpt-4o-mini', label: 'GPT-4o Mini (Ekonomik)' },
   { id: 'o3', label: 'o3 (Reasoning)' },
@@ -37,8 +47,32 @@ export const XAI_MODELS = [
   { id: 'grok-3-mini', label: 'Grok 3 Mini (Hızlı)' },
 ];
 
-async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson) {
-  const url = `${GEMINI_URL}?key=${apiKey}`;
+export const PERPLEXITY_MODELS = [
+  { id: 'sonar-pro', label: 'Sonar Pro ⭐ (En Güçlü)' },
+  { id: 'sonar', label: 'Sonar (Dengeli)' },
+  { id: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' },
+];
+
+export const ZAI_MODELS = [
+  { id: 'glm-4-plus', label: 'GLM-4 Plus ⭐ (En Güçlü)' },
+  { id: 'glm-4-flash', label: 'GLM-4 Flash (Hızlı)' },
+];
+
+export const KIMI_MODELS = [
+  { id: 'moonshot-v1-128k', label: 'Kimi v1 128K ⭐' },
+  { id: 'moonshot-v1-32k', label: 'Kimi v1 32K' },
+  { id: 'moonshot-v1-8k', label: 'Kimi v1 8K (Hızlı)' },
+];
+
+export const QWEN_MODELS = [
+  { id: 'qwen-max', label: 'Qwen Max ⭐ (En Güçlü)' },
+  { id: 'qwen-plus', label: 'Qwen Plus (Dengeli)' },
+  { id: 'qwen-turbo', label: 'Qwen Turbo (Hızlı)' },
+];
+
+async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
+  const geminiModel = model || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
   const parts = [{ text: prompt }];
   if (inlineData) parts.push({ inlineData });
 
@@ -189,9 +223,105 @@ async function callXAIAPI(prompt, systemInstruction, apiKey, model) {
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
 }
 
+async function callPerplexityAPI(prompt, systemInstruction, apiKey, model) {
+  const payload = {
+    model: model || 'sonar-pro',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: 8192,
+  };
+
+  const response = await fetch(PERPLEXITY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`Perplexity HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
+async function callZAIAPI(prompt, systemInstruction, apiKey, model) {
+  const payload = {
+    model: model || 'glm-4-plus',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: 8192,
+  };
+
+  const response = await fetch(ZAI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`z.ai HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
+async function callKimiAPI(prompt, systemInstruction, apiKey, model) {
+  const payload = {
+    model: model || 'moonshot-v1-128k',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: 8192,
+  };
+
+  const response = await fetch(KIMI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`Kimi HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
+async function callQwenAPI(prompt, systemInstruction, apiKey, model) {
+  const payload = {
+    model: model || 'qwen-max',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: 8192,
+  };
+
+  const response = await fetch(QWEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`Qwen HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
 /**
  * Unified AI API caller.
- * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai'
+ * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
   // Auto-detect provider from key prefix
@@ -223,8 +353,20 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
         case 'xai':
           result = await callXAIAPI(prompt, systemInstruction, apiKey, selectedModel);
           break;
+        case 'perplexity':
+          result = await callPerplexityAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'zai':
+          result = await callZAIAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'kimi':
+          result = await callKimiAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'qwen':
+          result = await callQwenAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
         default:
-          result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson);
+          result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, selectedModel);
       }
 
       if (result.rateLimited) {
