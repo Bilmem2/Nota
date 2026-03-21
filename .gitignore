@@ -24,5 +24,6 @@ npm-debug.log*
 # Kiro spec files (internal)
 .kiro/
 
-# Source archive
+# Source archive and sample files
 *.txt
+*.akademik
