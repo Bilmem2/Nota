@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 
-const isEnglish = navigator.language?.toLowerCase().startsWith('en');
+// Türkiye timezone'u veya Türkçe tarayıcı dili → Türkçe, diğer her şey → İngilizce
+const isTurkish = (() => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === 'Europe/Istanbul') return true;
+  } catch (_) {}
+  return navigator.language?.toLowerCase().startsWith('tr');
+})();
 
 const I18N = {
   tr: {
@@ -96,7 +103,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
   const [error, setError] = useState('');
   const [showGuide, setShowGuide] = useState(false);
 
-  const lang = isEnglish ? 'en' : 'tr';
+  const lang = isTurkish ? 'tr' : 'en';
   const t = I18N[lang];
   const meta = PROVIDER_META[provider];
   const guide = t.guides[provider];

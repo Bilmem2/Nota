@@ -293,7 +293,15 @@ export default function App() {
   const [weakAnalysis, setWeakAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
-  const [appLang, setAppLang] = useState(() => localStorage.getItem('app_lang') || 'tr');
+  const [appLang, setAppLang] = useState(() => {
+    const saved = localStorage.getItem('app_lang');
+    if (saved) return saved;
+    // İlk ziyarette: Türkiye timezone'u veya Türkçe tarayıcı → TR, diğerleri → EN
+    try {
+      if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul') return 'tr';
+    } catch (_) {}
+    return navigator.language?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+  });
   const [mindMapData, setMindMapData] = useState(null);
 
   const t = T[appLang];
@@ -354,9 +362,16 @@ export default function App() {
     finished: false,
   });
 
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'model', text: T[localStorage.getItem('app_lang') || 'tr'].chatWelcome, isSystem: true },
-  ]);
+  const [chatMessages, setChatMessages] = useState(() => {
+    const saved = localStorage.getItem('app_lang');
+    const defaultLang = saved || (() => {
+      try {
+        if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul') return 'tr';
+      } catch (_) {}
+      return navigator.language?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    })();
+    return [{ role: 'model', text: T[defaultLang].chatWelcome, isSystem: true }];
+  });
   const [currentMessage, setCurrentMessage] = useState('');
 
   const chatEndRef = useRef(null);
