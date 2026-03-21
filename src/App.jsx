@@ -296,11 +296,11 @@ export default function App() {
   const [appLang, setAppLang] = useState(() => {
     const saved = localStorage.getItem('app_lang');
     if (saved) return saved;
-    // İlk ziyarette: Türkiye timezone'u veya Türkçe tarayıcı → TR, diğerleri → EN
+    // İlk ziyarette: yalnızca Türkiye timezone'u → TR, diğerleri → EN
     try {
       if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul') return 'tr';
     } catch (_) {}
-    return navigator.language?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    return 'en';
   });
   const [mindMapData, setMindMapData] = useState(null);
 
@@ -368,7 +368,7 @@ export default function App() {
       try {
         if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul') return 'tr';
       } catch (_) {}
-      return navigator.language?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+      return 'en';
     })();
     return [{ role: 'model', text: T[defaultLang].chatWelcome, isSystem: true }];
   });

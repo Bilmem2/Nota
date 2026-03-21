@@ -1,16 +1,65 @@
 import React, { useState } from 'react';
 
-// Türkiye timezone'u veya Türkçe tarayıcı dili → Türkçe, diğer her şey → İngilizce
+// Yalnızca Türkiye timezone'u (Europe/Istanbul) → Türkçe, diğer her şey → İngilizce
 const isTurkish = (() => {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz === 'Europe/Istanbul') return true;
-  } catch (_) {}
-  return navigator.language?.toLowerCase().startsWith('tr');
+    return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul';
+  } catch (_) {
+    return false;
+  }
 })();
+
+const PROVIDERS = [
+  // Ücretsiz
+  { id: 'gemini',     label: 'Google Gemini', placeholder: 'AIzaSy...', free: true,
+    hintTr: '2.5 Flash ücretsiz · 1M token',
+    hintEn: '2.5 Flash free · 1M token',
+    link: 'https://aistudio.google.com/app/apikey' },
+  { id: 'groq',       label: 'Groq',          placeholder: 'gsk_...',   free: true,
+    hintTr: 'Ücretsiz · Llama 3.3 70B · Çok hızlı',
+    hintEn: 'Free · Llama 3.3 70B · Very fast',
+    link: 'https://console.groq.com/keys' },
+  { id: 'openrouter', label: 'OpenRouter',    placeholder: 'sk-or-...', free: true,
+    hintTr: 'Ücretsiz modeller var · Çok seçenek',
+    hintEn: 'Free models available · Many options',
+    link: 'https://openrouter.ai/keys' },
+  // Ücretli
+  { id: 'openai',     label: 'OpenAI',        placeholder: 'sk-...',    free: false,
+    hintTr: 'GPT-5, GPT-4o, o3...',
+    hintEn: 'GPT-5, GPT-4o, o3...',
+    link: 'https://platform.openai.com/api-keys' },
+  { id: 'anthropic',  label: 'Anthropic',     placeholder: 'sk-ant-...', free: false,
+    hintTr: 'Claude Opus / Sonnet 4.6',
+    hintEn: 'Claude Opus / Sonnet 4.6',
+    link: 'https://console.anthropic.com/' },
+  { id: 'xai',        label: 'xAI (Grok)',    placeholder: 'xai-...',   free: false,
+    hintTr: 'Grok 4, Grok 4 Fast',
+    hintEn: 'Grok 4, Grok 4 Fast',
+    link: 'https://console.x.ai/' },
+  { id: 'perplexity', label: 'Perplexity',    placeholder: 'pplx-...', free: false,
+    hintTr: 'Sonar Pro · Web aramalı',
+    hintEn: 'Sonar Pro · Web search',
+    link: 'https://www.perplexity.ai/settings/api' },
+  { id: 'zai',        label: 'z.ai (GLM)',    placeholder: 'Bearer ...', free: false,
+    hintTr: 'GLM-4.7 · 200K token',
+    hintEn: 'GLM-4.7 · 200K token',
+    link: 'https://open.bigmodel.cn/' },
+  { id: 'kimi',       label: 'Kimi AI',       placeholder: 'sk-...',    free: false,
+    hintTr: 'Kimi K2 · 128K token',
+    hintEn: 'Kimi K2 · 128K token',
+    link: 'https://platform.moonshot.cn/' },
+  { id: 'qwen',       label: 'Qwen',          placeholder: 'sk-...',    free: false,
+    hintTr: 'Qwen3 Max · 1M token',
+    hintEn: 'Qwen3 Max · 1M token',
+    link: 'https://dashscope.aliyuncs.com/' },
+];
+
+const FREE_PROVIDERS  = PROVIDERS.filter(p => p.free);
+const PAID_PROVIDERS  = PROVIDERS.filter(p => !p.free);
 
 const I18N = {
   tr: {
+    tagline: 'Sınava kadar uyumaz.',
     desc: 'PDF veya ders notunu yükle — AI senin için ders anlatsın, rehber çıkarsın, sınav hazırlasın.',
     features: [
       { icon: '📖', label: 'Ders Anlatımı' },
@@ -20,37 +69,18 @@ const I18N = {
       { icon: '💬', label: 'AI Sohbet' },
       { icon: '🗺️', label: 'Kavram Haritası' },
     ],
-    providerLabel: 'AI Sağlayıcısı',
+    freeLabel: '✅ Ücretsiz Sağlayıcılar',
+    paidLabel: '💳 Ücretli Sağlayıcılar',
     apiKeyLabel: (p) => `${p} API Anahtarı`,
     errorEmpty: 'Lütfen bir API anahtarı girin.',
     startBtn: 'Başla →',
     howToGet: 'API anahtarı nasıl alınır?',
+    getKeyLink: 'Ücretsiz anahtar al →',
     securityNote: '🔒 Anahtarınız yalnızca tarayıcınızda saklanır, hiçbir sunucuya gönderilmez.',
     footer: '© Can Sevilmiş · Nota v1.0',
-    guides: {
-      gemini: {
-        hint: 'Dakikada 15 istek · Ücretsiz',
-        linkText: "Google AI Studio'dan ücretsiz anahtar al",
-        steps: [
-          { text: 'Yukarıdaki bağlantıya tıkla', sub: 'Google hesabınla giriş yap' },
-          { text: '"Create API Key" butonuna bas', sub: 'Herhangi bir proje seçebilirsin' },
-          { text: 'Oluşan anahtarı kopyala', sub: '"AIzaSy..." ile başlar' },
-          { text: "Buraya yapıştır ve Başla'ya bas", sub: 'Anahtar sadece tarayıcında saklanır' },
-        ],
-      },
-      groq: {
-        hint: 'Dakikada 30 istek · Ücretsiz · Çok hızlı',
-        linkText: "Groq Console'dan ücretsiz anahtar al",
-        steps: [
-          { text: 'Yukarıdaki bağlantıya tıkla', sub: 'Ücretsiz hesap oluştur veya giriş yap' },
-          { text: '"Create API Key" butonuna bas', sub: 'İstediğin bir isim ver' },
-          { text: 'Oluşan anahtarı kopyala', sub: '"gsk_..." ile başlar' },
-          { text: "Buraya yapıştır ve Başla'ya bas", sub: 'Anahtar sadece tarayıcında saklanır' },
-        ],
-      },
-    },
   },
   en: {
+    tagline: "Doesn't sleep until the exam.",
     desc: 'Upload a PDF or lecture note — AI explains it, builds a study guide, and prepares your exam.',
     features: [
       { icon: '📖', label: 'Lesson' },
@@ -60,41 +90,16 @@ const I18N = {
       { icon: '💬', label: 'AI Chat' },
       { icon: '🗺️', label: 'Concept Map' },
     ],
-    providerLabel: 'AI Provider',
+    freeLabel: '✅ Free Providers',
+    paidLabel: '💳 Paid Providers',
     apiKeyLabel: (p) => `${p} API Key`,
     errorEmpty: 'Please enter an API key.',
     startBtn: 'Get Started →',
     howToGet: 'How do I get an API key?',
+    getKeyLink: 'Get a free key →',
     securityNote: '🔒 Your key is stored only in your browser. It is never sent to any server.',
     footer: '© Can Sevilmiş · Nota v1.0',
-    guides: {
-      gemini: {
-        hint: '15 req/min · Free',
-        linkText: 'Get a free key from Google AI Studio',
-        steps: [
-          { text: 'Click the link above', sub: 'Sign in with your Google account' },
-          { text: 'Click "Create API Key"', sub: 'You can select any project' },
-          { text: 'Copy the generated key', sub: 'It starts with "AIzaSy..."' },
-          { text: 'Paste it here and click Get Started', sub: 'Key is stored only in your browser' },
-        ],
-      },
-      groq: {
-        hint: '30 req/min · Free · Very fast',
-        linkText: 'Get a free key from Groq Console',
-        steps: [
-          { text: 'Click the link above', sub: 'Create a free account or sign in' },
-          { text: 'Click "Create API Key"', sub: 'Give it any name you like' },
-          { text: 'Copy the generated key', sub: 'It starts with "gsk_..."' },
-          { text: 'Paste it here and click Get Started', sub: 'Key is stored only in your browser' },
-        ],
-      },
-    },
   },
-};
-
-const PROVIDER_META = {
-  gemini: { label: 'Google Gemini', placeholder: 'AIzaSy...', link: 'https://aistudio.google.com/app/apikey' },
-  groq:   { label: 'Groq',          placeholder: 'gsk_...',   link: 'https://console.groq.com/keys' },
 };
 
 export default function OnboardingScreen({ onApiKeySubmit }) {
@@ -105,8 +110,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
 
   const lang = isTurkish ? 'tr' : 'en';
   const t = I18N[lang];
-  const meta = PROVIDER_META[provider];
-  const guide = t.guides[provider];
+  const meta = PROVIDERS.find(p => p.id === provider);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -115,6 +119,29 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
     onApiKeySubmit(apiKey.trim(), provider);
   };
 
+  const selectProvider = (id) => {
+    setProvider(id);
+    setApiKey('');
+    setError('');
+    setShowGuide(false);
+  };
+
+  const ProviderButton = ({ p }) => (
+    <button
+      key={p.id}
+      type="button"
+      onClick={() => selectProvider(p.id)}
+      className={`p-3 rounded-xl border-2 text-left transition-all ${
+        provider === p.id
+          ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-900/30'
+          : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-700/40'
+      }`}
+    >
+      <div className="font-bold text-sm">{p.label}</div>
+      <div className="text-xs mt-0.5 opacity-60">{lang === 'tr' ? p.hintTr : p.hintEn}</div>
+    </button>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -122,14 +149,15 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-lg">
         {/* Logo + Başlık */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-5">
             <img src="/Nota/favicon.png" alt="Nota" className="w-20 h-20 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Nota</h1>
-          <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">{t.desc}</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Nota</h1>
+          <p className="text-indigo-300 text-sm font-medium mb-3 italic">{t.tagline}</p>
+          <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto">{t.desc}</p>
           <div className="flex flex-wrap justify-center gap-2 mt-5">
             {t.features.map((f) => (
               <span key={f.label} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-slate-300 font-medium">
@@ -141,23 +169,17 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
 
         {/* Kart */}
         <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/60 p-7">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">{t.providerLabel}</p>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {Object.entries(PROVIDER_META).map(([key, val]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => { setProvider(key); setApiKey(''); setError(''); setShowGuide(false); }}
-                className={`p-3.5 rounded-xl border-2 text-left transition-all ${
-                  provider === key
-                    ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg shadow-indigo-900/30'
-                    : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-700/40'
-                }`}
-              >
-                <div className="font-bold text-sm">{val.label}</div>
-                <div className="text-xs mt-1 opacity-60">{t.guides[key].hint}</div>
-              </button>
-            ))}
+
+          {/* Ücretsiz Sağlayıcılar */}
+          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-2">{t.freeLabel}</p>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {FREE_PROVIDERS.map(p => <ProviderButton key={p.id} p={p} />)}
+          </div>
+
+          {/* Ücretli Sağlayıcılar */}
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">{t.paidLabel}</p>
+          <div className="grid grid-cols-3 gap-2 mb-6 sm:grid-cols-4 lg:grid-cols-4">
+            {PAID_PROVIDERS.map(p => <ProviderButton key={p.id} p={p} />)}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -180,6 +202,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
             </button>
           </form>
 
+          {/* API Key Rehberi */}
           <button
             type="button"
             onClick={() => setShowGuide((v) => !v)}
@@ -193,23 +216,20 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
 
           {showGuide && (
             <div className="mt-3 bg-slate-900/50 border border-slate-600/50 rounded-xl p-4 animate-in fade-in duration-200">
-              <a href={meta.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold mb-4 underline transition">
+              <a
+                href={meta.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-semibold mb-3 underline transition"
+              >
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-                {guide.linkText}
+                {meta.label} — {t.getKeyLink}
               </a>
-              <ol className="space-y-3">
-                {guide.steps.map((step, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
-                    <div>
-                      <div className="text-slate-200 text-sm font-medium">{step.text}</div>
-                      <div className="text-slate-400 text-xs mt-0.5">{step.sub}</div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                {lang === 'tr' ? meta.hintTr : meta.hintEn}
+              </p>
             </div>
           )}
 
