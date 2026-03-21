@@ -50,6 +50,7 @@ import VisualSummaryComponent from './components/VisualSummaryComponent';
 export default function App() {
   // API Key state - loaded from localStorage
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiKey, setSettingsApiKey] = useState('');
 
@@ -258,7 +259,7 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
 Öğrenci beklenen cevabın ana fikrini yakalamışsa isCorrect: true yap. Kısmen doğruysa tolerans gösterip doğru sayabilirsin ancak eksiklerini feedback kısmında kibarca belirt. Essay (kompozisyon) ise argümanların sağlamlığına ve beklenen anahtar noktalara değinip değinmediğine bak. Tamamen alakasızsa isCorrect: false yap. 
 Çıktın SADECE geçerli bir JSON olmalıdır.
 { "isCorrect": true/false, "feedback": "Öğrenciye özel değerlendirme cümlen" }`;
-        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true);
+        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider);
         const parsed = parseJSON(result);
 
         const isCorr = parsed?.isCorrect ?? false;
@@ -319,7 +320,7 @@ Cevaplar:
 ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question.tip} | Soru: ${item.question.soru} | Beklenen: ${item.question.dogruCevap} | Verilen: ${item.answer}`).join('\n')}`;
 
       try {
-        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true);
+        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider);
         const parsed = parseJSON(result);
         if (Array.isArray(parsed)) {
           parsed.forEach((res) => {
@@ -516,7 +517,9 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
             'Lütfen bu PDF dosyasının içindeki tüm okunabilir metni çıkar ve bana sadece düz metin olarak ver. Başka hiçbir açıklama yapma.',
             'Sen yetenekli bir belge okuma asistanısın.',
             apiKey,
-            inlineData
+            inlineData,
+            false,
+            provider
           );
           setMaterialText(extractedText || 'PDF\'den metin okunamadı. Lütfen metin içeren bir PDF yükleyin.');
           if (!studyTitle) setStudyTitle(file.name.replace('.pdf', ''));
@@ -586,7 +589,7 @@ Format:
 Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, true);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider);
         const finalData = parseJSON(result);
         if (!finalData) throw new Error('JSON parse edilemedi');
         setQuizState((p) => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
@@ -661,7 +664,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       }
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson, provider);
         let finalData = result;
         if (isJson) {
           finalData = parseJSON(result);
@@ -715,7 +718,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       .join('\n');
     const prompt = `Önceki Sohbet:\n${chatHistoryText}\n\nÖğrenci: ${userMsg}\n\nCevabın:`;
 
-    const response = await callGemini(prompt, systemInstruction, apiKey);
+    const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider);
     setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
     setLoading((prev) => ({ ...prev, chat: false }));
   };
@@ -762,59 +765,93 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
   if (!apiKey) {
     return (
       <OnboardingScreen
-        onApiKeySubmit={(key) => {
+        onApiKeySubmit={(key, prov) => {
           localStorage.setItem('gemini_api_key', key);
+          localStorage.setItem('ai_provider', prov);
           setApiKey(key);
+          setProvider(prov);
         }}
       />
     );
   }
 
   // --- AYARLAR MODALİ ---
-  const SettingsModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Key size={20} className="text-indigo-600" /> API Anahtarı Ayarları
-          </h2>
-          <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <X size={20} className="text-slate-500" />
-          </button>
-        </div>
-        <p className="text-sm text-slate-500 mb-4">Mevcut Gemini API anahtarınızı güncelleyin. Yeni anahtar tarayıcınızda saklanır.</p>
-        <input
-          type="text"
-          value={settingsApiKey}
-          onChange={(e) => setSettingsApiKey(e.target.value)}
-          placeholder="Yeni API anahtarı (AIza...)"
-          className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
-        />
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              if (settingsApiKey.trim()) {
-                localStorage.setItem('gemini_api_key', settingsApiKey.trim());
-                setApiKey(settingsApiKey.trim());
-                setSettingsApiKey('');
-                setShowSettings(false);
-              }
-            }}
-            disabled={!settingsApiKey.trim()}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-lg transition"
-          >
-            Kaydet
-          </button>
-          <button
-            onClick={() => setShowSettings(false)}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-lg transition"
-          >
-            İptal
-          </button>
+  const SettingsModal = () => {
+    const [settingsProvider, setSettingsProvider] = React.useState(provider);
+    const providerInfo = {
+      gemini: { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Dakikada 15 istek · Ücretsiz' },
+      groq: { label: 'Groq', placeholder: 'gsk_...', hint: 'Dakikada 30 istek · Ücretsiz · Çok hızlı' },
+    };
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Key size={20} className="text-indigo-600" /> AI Sağlayıcı Ayarları
+            </h2>
+            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <X size={20} className="text-slate-500" />
+            </button>
+          </div>
+
+          {/* Sağlayıcı Seçimi */}
+          <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {Object.entries(providerInfo).map(([key, val]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { setSettingsProvider(key); setSettingsApiKey(''); }}
+                className={`p-3 rounded-xl border-2 text-left transition ${
+                  settingsProvider === key
+                    ? 'border-indigo-500 bg-indigo-50 text-slate-800'
+                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                <div className="font-bold text-sm">{val.label}</div>
+                <div className="text-xs mt-1 opacity-70">{val.hint}</div>
+              </button>
+            ))}
+          </div>
+
+          <p className="text-sm font-medium text-slate-600 mb-2">
+            {providerInfo[settingsProvider].label} API Anahtarı
+          </p>
+          <input
+            type="text"
+            value={settingsApiKey}
+            onChange={(e) => setSettingsApiKey(e.target.value)}
+            placeholder={`Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
+            className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                if (settingsApiKey.trim()) {
+                  localStorage.setItem('gemini_api_key', settingsApiKey.trim());
+                  localStorage.setItem('ai_provider', settingsProvider);
+                  setApiKey(settingsApiKey.trim());
+                  setProvider(settingsProvider);
+                  setSettingsApiKey('');
+                  setShowSettings(false);
+                }
+              }}
+              disabled={!settingsApiKey.trim()}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-lg transition"
+            >
+              Kaydet
+            </button>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-lg transition"
+            >
+              İptal
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full overflow-hidden bg-slate-50 m-0 p-0' : ''}`}>
@@ -885,7 +922,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             onClick={() => { setSettingsApiKey(''); setShowSettings(true); }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
           >
-            <Key size={18} /> API Anahtarını Değiştir
+            <Key size={18} /> Ayarlar ({provider === 'groq' ? 'Groq' : 'Gemini'})
           </button>
           <button
             onClick={toggleFullScreen}
