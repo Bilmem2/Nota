@@ -1101,12 +1101,25 @@ ${savedMaterial.slice(0, 6000)}`;
     const lang = appLang === 'en' ? 'en' : 'tr';
     const hostName = appLang === 'en' ? 'Host' : 'Hoca';
 
-    // Ses seçimi
-    const trVoices = voices.filter(v => v.lang.startsWith(lang));
-    const femaleVoice = trVoices.find(v => /female|woman|zira|samantha|karen|moira|fiona|victoria/i.test(v.name))
-      || trVoices.find((_, i) => i === 1) || trVoices[0] || null;
-    const maleVoice = trVoices.find(v => /male|man|tolga|daniel|alex|fred|jorge/i.test(v.name))
-      || trVoices[0] || null;
+    // Ses seçimi — dile göre öncelikli isimler
+    const langVoices = voices.filter(v => v.lang.startsWith(lang));
+    const allVoices = langVoices.length ? langVoices : voices; // fallback: tüm sesler
+
+    const femaleNames = /female|woman|zira|samantha|karen|moira|fiona|victoria|tessa|allison|ava|susan|kate/i;
+    const maleNames   = /male|man|tolga|daniel|alex|fred|jorge|david|mark|thomas|oliver|luca/i;
+
+    let femaleVoice = allVoices.find(v => femaleNames.test(v.name)) || null;
+    let maleVoice   = allVoices.find(v => maleNames.test(v.name)) || null;
+
+    // İkisi de bulunamadıysa veya aynıysa: farklı iki ses seç
+    if (!femaleVoice && !maleVoice) {
+      femaleVoice = allVoices[0] || null;
+      maleVoice   = allVoices[1] || allVoices[0] || null;
+    } else if (!femaleVoice) {
+      femaleVoice = allVoices.find(v => v !== maleVoice) || maleVoice;
+    } else if (!maleVoice) {
+      maleVoice = allVoices.find(v => v !== femaleVoice) || femaleVoice;
+    }
 
     for (let i = 0; i < podcastLines.length; i++) {
       if (podcastCancelRef.current) break;
