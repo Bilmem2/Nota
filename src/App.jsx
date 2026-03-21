@@ -1024,10 +1024,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             onClick={() => setDarkMode(d => !d)}
             className="w-full flex items-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
           >
-            <span className="text-base">{darkMode ? '☀️' : '🌙'}</span>
-            <span className="flex-1 text-left">{t.darkMode}</span>
-            <span className={`w-8 h-4 rounded-full transition-colors ${darkMode ? 'bg-indigo-400' : 'bg-indigo-700'} relative`}>
-              <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            <span>{darkMode ? '☀️' : '🌙'}</span>
+            <span className="flex-1 text-left truncate">{t.darkMode}</span>
+            <span className={`shrink-0 w-8 h-4 rounded-full transition-colors relative ${darkMode ? 'bg-indigo-400' : 'bg-indigo-700'}`}>
+              <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow ${darkMode ? 'translate-x-4' : 'translate-x-0.5'}`} />
             </span>
           </button>
           {/* Language toggle */}
