@@ -888,6 +888,9 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       return;
     }
 
+    // Groq için chunk'lar arası context: önceki chunk'ın kısa özetini tut
+    let prevChunkSummary = '';
+
     for (let i = 0; i < materialChunks.length; i++) {
       if (content[type] && content[type][i]) {
         continue;
@@ -901,11 +904,31 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
+      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq';
+
+      // Groq için önceki chunk context'i
+      const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
+        ? `[ÖNCEKİ BÖLÜM ÖZETİ: ${prevChunkSummary}]\n\n`
+        : '';
 
       switch (type) {
         case 'lesson':
-          prompt = `Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, akıcı, akademik ama abartıdan uzak bir dille detaylıca anlat. Materyaldeki hiçbir konuyu atlama:\n\n${textToAnalyze}`;
-          systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
+          if (isGroq) {
+            prompt = `${groqContextPrefix}Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde detaylıca anlat. Materyaldeki HİÇBİR konuyu atlama.\n\nMATERYAL:\n${textToAnalyze}\n\nÇIKTI YAPISI (bu sırayla, her bölümü eksiksiz doldur):\n1. KONU GİRİŞİ: Bu konunun akademik önemi ve bağlamı (2-3 paragraf)\n2. DETAYLI ANLATIM: Materyaldeki tüm kavramları alt başlıklarla açıkla. Gerekirse tablolar kullan.\n3. KAVRAMLAR ARASI İLİŞKİLER: Konular arasındaki bağlantıları açıkla\n4. KRİTİK NOKTALAR: [TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle öne çıkan bilgiler`;
+            systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
+
+ZORUNLU KURALLAR:
+- Verilen materyaldeki HER kavramı, HER terimi, HER süreci açıkla. Hiçbirini atlama.
+- Her ana başlık için en az 2-3 paragraf yaz.
+- Karmaşık kavramları adım adım açıkla.
+- Akademik metinleri zenginleştirmek için şu 3 özel etiketi satır başında YERİ GELDİKÇE kullan:
+  - [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
+  - [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
+  - [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.
+- Çıktın en az 800 kelime olmalı. Kısa ve yüzeysel anlatımdan kaçın.`;
+          } else {
+            prompt = `Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, akıcı, akademik ama abartıdan uzak bir dille detaylıca anlat. Materyaldeki hiçbir konuyu atlama:\n\n${textToAnalyze}`;
+            systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
 Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
 1. **Doğrudan Giriş:** Bu konunun akademik özü ve önemi nedir? 
 2. **Kapsamlı ve Eksiksiz Anlatım:** Sana verilen materyaldeki HİÇBİR BİLGİYİ atlama. Gerekirse alt başlıklar ve TABLOLAR kullanarak mantığını detaylıca anlat.
@@ -915,19 +938,36 @@ Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
 - [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
 - [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
 - [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.`;
+          }
           break;
         case 'notes':
-          prompt = `Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur:\n\n${textToAnalyze}`;
-          systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA. Rehber şu 4 ana bölümden oluşmalı:
+          if (isGroq) {
+            prompt = `${groqContextPrefix}Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur.\n\nMATERYAL:\n${textToAnalyze}\n\nAŞAĞIDAKİ 4 BÖLÜMÜ SIRAYLA VE EKSİKSİZ DOLDUR:\n\n## 1. KRİTİK KAVRAMLAR SÖZLÜĞÜ\n(Her önemli terimi tanımla — en az 5-8 kavram)\n\n## 2. SÜREÇLER VE İLİŞKİLER\n(Neden-sonuç ilişkileri, mekanizmalar, mantıksal akış — en az 4-6 madde)\n\n## 3. PÜF NOKTALAR / BURAYA DİKKAT\n([TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle — en az 4-5 madde)\n\n## 4. MUHTEMEL SINAV SORULARI\n(3 adet açık uçlu soru ve model cevapları)`;
+            systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA.
+
+ZORUNLU KURALLAR:
+- 4 bölümün tamamını eksiksiz doldur. Hiçbir bölümü atlama veya kısaltma.
+- Her bölümde yeterli derinlik ve detay sağla.
+- Kavramlar sözlüğünde en az 5 terim tanımla.
+- Sınav soruları gerçekçi ve düşündürücü olmalı, model cevapları kapsamlı olmalı.
+- Başka hiçbir gereksiz metin ekleme.`;
+          } else {
+            prompt = `Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur:\n\n${textToAnalyze}`;
+            systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA. Rehber şu 4 ana bölümden oluşmalı:
 1. **Kritik Kavramlar Sözlüğü:** Konudaki en önemli terimler ve net tanımları.
 2. **Süreçler ve İlişkiler:** Konudaki neden-sonuç ilişkileri, etki-tepki mekanizmaları veya mantıksal akış.
 3. **Püf Noktalar / Buraya Dikkat:** Sınavda tuzak olabilecek detaylar. (Yazarken satır başına [TÜYO], [DİKKAT] veya [ÖNEMLİ] etiketlerinden uygun olanı koyarak tasarımsal olarak öne çıkmalarını sağla).
 4. **Muhtemel Sınav Soruları:** Hocaların sınavlarda sorabileceği 3 adet potansiyel açık uçlu soru ve vurucu yanıtları.
 Başka hiçbir gereksiz metin ekleme.`;
+          }
           break;
         case 'visual':
-          prompt = `Aşağıdaki metni ${partInfo} analiz et ve içeriğin yapısına EN UYGUN görsel şablonu (Zaman çizelgesi, Karşılaştırma, Veri Tablosu veya Kategorik Grid) seçip oluştur:\n\n${textToAnalyze}`;
-          systemInstruction = `Sen uzman bir veri görselleştirme asistanısın. Metni analiz et ve şu 4 formattan BİRİNİ seçerek SADECE JSON objesi dön.
+          if (isGroq) {
+            prompt = `${groqContextPrefix}Aşağıdaki metni ${partInfo} analiz et ve içeriğin yapısına EN UYGUN görsel şablonu seç.\n\nMATERYAL:\n${textToAnalyze}\n\nKULLANILABİLECEK FORMATLAR:\n- "timeline": Süreç veya tarihsel akış için\n- "grid": Kategorik bilgiler için\n- "comparison": İki kavramı karşılaştırmak için\n- "table": Sınıflandırma veya sayısal veri için\n\nSEÇTİĞİN FORMATA GÖRE TAM JSON ÇIKTI:\n\nEğer timeline seçersen:\n{"title":"...", "layout":"timeline", "items":[{"subtitle":"Adım adı","details":"Detaylı açıklama (2-3 cümle)"}]}\n\nEğer grid seçersen:\n{"title":"...", "layout":"grid", "items":[{"subtitle":"Kategori adı","details":"Detaylı açıklama (2-3 cümle)"}]}\n\nEğer comparison seçersen:\n{"title":"...", "layout":"comparison", "comparisonData":{"conceptA":"Kavram 1","conceptB":"Kavram 2","points":[{"feature":"Özellik","valA":"1. Durum","valB":"2. Durum"}]}}\n\nEğer table seçersen:\n{"title":"...", "layout":"table", "tableData":{"headers":["Sütun 1","Sütun 2","Sütun 3"],"rows":[["Değer 1","Değer 2","Değer 3"]]}}\n\nSADECE JSON döndür. Başka hiçbir metin ekleme.`;
+            systemInstruction = `Sen uzman bir veri görselleştirme asistanısın. SADECE geçerli JSON objesi döndür. Başka hiçbir metin, açıklama veya markdown ekleme. JSON dışında herhangi bir karakter çıktıda olmamalı.`;
+          } else {
+            prompt = `Aşağıdaki metni ${partInfo} analiz et ve içeriğin yapısına EN UYGUN görsel şablonu (Zaman çizelgesi, Karşılaştırma, Veri Tablosu veya Kategorik Grid) seçip oluştur:\n\n${textToAnalyze}`;
+            systemInstruction = `Sen uzman bir veri görselleştirme asistanısın. Metni analiz et ve şu 4 formattan BİRİNİ seçerek SADECE JSON objesi dön.
 
 Format 1 (Süreç/Tarihsel Akış):
 { "title": "Başlık", "layout": "timeline", "items": [ { "subtitle": "Adım", "details": "Açıklama" } ] }
@@ -942,6 +982,7 @@ Format 4 (Sınıflandırma/Sayısal Veri Tablosu):
 { "title": "Başlık", "layout": "table", "tableData": { "headers": ["Sütun 1", "Sütun 2", "Sütun 3"], "rows": [ ["Değer 1", "Değer 2", "Değer 3"] ] } }
 
 Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin ekleme.`;
+          }
           isJson = true;
           break;
         default:
@@ -959,6 +1000,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
           ...prev,
           [type]: { ...prev[type], [i]: finalData },
         }));
+        // Groq için bir sonraki chunk'a context aktarımı: metin çıktısının ilk ~200 karakterini özet olarak sakla
+        if (isGroq && typeof finalData === 'string' && materialChunks.length > 1) {
+          prevChunkSummary = finalData.replace(/\[TÜYO\]|\[DİKKAT\]|\[ÖNEMLİ\]/g, '').replace(/#+\s/g, '').slice(0, 200).trim();
+        }
       } catch (error) {
         console.error(`Bölüm ${i + 1} üretilirken hata:`, error);
         setContent((prev) => ({
