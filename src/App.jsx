@@ -1299,11 +1299,19 @@ ${savedMaterial.slice(0, 10000)}`;
           <p className="text-sm font-medium text-slate-600 mb-2">
             {providerInfo[settingsProvider].label} API Anahtarı
           </p>
+          {apiKey && !keyWasReset && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="text-emerald-600 text-xs">✓ Kayıtlı anahtar:</span>
+              <span className="font-mono text-xs text-slate-600 tracking-wider">
+                {apiKey.slice(0, 6)}{'•'.repeat(Math.min(12, apiKey.length - 8))}{apiKey.slice(-4)}
+              </span>
+            </div>
+          )}
           <input
             type="text"
             value={settingsApiKey}
             onChange={(e) => setSettingsApiKey(e.target.value)}
-            placeholder={`Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
+            placeholder={apiKey && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
             className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
           />
 
