@@ -98,7 +98,7 @@ const LEVEL_COLORS = {
 
 const NODE_RADIUS = [52, 42, 34, 26];
 
-export default function MindMapComponent({ data, darkMode }) {
+export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
   const svgRef = useRef(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [dragging, setDragging] = useState(false);
@@ -305,22 +305,42 @@ export default function MindMapComponent({ data, darkMode }) {
       {/* Detail Panel */}
       {selectedNode && (
         <div className="mt-4 p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-in fade-in duration-200">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 mb-3">
             <div className="flex items-center gap-3">
-              <div
-                className="w-3 h-3 rounded-full shrink-0 mt-1"
-                style={{ background: LEVEL_COLORS[selectedNode.level].bg }}
-              />
+              <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ background: LEVEL_COLORS[selectedNode.level].bg }} />
               <h3 className="text-lg font-extrabold text-slate-800 dark:text-slate-100">{selectedNode.label}</h3>
             </div>
             <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl leading-none shrink-0">×</button>
           </div>
+
           {selectedNode.description && (
-            <p className="mt-3 text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{selectedNode.description}</p>
+            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3">{selectedNode.description}</p>
           )}
+
+          {selectedNode.importance && (
+            <div className="mb-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-xl">
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">{lang === 'en' ? 'Why It Matters' : 'Önemi'}</span>
+              <p className="mt-1 text-sm text-indigo-800 dark:text-indigo-200">{selectedNode.importance}</p>
+            </div>
+          )}
+
+          {selectedNode.keyFacts && selectedNode.keyFacts.length > 0 && (
+            <div className="mb-3 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{lang === 'en' ? 'Key Facts' : 'Anahtar Bilgiler'}</span>
+              <ul className="mt-2 space-y-1">
+                {selectedNode.keyFacts.map((fact, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: LEVEL_COLORS[selectedNode.level].bg }} />
+                    {fact}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {selectedNode.example && (
-            <div className="mt-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Örnek / Example</span>
+            <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">{lang === 'en' ? 'Example' : 'Örnek'}</span>
               <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">{selectedNode.example}</p>
             </div>
           )}
