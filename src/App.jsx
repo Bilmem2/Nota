@@ -46,6 +46,34 @@ import { handlePrint } from './utils/print';
 import OnboardingScreen from './components/OnboardingScreen';
 import VisualSummaryComponent from './components/VisualSummaryComponent';
 
+// --- I18N ---
+const T = {
+  tr: {
+    appName: 'Yapay Öğretmen',
+    myStudies: 'Çalışmalarım', addMaterial: 'Materyal Ekle', lesson: 'Ders Anlatımı',
+    notes: 'Çalışma Rehberi', visual: 'Görsel Özet', quiz: 'Sınav Modu', chat: 'Soru Sor',
+    settings: 'Ayarlar', darkMode: 'Karanlık Tema', language: 'Dil', fullscreen: 'Tam Ekran',
+    normalScreen: 'Normal Ekran', newStudy: 'Yeni Çalışma', importFile: 'İçeri Aktar',
+    saveMaterial: 'Materyali Kaydet ve Analiz Et', generating: 'Oluşturuluyor...',
+    generate: 'Oluştur', podcast: 'Podcast', podcastPlay: 'Dinle', podcastStop: 'Durdur',
+    podcastGenerating: 'Podcast hazırlanıyor...', podcastReady: 'Podcast hazır, dinlemek için ▶ bas.',
+    chatPlaceholder: 'Konuyla ilgili kafanıza takılanı sorun...',
+    author: '© Can Sevilmiş', version: 'Yapay Öğretmen v1.0',
+  },
+  en: {
+    appName: 'AI Teacher',
+    myStudies: 'My Studies', addMaterial: 'Add Material', lesson: 'Lesson',
+    notes: 'Study Guide', visual: 'Visual Summary', quiz: 'Quiz Mode', chat: 'Ask a Question',
+    settings: 'Settings', darkMode: 'Dark Mode', language: 'Language', fullscreen: 'Fullscreen',
+    normalScreen: 'Exit Fullscreen', newStudy: 'New Study', importFile: 'Import',
+    saveMaterial: 'Save & Analyze Material', generating: 'Generating...',
+    generate: 'Generate', podcast: 'Podcast', podcastPlay: 'Listen', podcastStop: 'Stop',
+    podcastGenerating: 'Preparing podcast...', podcastReady: 'Podcast ready — press ▶ to listen.',
+    chatPlaceholder: 'Ask anything about the material...',
+    author: '© Can Sevilmiş', version: 'AI Teacher v1.0',
+  },
+};
+
 // --- ANA UYGULAMA BİLEŞENİ ---
 export default function App() {
   // API Key state - loaded from localStorage
@@ -55,6 +83,13 @@ export default function App() {
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
+  const [appLang, setAppLang] = useState(() => localStorage.getItem('app_lang') || 'tr');
+  const [podcastText, setPodcastText] = useState('');
+  const [podcastPlaying, setPodcastPlaying] = useState(false);
+  const podcastUtteranceRef = useRef(null);
+
+  const t = T[appLang];
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState('archive');
@@ -86,6 +121,7 @@ export default function App() {
     visual: false,
     quiz: false,
     chat: false,
+    podcast: false,
   });
 
   const [quizConfig, setQuizConfig] = useState({
@@ -122,6 +158,19 @@ export default function App() {
   const importFileRef = useRef(null);
 
   // --- HAFIZA (LOCAL STORAGE) YÖNETİMİ ---
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('dark_mode', darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('app_lang', appLang);
+  }, [appLang]);
+
   useEffect(() => {
     try {
       const localData = localStorage.getItem('akademik_asistan_sessions');
@@ -730,14 +779,45 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     setLoading((prev) => ({ ...prev, chat: false }));
   };
 
+  const generatePodcast = async () => {
+    if (!savedMaterial) return;
+    setPodcastText('');
+    setPodcastPlaying(false);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setLoading(prev => ({ ...prev, podcast: true }));
+    const isEn = appLang === 'en';
+    const prompt = `${isEn ? 'Convert the following academic material into a natural, engaging podcast script. Write it as a single narrator speaking directly to a student. No headers, no bullet points — just flowing spoken language. Keep it educational but conversational.' : 'Aşağıdaki akademik materyali doğal, akıcı bir podcast anlatımına dönüştür. Tek bir anlatıcı öğrenciye doğrudan konuşuyor gibi yaz. Başlık veya madde işareti kullanma — sadece konuşma dili. Eğitici ama sohbet havasında olsun.'}\n\n${savedMaterial.slice(0, 6000)}`;
+    const result = await callGemini(prompt, isEn ? 'You are a friendly academic podcast host.' : 'Sen samimi bir akademik podcast sunucususun.', apiKey, null, false, provider);
+    setPodcastText(result);
+    setLoading(prev => ({ ...prev, podcast: false }));
+  };
+
+  const handlePodcastPlay = () => {
+    if (!podcastText || !window.speechSynthesis) return;
+    if (podcastPlaying) {
+      window.speechSynthesis.cancel();
+      setPodcastPlaying(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(podcastText);
+    utterance.lang = appLang === 'en' ? 'en-US' : 'tr-TR';
+    utterance.rate = 0.95;
+    utterance.onend = () => setPodcastPlaying(false);
+    utterance.onerror = () => setPodcastPlaying(false);
+    podcastUtteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setPodcastPlaying(true);
+  };
+
   const tabs = [
-    { id: 'archive', icon: <Library size={20} />, label: 'Çalışmalarım', requiresMaterial: false },
-    { id: 'material', icon: <UploadCloud size={20} />, label: 'Materyal Ekle', requiresMaterial: false },
-    { id: 'lesson', icon: <BookOpen size={20} />, label: 'Ders Anlatımı', requiresMaterial: true },
-    { id: 'notes', icon: <ClipboardList size={20} />, label: 'Çalışma Rehberi', requiresMaterial: true },
-    { id: 'visual', icon: <PieChart size={20} />, label: 'Görsel Özet', requiresMaterial: true },
-    { id: 'quiz', icon: <GraduationCap size={20} />, label: 'Sınav Modu', requiresMaterial: true },
-    { id: 'chat', icon: <MessageSquare size={20} />, label: 'Soru Sor', requiresMaterial: true },
+    { id: 'archive', icon: <Library size={20} />, label: t.myStudies, requiresMaterial: false },
+    { id: 'material', icon: <UploadCloud size={20} />, label: t.addMaterial, requiresMaterial: false },
+    { id: 'lesson', icon: <BookOpen size={20} />, label: t.lesson, requiresMaterial: true },
+    { id: 'notes', icon: <ClipboardList size={20} />, label: t.notes, requiresMaterial: true },
+    { id: 'visual', icon: <PieChart size={20} />, label: t.visual, requiresMaterial: true },
+    { id: 'quiz', icon: <GraduationCap size={20} />, label: t.quiz, requiresMaterial: true },
+    { id: 'podcast', icon: <Volume2 size={20} />, label: t.podcast, requiresMaterial: true },
+    { id: 'chat', icon: <MessageSquare size={20} />, label: t.chat, requiresMaterial: true },
   ];
 
   const renderChapterNav = (type) => {
@@ -863,7 +943,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
   };
 
   return (
-    <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full overflow-hidden bg-slate-50 m-0 p-0' : ''}`}>
+    <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full overflow-hidden bg-slate-50 dark:bg-slate-950 m-0 p-0' : ''}`}>
       {showSettings && <SettingsModal />}
 
       {/* Mobil Header */}
@@ -941,21 +1021,41 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
               </span>
             )}
           </button>
+          {/* Dark mode toggle */}
+          <button
+            onClick={() => setDarkMode(d => !d)}
+            className="w-full flex items-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
+          >
+            <span className="text-base">{darkMode ? '☀️' : '🌙'}</span>
+            <span className="flex-1 text-left">{t.darkMode}</span>
+            <span className={`w-8 h-4 rounded-full transition-colors ${darkMode ? 'bg-indigo-400' : 'bg-indigo-700'} relative`}>
+              <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </span>
+          </button>
+          {/* Language toggle */}
+          <button
+            onClick={() => setAppLang(l => l === 'tr' ? 'en' : 'tr')}
+            className="w-full flex items-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
+          >
+            <Globe size={18} />
+            <span className="flex-1 text-left">{t.language}</span>
+            <span className="text-xs font-bold bg-indigo-700 px-2 py-0.5 rounded-md">{appLang === 'tr' ? 'TR' : 'EN'}</span>
+          </button>
           <button
             onClick={toggleFullScreen}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
           >
-            {isFullscreen ? <><Minimize size={18} /> Normal Ekran</> : <><Maximize size={18} /> Tam Ekran (Focus)</>}
+            {isFullscreen ? <><Minimize size={18} /> {t.normalScreen}</> : <><Maximize size={18} /> {t.fullscreen}</>}
           </button>
           <div className="pt-2 text-center text-indigo-500 text-xs leading-relaxed">
-            <div>Yapay Öğretmen v1.0</div>
-            <div>© Can Sevilmiş</div>
+            <div>{t.version}</div>
+            <div>{t.author}</div>
           </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 h-screen overflow-y-auto w-full bg-slate-50/50 relative">
+      <main className="flex-1 p-4 md:p-8 h-screen overflow-y-auto w-full bg-slate-50/50 dark:bg-slate-900 relative">
         <div className="max-w-5xl mx-auto pb-10">
 
           {/* TAB 0: ÇALIŞMA ARŞİVİ */}
@@ -1990,6 +2090,67 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                         })()}
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PODCAST */}
+          {activeTab === 'podcast' && (
+            <div className="animate-in fade-in duration-500">
+              <div className="flex items-center gap-3 mb-8 px-2">
+                <Volume2 size={32} className="text-violet-600" />
+                <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.podcast}</h2>
+              </div>
+              <div className="bg-white dark:bg-slate-800 p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+                {!podcastText && !loading.podcast && (
+                  <div className="text-center py-12">
+                    <div className="w-24 h-24 bg-violet-50 dark:bg-violet-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                      <Volume2 size={48} className="text-violet-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
+                      {appLang === 'en' ? 'Turn your material into a podcast' : 'Materyalini podcast\'a dönüştür'}
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
+                      {appLang === 'en' ? 'AI will rewrite your material as a natural spoken script, then read it aloud.' : 'Yapay zeka materyalini doğal bir anlatıma çevirir, sonra sesli okur.'}
+                    </p>
+                    <button
+                      onClick={generatePodcast}
+                      className="inline-flex items-center gap-3 px-10 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-violet-600/20"
+                    >
+                      <Volume2 size={22} /> {appLang === 'en' ? 'Generate Podcast' : 'Podcast Oluştur'}
+                    </button>
+                  </div>
+                )}
+                {loading.podcast && (
+                  <div className="flex flex-col items-center justify-center py-24 text-violet-600">
+                    <Loader2 size={48} className="animate-spin mb-4" />
+                    <p className="font-bold text-lg animate-pulse">{t.podcastGenerating}</p>
+                  </div>
+                )}
+                {podcastText && !loading.podcast && (
+                  <div>
+                    {/* Player */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 p-6 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-2xl">
+                      <button
+                        onClick={handlePodcastPlay}
+                        className={`flex items-center gap-3 px-8 py-4 font-bold text-lg rounded-xl transition-all shadow-md ${podcastPlaying ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-violet-600 hover:bg-violet-700 text-white'}`}
+                      >
+                        {podcastPlaying ? <><VolumeX size={22} /> {t.podcastStop}</> : <><Volume2 size={22} /> {t.podcastPlay}</>}
+                      </button>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">{t.podcastReady}</p>
+                      <button
+                        onClick={() => { window.speechSynthesis?.cancel(); setPodcastPlaying(false); setPodcastText(''); }}
+                        className="ml-auto text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
+                      >
+                        {appLang === 'en' ? 'Regenerate' : 'Yeniden Oluştur'}
+                      </button>
+                    </div>
+                    {/* Script */}
+                    <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap text-base bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      {podcastText}
+                    </div>
                   </div>
                 )}
               </div>
