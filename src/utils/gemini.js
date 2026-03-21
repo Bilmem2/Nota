@@ -123,7 +123,7 @@ async function callGroqAPI(prompt, systemInstruction, apiKey) {
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
 }
 
-async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model) {
+async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJson = false) {
   const payload = {
     model: model || OPENROUTER_MODELS[0].id,
     messages: [
@@ -134,6 +134,11 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model) {
     max_tokens: 8192,
     top_p: 0.9,
   };
+  // JSON mode — only add for models that support it (non-free models and some free ones)
+  // Avoids breaking free models that don't support response_format
+  if (isJson && model && !model.endsWith(':free')) {
+    payload.response_format = { type: 'json_object' };
+  }
 
   const response = await fetch(OPENROUTER_URL, {
     method: 'POST',
@@ -345,7 +350,7 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
           result = await callGroqAPI(prompt, systemInstruction, apiKey);
           break;
         case 'openrouter':
-          result = await callOpenRouterAPI(prompt, systemInstruction, apiKey, selectedModel);
+          result = await callOpenRouterAPI(prompt, systemInstruction, apiKey, selectedModel, isJson);
           break;
         case 'openai':
           result = await callOpenAIAPI(prompt, systemInstruction, apiKey, selectedModel);

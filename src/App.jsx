@@ -892,12 +892,15 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       try {
         const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider, openRouterModel);
         const finalData = parseJSON(result);
-        if (!finalData) throw new Error('JSON parse edilemedi');
+        if (!finalData) throw new Error('JSON parse edilemedi — model geçersiz format döndürdü');
         setQuizState((p) => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
         setContent((prev) => ({ ...prev, quiz: finalData }));
       } catch (error) {
         console.error('Sınav üretilirken hata:', error);
-        alert('Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        const isJsonErr = error.message?.includes('JSON');
+        alert(isJsonErr
+          ? 'Seçili model JSON formatında yanıt üretemedi. Lütfen farklı bir model deneyin (önerilen: Gemini 2.0 Flash veya Kimi K2).'
+          : 'Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.');
       } finally {
         setLoading((prev) => ({ ...prev, quiz: false }));
       }
