@@ -142,10 +142,10 @@ async function callOpenAIAPI(prompt, systemInstruction, apiKey, model) {
  * @returns {Promise<string>}
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', openRouterModel = null) {
-  // Auto-detect provider from key prefix to prevent misconfiguration
+  // Auto-detect provider strictly from key prefix — provider param is only a fallback
   const effectiveProvider = apiKey.startsWith('gsk_') ? 'groq'
     : apiKey.startsWith('sk-or-') ? 'openrouter'
-    : (apiKey.startsWith('sk-') && provider !== 'openrouter') ? 'openai'
+    : apiKey.startsWith('sk-') ? 'openai'
     : provider;
   const delays = [1000, 2000, 4000, 8000, 16000];
 

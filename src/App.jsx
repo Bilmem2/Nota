@@ -905,7 +905,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
-      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq' || apiKey.startsWith('sk-or-') || provider === 'openrouter' || (apiKey.startsWith('sk-') && provider !== 'openrouter') || provider === 'openai';
+      const isGroq = apiKey.startsWith('gsk_') || apiKey.startsWith('sk-or-') || apiKey.startsWith('sk-') || provider === 'groq' || provider === 'openrouter' || provider === 'openai';
 
       // Groq için önceki chunk context'i
       const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
@@ -1285,7 +1285,7 @@ ${savedMaterial.slice(0, 10000)}`;
                 if (settingsApiKey.trim()) {
                   const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq'
                     : settingsApiKey.trim().startsWith('sk-or-') ? 'openrouter'
-                    : (settingsApiKey.trim().startsWith('sk-') && settingsProvider !== 'openrouter') ? 'openai'
+                    : settingsApiKey.trim().startsWith('sk-') ? 'openai'
                     : settingsProvider;
                   localStorage.setItem('gemini_api_key', settingsApiKey.trim());
                   localStorage.setItem('ai_provider', detectedProvider);
