@@ -1311,6 +1311,40 @@ ${savedMaterial.slice(0, 10000)}`;
               İptal
             </button>
           </div>
+
+          {/* Sıfırlama seçenekleri */}
+          <div className="mt-5 pt-5 border-t border-slate-200">
+            <p className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wide">Sıfırlama Seçenekleri</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (window.confirm('API anahtarı ve sağlayıcı ayarları sıfırlanacak. Çalışmalarınız korunacak. Devam edilsin mi?')) {
+                    localStorage.removeItem('gemini_api_key');
+                    localStorage.removeItem('ai_provider');
+                    localStorage.removeItem('openrouter_model');
+                    setApiKey('');
+                    setProvider('gemini');
+                    setOpenRouterModel(OPENROUTER_MODELS[0].id);
+                    setShowSettings(false);
+                  }
+                }}
+                className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-medium py-2 px-3 rounded-lg transition text-sm"
+              >
+                API Anahtarını Sıfırla
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm('Tüm çalışmalar, ayarlar ve API anahtarı silinecek. Bu işlem geri alınamaz. Emin misiniz?')) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium py-2 px-3 rounded-lg transition text-sm"
+              >
+                Uygulamayı Sıfırla
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
