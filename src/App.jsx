@@ -507,6 +507,7 @@ export default function App() {
     link.href = url;
     link.download = `${session.title.replace(/\s+/g, '_')}_Yedek.akademik`;
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleImportFile = (e) => {
@@ -923,7 +924,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
-      const isGroq = apiKey.startsWith('gsk_') || apiKey.startsWith('sk-or-') || apiKey.startsWith('sk-') || provider === 'groq' || provider === 'openrouter' || provider === 'openai' || provider === 'perplexity' || provider === 'zai' || provider === 'kimi' || provider === 'qwen';
+      const isGroq = provider === 'groq' || apiKey.startsWith('gsk_');
 
       // Groq için önceki chunk context'i
       const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
@@ -1067,9 +1068,15 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       .join('\n');
     const prompt = `Önceki Sohbet:\n${chatHistoryText}\n\nÖğrenci: ${userMsg}\n\nCevabın:`;
 
-    const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, openRouterModel);
-    setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
-    setLoading((prev) => ({ ...prev, chat: false }));
+    try {
+      const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, openRouterModel);
+      setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setChatMessages((prev) => [...prev, { role: 'model', text: appLang === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'An error occurred. Please try again.' }]);
+    } finally {
+      setLoading((prev) => ({ ...prev, chat: false }));
+    }
   };
 
   const generateMindMap = async () => {
