@@ -112,6 +112,21 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
   const t = I18N[lang];
   const meta = PROVIDERS.find(p => p.id === provider);
 
+  // Key prefix → provider eşlemesi (belirsiz sk- hariç)
+  const detectProviderFromKey = (key) => {
+    if (key.startsWith('AIzaSy'))  return 'gemini';
+    if (key.startsWith('gsk_'))    return 'groq';
+    if (key.startsWith('sk-or-'))  return 'openrouter';
+    if (key.startsWith('sk-ant-')) return 'anthropic';
+    if (key.startsWith('xai-'))    return 'xai';
+    if (key.startsWith('pplx-'))   return 'perplexity';
+    return null; // belirsiz
+  };
+
+  const detectedProvider = detectProviderFromKey(apiKey.trim());
+  const hasMismatch = detectedProvider && detectedProvider !== provider;
+  const mismatchLabel = PROVIDERS.find(p => p.id === detectedProvider)?.label;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!apiKey.trim()) { setError(t.errorEmpty); return; }
@@ -196,6 +211,13 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
                 className="w-full bg-slate-900/60 border border-slate-600 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono"
               />
               {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+              {hasMismatch && !error && (
+                <p className="mt-2 text-xs text-amber-400">
+                  ⚠️ {lang === 'tr'
+                    ? `Bu anahtar ${mismatchLabel} sağlayıcısına ait görünüyor. Yine de ${meta.label} ile devam edebilirsin.`
+                    : `This key looks like it belongs to ${mismatchLabel}. You can still continue with ${meta.label}.`}
+                </p>
+              )}
             </div>
             <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-900/40 text-base">
               {t.startBtn}

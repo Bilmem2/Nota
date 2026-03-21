@@ -1205,19 +1205,10 @@ ${savedMaterial.slice(0, 10000)}`;
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
-          const prefixProvider =
-            key.startsWith('gsk_')    ? 'groq'
-            : key.startsWith('sk-or-') ? 'openrouter'
-            : key.startsWith('sk-ant-') ? 'anthropic'
-            : key.startsWith('xai-')   ? 'xai'
-            : key.startsWith('AIzaSy') ? 'gemini'
-            : key.startsWith('pplx-')  ? 'perplexity'
-            : null; // sk- gibi belirsiz prefix → kullanıcının seçtiği prov'a güven
-          const detectedProvider = prefixProvider || prov;
           localStorage.setItem('gemini_api_key', key);
-          localStorage.setItem('ai_provider', detectedProvider);
+          localStorage.setItem('ai_provider', prov);
           setApiKey(key);
-          setProvider(detectedProvider);
+          setProvider(prov);
         }}
       />
     );
@@ -1319,9 +1310,28 @@ ${savedMaterial.slice(0, 10000)}`;
             value={settingsApiKey}
             onChange={(e) => setSettingsApiKey(e.target.value)}
             placeholder={apiKey && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `Yeni anahtar (${providerInfo[settingsProvider].placeholder})`}
-            className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
+            className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-1"
           />
-
+          {(() => {
+            const k = settingsApiKey.trim();
+            const detected =
+              k.startsWith('AIzaSy')  ? 'gemini'
+              : k.startsWith('gsk_')    ? 'groq'
+              : k.startsWith('sk-or-')  ? 'openrouter'
+              : k.startsWith('sk-ant-') ? 'anthropic'
+              : k.startsWith('xai-')    ? 'xai'
+              : k.startsWith('pplx-')   ? 'perplexity'
+              : null;
+            if (detected && detected !== settingsProvider) {
+              const detectedLabel = providerInfo[detected]?.label || detected;
+              return (
+                <p className="text-xs text-amber-600 mb-3">
+                  ⚠️ Bu anahtar <strong>{detectedLabel}</strong> sağlayıcısına ait görünüyor. Yine de {providerInfo[settingsProvider].label} ile devam edebilirsin.
+                </p>
+              );
+            }
+            return <div className="mb-3" />;
+          })()}
           {currentModelList && (
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-600 mb-2">Model Seç</p>
@@ -1347,20 +1357,11 @@ ${savedMaterial.slice(0, 10000)}`;
               onClick={() => {
                 const key = settingsApiKey.trim();
                 if (key) {
-                  // Yeni key girildi
-                  const prefixProvider =
-                    key.startsWith('gsk_')    ? 'groq'
-                    : key.startsWith('sk-or-') ? 'openrouter'
-                    : key.startsWith('sk-ant-') ? 'anthropic'
-                    : key.startsWith('xai-')   ? 'xai'
-                    : key.startsWith('AIzaSy') ? 'gemini'
-                    : key.startsWith('pplx-')  ? 'perplexity'
-                    : null;
-                  const detectedProvider = prefixProvider || settingsProvider;
+                  // Yeni key girildi — kullanıcının seçtiği provider'a güven
                   localStorage.setItem('gemini_api_key', key);
-                  localStorage.setItem('ai_provider', detectedProvider);
+                  localStorage.setItem('ai_provider', settingsProvider);
                   setApiKey(key);
-                  setProvider(detectedProvider);
+                  setProvider(settingsProvider);
                   if (currentModelList) {
                     localStorage.setItem('openrouter_model', localModel);
                     setOpenRouterModel(localModel);
