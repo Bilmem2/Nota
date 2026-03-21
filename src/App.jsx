@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, OPENROUTER_MODELS } from './utils/gemini';
+import { callGemini, OPENROUTER_MODELS, OPENAI_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -905,7 +905,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       const textToAnalyze = materialChunks[i];
       const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
-      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq' || apiKey.startsWith('sk-or-') || provider === 'openrouter';
+      const isGroq = apiKey.startsWith('gsk_') || provider === 'groq' || apiKey.startsWith('sk-or-') || provider === 'openrouter' || (apiKey.startsWith('sk-') && provider !== 'openrouter') || provider === 'openai';
 
       // Groq için önceki chunk context'i
       const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
@@ -1198,7 +1198,18 @@ ${savedMaterial.slice(0, 10000)}`;
       gemini: { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: 'Dakikada 15 istek · Ücretsiz' },
       groq: { label: 'Groq', placeholder: 'gsk_...', hint: 'Dakikada 30 istek · Ücretsiz · Çok hızlı' },
       openrouter: { label: 'OpenRouter', placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler mevcut' },
+      openai: { label: 'OpenAI', placeholder: 'sk-...', hint: 'GPT-4o, o3, GPT-5 · Ücretli' },
     };
+    const modelList = settingsProvider === 'openai' ? OPENAI_MODELS : OPENROUTER_MODELS;
+    const defaultModel = settingsProvider === 'openai' ? OPENAI_MODELS[0].id : OPENROUTER_MODELS[0].id;
+
+    // Provider değişince modeli sıfırla
+    const handleProviderChange = (key) => {
+      setSettingsProvider(key);
+      setSettingsApiKey('');
+      setLocalModel(key === 'openai' ? OPENAI_MODELS[0].id : OPENROUTER_MODELS[0].id);
+    };
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200">
@@ -1213,12 +1224,12 @@ ${savedMaterial.slice(0, 10000)}`;
 
           {/* Sağlayıcı Seçimi */}
           <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-2 gap-3 mb-5">
             {Object.entries(providerInfo).map(([key, val]) => (
               <button
                 key={key}
                 type="button"
-                onClick={() => { setSettingsProvider(key); setSettingsApiKey(''); }}
+                onClick={() => handleProviderChange(key)}
                 className={`p-3 rounded-xl border-2 text-left transition ${
                   settingsProvider === key
                     ? 'border-indigo-500 bg-indigo-50 text-slate-800'
@@ -1242,8 +1253,8 @@ ${savedMaterial.slice(0, 10000)}`;
             className="w-full bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-4"
           />
 
-          {/* OpenRouter model seçimi */}
-          {settingsProvider === 'openrouter' && (
+          {/* Model seçimi — OpenRouter ve OpenAI için */}
+          {(settingsProvider === 'openrouter' || settingsProvider === 'openai') && (
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-600 mb-2">Model Seç</p>
               <select
@@ -1251,13 +1262,20 @@ ${savedMaterial.slice(0, 10000)}`;
                 onChange={(e) => setLocalModel(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               >
-                {OPENROUTER_MODELS.map((m) => (
+                {modelList.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </select>
-              <p className="text-xs text-slate-400 mt-1">
-                Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">Tüm modeller →</a>
-              </p>
+              {settingsProvider === 'openrouter' && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">Tüm modeller →</a>
+                </p>
+              )}
+              {settingsProvider === 'openai' && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Modeller ücretlidir. <a href="https://platform.openai.com/docs/models" target="_blank" rel="noreferrer" className="text-indigo-500 underline">OpenAI model listesi →</a>
+                </p>
+              )}
             </div>
           )}
 
@@ -1267,12 +1285,13 @@ ${savedMaterial.slice(0, 10000)}`;
                 if (settingsApiKey.trim()) {
                   const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq'
                     : settingsApiKey.trim().startsWith('sk-or-') ? 'openrouter'
+                    : (settingsApiKey.trim().startsWith('sk-') && settingsProvider !== 'openrouter') ? 'openai'
                     : settingsProvider;
                   localStorage.setItem('gemini_api_key', settingsApiKey.trim());
                   localStorage.setItem('ai_provider', detectedProvider);
                   setApiKey(settingsApiKey.trim());
                   setProvider(detectedProvider);
-                  if (detectedProvider === 'openrouter') {
+                  if (detectedProvider === 'openrouter' || detectedProvider === 'openai') {
                     localStorage.setItem('openrouter_model', localModel);
                     setOpenRouterModel(localModel);
                   }
@@ -1366,7 +1385,7 @@ ${savedMaterial.slice(0, 10000)}`;
           >
             <Key size={18} />
             <span className="flex-1 text-left">
-              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : 'Gemini'}
+              {provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : provider === 'openai' ? 'OpenAI' : 'Gemini'}
             </span>
             {apiKey && (
               <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
