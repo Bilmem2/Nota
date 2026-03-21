@@ -766,10 +766,11 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
+          const detectedProvider = key.startsWith('gsk_') ? 'groq' : prov;
           localStorage.setItem('gemini_api_key', key);
-          localStorage.setItem('ai_provider', prov);
+          localStorage.setItem('ai_provider', detectedProvider);
           setApiKey(key);
-          setProvider(prov);
+          setProvider(detectedProvider);
         }}
       />
     );
@@ -828,10 +829,11 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
             <button
               onClick={() => {
                 if (settingsApiKey.trim()) {
+                  const detectedProvider = settingsApiKey.trim().startsWith('gsk_') ? 'groq' : settingsProvider;
                   localStorage.setItem('gemini_api_key', settingsApiKey.trim());
-                  localStorage.setItem('ai_provider', settingsProvider);
+                  localStorage.setItem('ai_provider', detectedProvider);
                   setApiKey(settingsApiKey.trim());
-                  setProvider(settingsProvider);
+                  setProvider(detectedProvider);
                   setSettingsApiKey('');
                   setShowSettings(false);
                 }
