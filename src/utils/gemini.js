@@ -34,7 +34,8 @@ async function callGroqAPI(prompt, systemInstruction, apiKey, isJson) {
       { role: 'user', content: prompt },
     ],
   };
-  if (isJson) payload.response_format = { type: 'json_object' };
+  // Note: Groq's json_object mode cannot return top-level arrays (OpenAI spec limitation).
+  // We rely on prompt instructions + parseJSON unwrapping instead.
 
   const response = await fetch(GROQ_URL, {
     method: 'POST',

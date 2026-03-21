@@ -23,7 +23,21 @@ export function parseJSON(text) {
       }
     }
 
-    return JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
+
+    // Groq json_object mode wraps arrays in an object — unwrap it
+    if (parsed && !Array.isArray(parsed) && typeof parsed === 'object') {
+      const values = Object.values(parsed);
+      if (values.length === 1 && Array.isArray(values[0])) {
+        return values[0];
+      }
+      // Also handle nested arrays like { questions: [...] }
+      for (const val of values) {
+        if (Array.isArray(val) && val.length > 0) return val;
+      }
+    }
+
+    return parsed;
   } catch (e) {
     console.error('JSON parse error:', e);
     return null;
