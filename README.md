@@ -8,7 +8,7 @@
 
 *Sınava kadar uyumaz.*
 
-**[→ Uygulamayı Aç](https://Bilmem2.github.io/yapay-ogretmen/)**
+**[→ Uygulamayı Aç](https://Bilmem2.github.io/Nota/)**
 
 </div>
 
@@ -16,7 +16,7 @@
 
 ## Nasıl Kullanılır?
 
-1. [Uygulamayı aç](https://Bilmem2.github.io/yapay-ogretmen/)
+1. [Uygulamayı aç](https://Bilmem2.github.io/Nota/)
 2. Ücretsiz bir API anahtarı al:
    - **Gemini** → [Google AI Studio](https://aistudio.google.com/app/apikey)
    - **Groq** → [Groq Console](https://console.groq.com/keys) *(daha hızlı)*

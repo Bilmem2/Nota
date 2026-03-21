@@ -8,7 +8,7 @@
 
 *Doesn't sleep until the exam.*
 
-**[→ Open App](https://Bilmem2.github.io/yapay-ogretmen/)**
+**[→ Open App](https://Bilmem2.github.io/Nota/)**
 
 </div>
 
@@ -16,7 +16,7 @@
 
 ## How to Use
 
-1. [Open the app](https://Bilmem2.github.io/yapay-ogretmen/)
+1. [Open the app](https://Bilmem2.github.io/Nota/)
 2. Get a free API key:
    - **Gemini** → [Google AI Studio](https://aistudio.google.com/app/apikey)
    - **Groq** → [Groq Console](https://console.groq.com/keys) *(faster)*

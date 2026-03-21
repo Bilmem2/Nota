@@ -1168,7 +1168,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       {/* Mobil Header */}
       <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white p-4 shadow-md z-20 shrink-0">
         <div className="flex items-center gap-2 font-bold text-xl">
-          <img src="/yapay-ogretmen/favicon.png" alt="logo" className="w-8 h-8 rounded-lg" />
+          <img src="/Nota/favicon.png" alt="logo" className="w-8 h-8 rounded-lg" />
           <span>{t.appName}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -1191,7 +1191,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       >
         <div className="p-6 hidden md:flex items-center justify-between border-b border-indigo-800">
           <div className="flex items-center gap-3">
-            <img src="/yapay-ogretmen/favicon.png" alt="logo" className="w-10 h-10 rounded-xl" />
+            <img src="/Nota/favicon.png" alt="logo" className="w-10 h-10 rounded-xl" />
             <h1 className="text-xl font-extrabold tracking-wide">{t.appName}</h1>
           </div>
         </div>

@@ -69,7 +69,7 @@ export default function OnboardingScreen({ onApiKeySubmit }) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-5">
             <img
-              src="/yapay-ogretmen/favicon.png"
+              src="/Nota/favicon.png"
               alt="Nota"
               className="w-20 h-20 rounded-2xl shadow-2xl shadow-indigo-900/60 ring-4 ring-white/10"
             />

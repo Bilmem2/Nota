@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/yapay-ogretmen/',
+  base: '/Nota/',
   test: {
     environment: 'jsdom',
     globals: true,
