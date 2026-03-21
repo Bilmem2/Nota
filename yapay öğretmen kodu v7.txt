@@ -1,0 +1,2451 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  BookOpen, 
+  FileText, 
+  GraduationCap, 
+  MessageSquare, 
+  UploadCloud, 
+  Send, 
+  Loader2, 
+  CheckCircle2, 
+  AlertCircle,
+  Menu,
+  X,
+  Lightbulb,
+  Check,
+  X as XIcon,
+  RotateCw,
+  ChevronRight,
+  ClipboardList,
+  Target,
+  Settings2,
+  Printer,
+  Volume2,
+  VolumeX,
+  Workflow,
+  Globe,
+  Layers,
+  PieChart,
+  Maximize,
+  Minimize,
+  Library,
+  PlusCircle,
+  Download,
+  Upload,
+  Trash2,
+  FolderOpen
+} from 'lucide-react';
+
+// --- SES EFEKTİ (Web Audio API) ---
+const playSound = (type, enabled) => {
+  if (!enabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    const now = ctx.currentTime;
+    
+    if (type === 'select') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'success') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.setValueAtTime(600, now + 0.1);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'finish') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(554, now + 0.1);
+      osc.frequency.setValueAtTime(659, now + 0.2);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.1);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    }
+  } catch (e) {
+    // Sessizce yoksay
+  }
+};
+
+// --- PDF YAZDIRMA YARDIMCISI ---
+const handlePrint = (elementId, title) => {
+  const content = document.getElementById(elementId).innerHTML;
+  const printWindow = window.open('', '_blank');
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="tr">
+      <head>
+        <meta charset="UTF-8">
+        <title>${title} - Akademik Asistan</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; clear: both; padding-top: 2rem; }
+          }
+        </style>
+      </head>
+      <body class="p-8 md:p-12 font-sans text-slate-800 bg-white">
+        <div class="mb-8 border-b-2 border-slate-200 pb-4 flex items-center gap-4">
+          <h1 class="text-3xl font-extrabold text-indigo-900">${title}</h1>
+        </div>
+        <div class="prose prose-slate max-w-none">
+          ${content}
+        </div>
+        <script>
+          setTimeout(() => {
+            window.print();
+            window.close();
+          }, 1000);
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+// --- API YARDIMCI FONKSİYONU ---
+const callGemini = async (prompt, systemInstruction, inlineData = null, isJson = false) => {
+  const apiKey = ""; 
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+  
+  const parts = [{ text: prompt }];
+  if (inlineData) {
+    parts.push({ inlineData });
+  }
+
+  const payload = {
+    contents: [{ parts }],
+    systemInstruction: { parts: [{ text: systemInstruction }] }
+  };
+
+  if (isJson) {
+    payload.generationConfig = { responseMimeType: "application/json" };
+  }
+
+  const delays = [1000, 2000, 4000, 8000, 16000];
+  const retries = 5;
+
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Bir yanıt oluşturulamadı.";
+    } catch (error) {
+      if (i === retries) {
+        return "Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip daha sonra tekrar deneyin.";
+      }
+      await new Promise(res => setTimeout(res, delays[i]));
+    }
+  }
+};
+
+// --- GELİŞMİŞ MARKDOWN RENDERER ---
+const formatSubSup = (str) => {
+  let safeStr = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return safeStr
+    .replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>')
+    .replace(/\^([a-zA-Z0-9+\-]+)/g, '<sup>$1</sup>')
+    .replace(/_\{([^}]+)\}/g, '<sub>$1</sub>')
+    .replace(/_([a-zA-Z0-9+\-]+)/g, '<sub>$1</sub>');
+};
+
+const formatInline = (text) => {
+  if (!text) return "";
+  
+  let processedText = text
+    .replace(/\\alpha/g, 'α')
+    .replace(/\\beta/g, 'β')
+    .replace(/\\gamma/g, 'γ')
+    .replace(/\\delta/g, 'δ')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\mu/g, 'μ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\sigma/g, 'σ')
+    .replace(/\\rightarrow/g, '→')
+    .replace(/\$([^\$]+)\$/g, '$1'); 
+
+  const parts = processedText.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold text-slate-800" dangerouslySetInnerHTML={{ __html: formatSubSup(part.slice(2, -2)) }} />;
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i} className="italic text-slate-700" dangerouslySetInnerHTML={{ __html: formatSubSup(part.slice(1, -1)) }} />;
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={i} className="bg-slate-100 text-rose-600 px-1.5 py-0.5 rounded-md font-mono text-sm">{part.slice(1, -1)}</code>;
+    }
+    return <span key={i} dangerouslySetInnerHTML={{ __html: formatSubSup(part) }} />;
+  });
+};
+
+const splitTableRow = (row) => {
+  const parts = row.split('|');
+  if (parts[0].trim() === '') parts.shift();
+  if (parts.length > 0 && parts[parts.length - 1].trim() === '') parts.pop();
+  return parts.map(p => p.trim());
+};
+
+const renderMarkdown = (text) => {
+  if (!text) return null;
+  
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    let line = lines[i];
+    let cleanLine = line.trim().replace(/^[-*\d+.]\s+/, '').trim();
+
+    if (cleanLine.startsWith('[TÜYO]')) {
+      elements.push(
+        <div key={i} className="my-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="bg-white p-2 rounded-xl shadow-sm no-print">
+              <Lightbulb className="shrink-0 text-purple-600" size={24} />
+            </div>
+            <div>
+              <span className="font-extrabold text-purple-800 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Sınav Tüyosu</span>
+              <p className="text-purple-950 font-medium leading-relaxed">{formatInline(cleanLine.replace('[TÜYO]', '').trim())}</p>
+            </div>
+          </div>
+        </div>
+      );
+      i++; continue;
+    }
+
+    if (cleanLine.startsWith('[DİKKAT]')) {
+      elements.push(
+        <div key={i} className="my-6 bg-gradient-to-br from-rose-50 to-red-50 border border-rose-100 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="bg-white p-2 rounded-xl shadow-sm no-print">
+              <AlertCircle className="shrink-0 text-rose-600" size={24} />
+            </div>
+            <div>
+              <span className="font-extrabold text-rose-800 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kavram Yanılgısı / Tuzak</span>
+              <p className="text-rose-950 font-medium leading-relaxed">{formatInline(cleanLine.replace('[DİKKAT]', '').trim())}</p>
+            </div>
+          </div>
+        </div>
+      );
+      i++; continue;
+    }
+
+    if (cleanLine.startsWith('[ÖNEMLİ]')) {
+      elements.push(
+        <div key={i} className="my-6 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="bg-white p-2 rounded-xl shadow-sm no-print">
+              <Target className="shrink-0 text-emerald-600" size={24} />
+            </div>
+            <div>
+              <span className="font-extrabold text-emerald-800 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kritik Vurgu</span>
+              <p className="text-emerald-950 font-medium leading-relaxed">{formatInline(cleanLine.replace('[ÖNEMLİ]', '').trim())}</p>
+            </div>
+          </div>
+        </div>
+      );
+      i++; continue;
+    }
+
+    if (line.startsWith('##### ')) { 
+      elements.push(<h5 key={i} className="text-base font-bold mt-4 mb-2 text-indigo-700 pl-2 break-after-avoid">{formatInline(line.replace('##### ', ''))}</h5>); 
+      i++; continue; 
+    }
+    if (line.startsWith('#### ')) { 
+      elements.push(<h4 key={i} className="text-lg font-bold mt-6 mb-3 text-indigo-800 border-l-[3px] border-indigo-400 pl-3 py-1 bg-indigo-50/30 rounded-r-lg break-after-avoid">{formatInline(line.replace('#### ', ''))}</h4>); 
+      i++; continue; 
+    }
+    if (line.startsWith('### ')) { 
+      elements.push(<h3 key={i} className="text-xl font-bold mt-8 mb-4 text-indigo-900 border-l-[4px] border-indigo-500 pl-4 py-1.5 bg-indigo-50/50 rounded-r-xl break-after-avoid">{formatInline(line.replace('### ', ''))}</h3>); 
+      i++; continue; 
+    }
+    if (line.startsWith('## ')) { 
+      elements.push(<h2 key={i} className="text-2xl font-bold mt-10 mb-4 text-slate-800 border-b-2 border-slate-100 pb-2 break-after-avoid">{formatInline(line.replace('## ', ''))}</h2>); 
+      i++; continue; 
+    }
+    if (line.startsWith('# ')) { 
+      elements.push(<h1 key={i} className="text-3xl font-extrabold mt-8 mb-6 text-indigo-950 break-after-avoid">{formatInline(line.replace('# ', ''))}</h1>); 
+      i++; continue; 
+    }
+
+    if (line.trim().startsWith('|') && i + 1 < lines.length && lines[i+1].trim().startsWith('|') && lines[i+1].includes('---')) {
+      const tableRows = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableRows.push(lines[i]);
+        i++;
+      }
+      
+      if (tableRows.length >= 2) {
+        const headers = splitTableRow(tableRows[0]);
+        const dataRows = tableRows.slice(2).map(splitTableRow);
+        
+        elements.push(
+          <div key={`table-${i}`} className="overflow-x-auto my-6 border border-slate-200 rounded-xl shadow-sm break-inside-avoid">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  {headers.map((h, idx) => (
+                    <th key={idx} className="px-6 py-4 text-left text-sm font-bold text-slate-700 tracking-wider bg-slate-100">{formatInline(h)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {dataRows.map((row, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
+                    {row.map((cell, cIdx) => (
+                      <td key={cIdx} className="px-6 py-4 text-sm text-slate-600 leading-relaxed">{formatInline(cell)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      continue;
+    }
+
+    if (line.trim().match(/^\d+\.\s/)) { 
+      const listItems = [];
+      let startNumMatch = line.trim().match(/^(\d+)\.\s/);
+      let startNum = startNumMatch ? parseInt(startNumMatch[1], 10) : 1;
+
+      while (i < lines.length && lines[i].trim().match(/^\d+\.\s/)) {
+        let currentCleanLine = lines[i].trim().replace(/^\d+\.\s/, '').trim();
+        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]')) {
+           break; 
+        }
+        listItems.push(currentCleanLine);
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} start={startNum} className="ml-6 mb-6 list-decimal marker:text-indigo-600 marker:font-bold font-medium pl-2 text-slate-800 space-y-2">
+          {listItems.map((item, idx) => <li key={idx}>{formatInline(item)}</li>)}
+        </ol>
+      );
+      continue; 
+    }
+
+    if (line.trim().match(/^[-*]\s/)) { 
+      const listItems = [];
+      while (i < lines.length && lines[i].trim().match(/^[-*]\s/)) {
+        let currentCleanLine = lines[i].trim().replace(/^[-*]\s/, '').trim();
+        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]')) {
+           break; 
+        }
+        listItems.push(currentCleanLine);
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} className="ml-6 mb-6 list-disc marker:text-indigo-400 pl-2 space-y-2 text-slate-700">
+          {listItems.map((item, idx) => <li key={idx}>{formatInline(item)}</li>)}
+        </ul>
+      );
+      continue; 
+    }
+
+    if (line.trim().startsWith('> ')) { 
+      elements.push(
+        <blockquote key={i} className="my-4 border-l-4 border-slate-300 bg-slate-50 p-4 rounded-r-xl text-slate-700 italic break-inside-avoid">
+          <p>{formatInline(line.substring(2))}</p>
+        </blockquote>
+      );
+      i++; continue; 
+    }
+
+    if (line.trim() === '') { 
+      elements.push(<div key={i} className="h-4"></div>); 
+      i++; continue; 
+    }
+
+    elements.push(<p key={i} className="mb-4 leading-relaxed text-slate-700 text-lg">{formatInline(line)}</p>);
+    i++;
+  }
+  
+  return elements;
+};
+
+const VisualSummaryComponent = ({ data }) => {
+    if (!data) return null;
+    
+    return (
+        <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-teal-100 mb-8">
+            <h3 className="text-2xl font-extrabold text-teal-900 mb-10 text-center border-b-2 border-teal-100 pb-4">
+                {data.title}
+            </h3>
+            
+            {data.layout === 'timeline' && data.items && (
+                <div className="relative border-l-4 border-teal-200 ml-4 md:ml-8 space-y-12 pb-8">
+                    {data.items.map((item, idx) => (
+                        <div key={idx} className="relative pl-8 md:pl-12 break-inside-avoid">
+                            <div className="absolute w-6 h-6 bg-teal-500 rounded-full -left-[15px] top-1 border-4 border-white shadow-sm"></div>
+                            <div className="bg-teal-50/50 border border-teal-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <span className="text-sm font-bold text-teal-600 mb-2 block tracking-wider uppercase">ADIM {idx + 1}</span>
+                                <h4 className="text-xl font-bold text-slate-800 mb-3">{item.subtitle}</h4>
+                                <p className="text-slate-600 leading-relaxed font-medium">{item.details}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {data.layout === 'grid' && data.items && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {data.items.map((item, idx) => (
+                        <div key={idx} className="bg-gradient-to-br from-white to-slate-50 border-2 border-teal-100/50 p-6 rounded-2xl shadow-sm hover:border-teal-300 transition-colors h-full flex flex-col break-inside-avoid">
+                            <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center font-black text-xl mb-4 shrink-0">
+                                {idx + 1}
+                            </div>
+                            <h4 className="text-xl font-bold text-slate-800 mb-3">{item.subtitle}</h4>
+                            <p className="text-slate-600 leading-relaxed font-medium flex-1">{item.details}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {data.layout === 'comparison' && data.comparisonData && (
+                <div className="overflow-x-auto break-inside-avoid">
+                    <div className="flex items-center justify-center gap-4 mb-8">
+                        <div className="px-6 py-3 bg-teal-600 text-white font-bold rounded-xl shadow-md text-lg">{data.comparisonData.conceptA}</div>
+                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-black text-slate-400 text-sm">VS</div>
+                        <div className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md text-lg">{data.comparisonData.conceptB}</div>
+                    </div>
+                    <table className="min-w-full border-2 border-slate-200 rounded-2xl overflow-hidden">
+                        <thead className="bg-slate-100">
+                            <tr>
+                                <th className="px-6 py-4 text-left font-bold text-slate-500 uppercase tracking-wider text-xs w-1/3 border-b-2 border-slate-200">Karşılaştırma Noktası</th>
+                                <th className="px-6 py-4 text-left font-bold text-teal-800 border-b-2 border-slate-200 w-1/3 border-l-2">{data.comparisonData.conceptA}</th>
+                                <th className="px-6 py-4 text-left font-bold text-indigo-800 border-b-2 border-slate-200 w-1/3 border-l-2">{data.comparisonData.conceptB}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 bg-white">
+                            {data.comparisonData.points.map((pt, idx) => (
+                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-6 py-5 font-bold text-slate-700">{pt.feature}</td>
+                                    <td className="px-6 py-5 text-slate-600 font-medium border-l-2 border-slate-100">{pt.valA}</td>
+                                    <td className="px-6 py-5 text-slate-600 font-medium border-l-2 border-slate-100">{pt.valB}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {data.layout === 'table' && data.tableData && (
+                <div className="overflow-x-auto break-inside-avoid border-2 border-slate-200 rounded-2xl">
+                    <table className="min-w-full divide-y divide-slate-200">
+                        <thead className="bg-slate-100">
+                            <tr>
+                                {data.tableData.headers.map((h, idx) => (
+                                    <th key={idx} className="px-6 py-4 text-left font-bold text-slate-700 tracking-wider text-sm">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-200">
+                            {data.tableData.rows.map((row, rIdx) => (
+                                <tr key={rIdx} className="hover:bg-slate-50">
+                                    {row.map((cell, cIdx) => (
+                                        <td key={cIdx} className="px-6 py-4 text-sm text-slate-600 font-medium">{cell}</td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const parseJSON = (text) => {
+  try {
+    let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    if (cleaned.startsWith('[')) {
+        const startIndex = cleaned.indexOf('[');
+        const endIndex = cleaned.lastIndexOf(']');
+        if (startIndex !== -1 && endIndex !== -1) {
+            cleaned = cleaned.substring(startIndex, endIndex + 1);
+        }
+    } else if (cleaned.startsWith('{')) {
+        const startIndex = cleaned.indexOf('{');
+        const endIndex = cleaned.lastIndexOf('}');
+        if (startIndex !== -1 && endIndex !== -1) {
+            cleaned = cleaned.substring(startIndex, endIndex + 1);
+        }
+    }
+    
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error("JSON parse error:", e);
+    return null;
+  }
+};
+
+const isAnswerCorrect = (userAnswer, correctAnswer) => {
+  if (!userAnswer || !correctAnswer) return false;
+  return userAnswer.toString().trim().localeCompare(correctAnswer.toString().trim(), 'tr', { sensitivity: 'base' }) === 0 || 
+         userAnswer.toString().trim().localeCompare(correctAnswer.toString().trim(), 'en', { sensitivity: 'base' }) === 0;
+};
+
+// --- ANA UYGULAMA BİLEŞENİ ---
+export default function App() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab, setActiveTab] = useState('archive');
+  const [materialText, setMaterialText] = useState('');
+  
+  const [sessionsList, setSessionsList] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [studyTitle, setStudyTitle] = useState('');
+
+  const [savedMaterial, setSavedMaterial] = useState('');
+  const [materialChunks, setMaterialChunks] = useState([]); 
+  
+  const [generatingIndex, setGeneratingIndex] = useState({ lesson: -1, notes: -1, visual: -1 }); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  
+  const [content, setContent] = useState({
+    lesson: {}, 
+    notes: {},
+    visual: {},
+    quiz: null,
+    quizHistory: [] // YENİ: Oturum içi geçmiş sınavlar kayıt edilir
+  });
+  
+  const [loading, setLoading] = useState({
+    lesson: false,
+    notes: false,
+    visual: false,
+    quiz: false,
+    chat: false
+  });
+  
+  const [quizConfig, setQuizConfig] = useState({
+    count: 10,
+    difficulty: 'Orta',
+    examMode: 'interactive', 
+    language: 'Turkish',     
+    onlyMultipleChoice: false,
+    onlyEssay: false,
+    quizScope: 'current', // YENİ: 'current' | 'mixed'
+    selectedSessions: []  // YENİ: Karma sınav için seçilen hafta/projelerin ID'leri
+  });
+  
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  const [quizState, setQuizState] = useState({
+    activeMode: 'interactive',
+    currentIndex: 0,
+    answers: {},
+    verdicts: {},
+    isChecked: false,
+    isEvaluating: false,
+    hintLevel: 0, // YENİ: 0, 1, 2 şeklinde ipucu kademesi
+    finished: false
+  });
+  
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'model', text: 'Ben senin akademik asistanınım. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.' }
+  ]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  
+  const chatEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const importFileRef = useRef(null);
+
+  // --- HAFIZA (LOCAL STORAGE) YÖNETİMİ ---
+  useEffect(() => {
+    try {
+        const localData = localStorage.getItem('akademik_asistan_sessions');
+        if (localData) {
+            const parsed = JSON.parse(localData);
+            setSessionsList(parsed);
+        }
+    } catch(e) {
+        console.error("Hafıza yüklenemedi", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!activeSessionId || !savedMaterial) return;
+
+    const currentSessionData = {
+        id: activeSessionId,
+        title: studyTitle || "İsimsiz Çalışma",
+        lastModified: new Date().toISOString(),
+        savedMaterial,
+        materialChunks,
+        content,
+        chatMessages
+    };
+
+    setSessionsList(prev => {
+        const existingIdx = prev.findIndex(s => s.id === activeSessionId);
+        let newList = [...prev];
+        if (existingIdx >= 0) {
+            newList[existingIdx] = currentSessionData;
+        } else {
+            newList = [currentSessionData, ...prev];
+        }
+        localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+        return newList;
+    });
+  }, [savedMaterial, content, chatMessages, studyTitle, activeSessionId, materialChunks]);
+
+  const createNewSession = () => {
+      setActiveSessionId(Date.now().toString());
+      setStudyTitle('');
+      setMaterialText('');
+      setSavedMaterial('');
+      setMaterialChunks([]);
+      setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
+      setChatMessages([{ role: 'model', text: 'Yeni çalışmaya hoş geldin! Sol menüden materyal yükleyerek başlayabilirsin.' }]);
+      setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+      setQuizConfig(p => ({ ...p, quizScope: 'current', selectedSessions: [] })); // Config sıfırlama
+      setActiveTab('material');
+      setIsMobileMenuOpen(false);
+  };
+
+  const loadSession = (session) => {
+      setActiveSessionId(session.id);
+      setStudyTitle(session.title);
+      setSavedMaterial(session.savedMaterial);
+      setMaterialText(session.savedMaterial); 
+      setMaterialChunks(session.materialChunks || []);
+      setContent(session.content || { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
+      setChatMessages(session.chatMessages || []);
+      setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+      setQuizConfig(p => ({ ...p, quizScope: 'current', selectedSessions: [] })); // Config sıfırlama
+      setActiveTab('lesson');
+      setIsMobileMenuOpen(false);
+  };
+
+  const deleteSession = (id, e) => {
+      e.stopPropagation();
+      if(window.confirm("Bu çalışmayı tamamen silmek istediğine emin misin?")) {
+          setSessionsList(prev => {
+              const newList = prev.filter(s => s.id !== id);
+              localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+              return newList;
+          });
+          if (activeSessionId === id) {
+              createNewSession();
+              setActiveTab('archive');
+          }
+      }
+  };
+
+  const exportSession = (session, e) => {
+      e.stopPropagation();
+      const exportData = JSON.stringify(session, null, 2);
+      const blob = new Blob([exportData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${session.title.replace(/\s+/g, '_')}_Yedek.akademik`;
+      link.click();
+  };
+
+  const handleImportFile = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          try {
+              const importedSession = JSON.parse(event.target.result);
+              if (!importedSession.id || !importedSession.savedMaterial) {
+                  throw new Error("Geçersiz format");
+              }
+              importedSession.id = Date.now().toString();
+              importedSession.title = importedSession.title + " (İçe Aktarıldı)";
+              
+              setSessionsList(prev => {
+                  const newList = [importedSession, ...prev];
+                  localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+                  return newList;
+              });
+              loadSession(importedSession);
+          } catch(err) {
+              alert("Dosya okunamadı. Lütfen geçerli bir .akademik yedek dosyası seçin.");
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = null;
+  };
+
+  const handleCheckAnswer = async () => {
+    const currentQ = content.quiz[quizState.currentIndex];
+    const uAns = quizState.answers[quizState.currentIndex];
+    const langPrompt = quizConfig.language === 'English' ? "Please evaluate in English." : "Lütfen Türkçe değerlendir.";
+    
+    if (!uAns || uAns.toString().trim() === '') return;
+
+    if (currentQ.tip === 'short_answer' || currentQ.tip === 'fill_blank' || currentQ.tip === 'essay') {
+        setQuizState(p => ({ ...p, isEvaluating: true }));
+        try {
+            const prompt = `Bir öğrencinin akademik sınav cevabını değerlendir. ${langPrompt}
+Soru Tipi: ${currentQ.tip}
+Soru: "${currentQ.soru}"
+Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
+Öğrencinin Verdiği Cevap: "${uAns}"
+
+Öğrenci beklenen cevabın ana fikrini yakalamışsa isCorrect: true yap. Kısmen doğruysa tolerans gösterip doğru sayabilirsin ancak eksiklerini feedback kısmında kibarca belirt. Essay (kompozisyon) ise argümanların sağlamlığına ve beklenen anahtar noktalara değinip değinmediğine bak. Tamamen alakasızsa isCorrect: false yap. 
+Çıktın SADECE geçerli bir JSON olmalıdır.
+{ "isCorrect": true/false, "feedback": "Öğrenciye özel değerlendirme cümlen" }`;
+            const result = await callGemini(prompt, "Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.", null, true);
+            const parsed = parseJSON(result);
+            
+            const isCorr = parsed?.isCorrect ?? false;
+            const feedback = parsed?.feedback ?? "Değerlendirme yapılamadı.";
+            
+            setQuizState(p => ({
+                ...p, isEvaluating: false, isChecked: true,
+                verdicts: { ...p.verdicts, [p.currentIndex]: { isCorrect: isCorr, feedback } }
+            }));
+            playSound(isCorr ? 'success' : 'error', soundEnabled);
+        } catch (err) {
+            const fallbackCorr = isAnswerCorrect(uAns, currentQ.dogruCevap);
+            setQuizState(p => ({
+                ...p, isEvaluating: false, isChecked: true,
+                verdicts: { ...p.verdicts, [p.currentIndex]: { isCorrect: fallbackCorr, feedback: "Otomatik kontrol yapıldı." } }
+            }));
+            playSound(fallbackCorr ? 'success' : 'error', soundEnabled);
+        }
+    } else {
+        const isCorr = isAnswerCorrect(uAns, currentQ.dogruCevap);
+        setQuizState(p => ({
+            ...p, isChecked: true,
+            verdicts: { ...p.verdicts, [p.currentIndex]: { isCorrect: isCorr, feedback: null } }
+        }));
+        playSound(isCorr ? 'success' : 'error', soundEnabled);
+    }
+  };
+
+  const handleMockExamSubmit = async () => {
+    setQuizState(p => ({ ...p, isEvaluating: true }));
+    const newVerdicts = {};
+    const questionsToEvaluate = [];
+    const langPrompt = quizConfig.language === 'English' ? "Provide feedback in English." : "Geri bildirimi Türkçe ver.";
+
+    content.quiz.forEach((q, i) => {
+        const uAns = quizState.answers[i];
+        const isEmpty = !uAns || uAns.toString().trim() === '';
+        
+        if (isEmpty) {
+            newVerdicts[i] = { isCorrect: false, feedback: quizConfig.language === 'English' ? "Left blank." : "Boş bırakıldı." };
+        } else if (q.tip === 'multiple_choice' || q.tip === 'true_false') {
+            const isCorr = isAnswerCorrect(uAns, q.dogruCevap);
+            newVerdicts[i] = { isCorrect: isCorr, feedback: null };
+        } else {
+            questionsToEvaluate.push({ index: i, question: q, answer: uAns });
+        }
+    });
+
+    if (questionsToEvaluate.length > 0) {
+        const prompt = `Aşağıdaki öğrenci cevaplarını topluca değerlendir. Öğrenci ana fikri yakalamışsa true say. Kısa ve net bir feedback ver. Kompozisyonlar (essay) için anahtar argümanları kontrol et. ${langPrompt}
+SADECE JSON DIZISI DÖN: [{"index": 0, "isCorrect": true, "feedback": "..."}]
+Cevaplar:
+${questionsToEvaluate.map(item => `Index: ${item.index} | Tip: ${item.question.tip} | Soru: ${item.question.soru} | Beklenen: ${item.question.dogruCevap} | Verilen: ${item.answer}`).join('\n')}`;
+        
+        try {
+            const result = await callGemini(prompt, "Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.", null, true);
+            const parsed = parseJSON(result);
+            if (Array.isArray(parsed)) {
+                parsed.forEach(res => {
+                    if (res.index !== undefined) {
+                        newVerdicts[res.index] = { isCorrect: res.isCorrect, feedback: res.feedback };
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Bulk AI evaluation failed", err);
+        }
+    }
+    
+    content.quiz.forEach((q, i) => {
+        if (!newVerdicts[i]) {
+            newVerdicts[i] = { isCorrect: isAnswerCorrect(quizState.answers[i], q.dogruCevap), feedback: "Auto-checked." };
+        }
+    });
+
+    setQuizState(p => {
+        const newState = { ...p, isEvaluating: false, isChecked: true, finished: true, verdicts: newVerdicts };
+        setContent(prev => ({ 
+            ...prev, 
+            quizHistory: [...(prev.quizHistory || []), { quiz: content.quiz, state: newState, config: quizConfig, date: new Date().toISOString() }] 
+        }));
+        return newState;
+    });
+    
+    const correctCount = Object.values(newVerdicts).filter(v => v.isCorrect).length;
+    const score = Math.round((correctCount / content.quiz.length) * 100);
+    playSound(score >= 50 ? 'finish' : 'error', soundEnabled);
+  };
+
+  // --- Sınav Modu Hızlı Klavye (Enter) Kısayolları ---
+  const handleCheckAnswerRef = useRef();
+  const quizStateRef = useRef(quizState);
+  const activeTabRef = useRef(activeTab);
+  const contentRef = useRef(content);
+  const quizConfigRef = useRef(quizConfig);
+  const soundEnabledRef = useRef(soundEnabled);
+
+  useEffect(() => {
+      handleCheckAnswerRef.current = handleCheckAnswer;
+      quizStateRef.current = quizState;
+      activeTabRef.current = activeTab;
+      contentRef.current = content;
+      quizConfigRef.current = quizConfig;
+      soundEnabledRef.current = soundEnabled;
+  }, [handleCheckAnswer, quizState, activeTab, content, quizConfig, soundEnabled]);
+
+  useEffect(() => {
+    const handleGlobalEnter = (e) => {
+      const state = quizStateRef.current;
+      const currentContent = contentRef.current;
+      
+      if (activeTabRef.current === 'quiz' && state.activeMode === 'interactive' && !state.finished && !state.isEvaluating) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          const activeTag = document.activeElement?.tagName;
+          if (activeTag === 'TEXTAREA' || activeTag === 'INPUT' || activeTag === 'BUTTON') {
+            return;
+          }
+          
+          if (!state.isChecked) {
+            const uAns = state.answers[state.currentIndex];
+            if (uAns && uAns.toString().trim() !== '') {
+              e.preventDefault();
+              if (handleCheckAnswerRef.current) {
+                  handleCheckAnswerRef.current();
+              }
+            }
+          } else {
+            // Eğer soru cevaplandıysa Enter ile sonraki soruya geç veya bitir
+            e.preventDefault();
+            if (state.currentIndex < currentContent.quiz.length - 1) {
+                playSound('select', soundEnabledRef.current);
+                setQuizState(p => ({...p, currentIndex: p.currentIndex + 1, isChecked: false, hintLevel: 0, showHint: false}));
+            } else {
+                playSound('finish', soundEnabledRef.current);
+                setQuizState(p => {
+                    const newState = { ...p, finished: true };
+                    setContent(prev => ({ 
+                        ...prev, 
+                        quizHistory: [...(prev.quizHistory || []), { quiz: prev.quiz, state: newState, config: quizConfigRef.current, date: new Date().toISOString() }] 
+                    }));
+                    return newState;
+                });
+            }
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalEnter);
+    return () => window.removeEventListener('keydown', handleGlobalEnter);
+  }, []);
+
+  // TAM EKRAN (FULLSCREEN) YÖNETİMİ
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      const docEl = document.documentElement;
+      const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+      
+      if (requestFs) {
+        requestFs.call(docEl).catch(err => {
+          console.warn("Native fullscreen engellendi, CSS fallback kullanılıyor.");
+          setIsFullscreen(!isFullscreen);
+        });
+      } else {
+        setIsFullscreen(!isFullscreen);
+      }
+    } else {
+      const exitFs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exitFs) {
+        exitFs.call(document);
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
+
+  const handleSaveMaterial = () => {
+    if (materialText.trim().length < 50) return;
+    
+    const MAX_LEN = 12000;
+    let text = materialText;
+    const chunks = [];
+    while (text.length > 0) {
+        if (text.length <= MAX_LEN) {
+            chunks.push(text);
+            break;
+        }
+        let splitIndex = text.lastIndexOf('\n', MAX_LEN);
+        if (splitIndex === -1 || splitIndex < MAX_LEN - 2000) splitIndex = MAX_LEN;
+        chunks.push(text.slice(0, splitIndex));
+        text = text.slice(splitIndex);
+    }
+    
+    if (!activeSessionId) {
+        setActiveSessionId(Date.now().toString());
+    }
+
+    setMaterialChunks(chunks);
+    setSavedMaterial(materialText); 
+    
+    setGeneratingIndex({ lesson: -1, notes: -1, visual: -1 });
+    setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+    setQuizConfig(p => ({ ...p, quizScope: 'current', selectedSessions: [] }));
+    
+    if (chatMessages.length <= 1) {
+        setChatMessages([{ role: 'model', text: 'Yeni materyal başarıyla sisteme aktarıldı. Hazırsan çalışmaya başlayalım.' }]);
+    }
+    setActiveTab('lesson');
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.name.endsWith(".pptx")) {
+        alert("Sunum dosyalarınızı (PPTX) doğrudan okuyamıyorum, ancak Dosya > Farklı Kaydet diyerek PDF olarak kaydederseniz tüm içeriği anında analiz edebilirim!");
+        e.target.value = null;
+        return;
+    }
+
+    if (file.type === "text/plain" || file.name.endsWith(".txt")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          setMaterialText(event.target.result);
+          if (!studyTitle) setStudyTitle(file.name.replace('.txt', ''));
+      };
+      reader.readAsText(file);
+    } else if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      if (file.size > 5 * 1024 * 1024) {
+         alert("PDF dosyası çok büyük (5MB sınırı). Lütfen daha küçük bir bölüm yükleyin.");
+         e.target.value = null;
+         return;
+      }
+      setIsExtracting(true);
+      setMaterialText("Akademik asistanınız PDF'i inceliyor, lütfen bekleyin...");
+      
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64Data = event.target.result.split(',')[1];
+        const inlineData = { mimeType: "application/pdf", data: base64Data };
+        try {
+            const extractedText = await callGemini(
+                "Lütfen bu PDF dosyasının içindeki tüm okunabilir metni çıkar ve bana sadece düz metin olarak ver. Başka hiçbir açıklama yapma.",
+                "Sen yetenekli bir belge okuma asistanısın.",
+                inlineData
+            );
+            setMaterialText(extractedText || "PDF'den metin okunamadı. Lütfen metin içeren bir PDF yükleyin.");
+            if (!studyTitle) setStudyTitle(file.name.replace('.pdf', ''));
+        } catch (err) {
+            setMaterialText("PDF okunurken bir hata oluştu.");
+        } finally {
+            setIsExtracting(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+        alert("Lütfen .txt veya .pdf formatında bir dosya yükleyin.");
+    }
+    e.target.value = null;
+  };
+
+  const generateContent = async (type) => {
+    if (!savedMaterial && (type !== 'quiz' || quizConfig.quizScope !== 'mixed')) return;
+    setLoading(prev => ({ ...prev, [type]: true }));
+
+    if (type === 'quiz') {
+        const isEnglish = quizConfig.language === 'English';
+        const langReq = isEnglish 
+            ? `IMPORTANT: The generated questions, options, hints, expected correct answers, and explanations MUST BE ENTIRELY IN ENGLISH.` 
+            : `Sınav dili tamamen Türkçe olmalıdır.`;
+            
+        const isMock = quizConfig.examMode === 'mock';
+        const isHard = quizConfig.difficulty === 'Zor';
+        const isMixed = quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length > 0;
+        
+        let typeReq = '';
+        if (quizConfig.onlyMultipleChoice) {
+           typeReq = `Sınavda SADECE Çoktan Seçmeli ("multiple_choice") sorular olsun.`;
+        } else if (quizConfig.onlyEssay) {
+           typeReq = `Sınavda SADECE Uzun Açık Uçlu Kompozisyon ("essay") soruları olsun.`;
+        } else if (isMock) {
+           typeReq = `Sınavda soru tiplerini şu oranda dengeli dağıt: Yaklaşık %40 Çoktan Seçmeli ("multiple_choice"), %20 Doğru-Yanlış ("true_false"), %15 Boşluk Doldurma ("fill_blank"), %15 Kısa Cevap ("short_answer") ve %10 Kompozisyon/Uzun Cevap ("essay").`;
+        } else {
+           typeReq = `Sınavda şu soru tiplerinin karışımı olsun: Çoktan Seçmeli ("multiple_choice"), Doğru-Yanlış ("true_false"), Boşluk Doldurma ("fill_blank"), Kısa Cevap ("short_answer") ${isHard ? 've en az 1-2 adet Kompozisyon/Analiz ("essay")' : ''}.`;
+        }
+
+        // YENİ: Çoklu döküman desteği (Karma Sınav)
+        let textToAnalyze = savedMaterial;
+        let mixedReq = "";
+        
+        if (isMixed) {
+            const selectedMats = sessionsList
+                .filter(s => quizConfig.selectedSessions.includes(s.id))
+                .map(s => `--- [MÜFREDAT KONUSU: ${s.title}] ---\n${s.savedMaterial}`);
+            textToAnalyze = selectedMats.join('\n\n');
+            mixedReq = `ÖNEMLİ: Bu kapsamlı bir VİZE / FİNAL karma sınavıdır. Soruları yukarıda verilen farklı MÜFREDAT KONULARI (Haftalar) arasında dengeli bir şekilde dağıt. Sınavın her konuyu (haftayı) ölçtüğünden emin ol.`;
+        }
+
+        const prompt = `Aşağıdaki metne dayanarak ${quizConfig.count} soruluk, "${quizConfig.difficulty}" zorluk derecesinde akademik bir sınav hazırla:\n\n${textToAnalyze}`;
+        const systemInstruction = `Sen adil ve yaratıcı bir üniversite profesörüsün. Çıktıyı SADECE geçerli bir JSON dizisi olarak ver. ${typeReq} ${langReq} ${mixedReq}
+Format:
+[
+  {
+    "tip": "multiple_choice" | "true_false" | "fill_blank" | "short_answer" | "essay",
+    "soru": "Question text",
+    "secenekler": ["Option 1", "Option 2", "Option 3"] (Only for multiple_choice/true_false. For true_false use ["True", "False"] or ["Doğru", "Yanlış"]. Null for others),
+    "dogruCevap": "Exact expected answer text or expected key points for essay",
+    "ipucu1": "First small hint",
+    "ipucu2": "Second more detailed hint",
+    "aciklama": "Detailed academic explanation of the correct answer"
+  }
+]
+Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
+        
+        try {
+            const result = await callGemini(prompt, systemInstruction, null, true);
+            const finalData = parseJSON(result);
+            if (!finalData) throw new Error("JSON parse edilemedi");
+            setQuizState(p => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
+            setContent(prev => ({ ...prev, quiz: finalData }));
+        } catch (error) {
+            console.error("Sınav üretilirken hata:", error);
+            alert("Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.");
+        } finally {
+            setLoading(prev => ({ ...prev, quiz: false }));
+        }
+        return;
+    }
+
+    for (let i = 0; i < materialChunks.length; i++) {
+        if (content[type] && content[type][i]) {
+            continue; 
+        }
+        
+        setGeneratingIndex(prev => ({ ...prev, [type]: i })); 
+        
+        let prompt = "";
+        let systemInstruction = "";
+        let isJson = false;
+
+        const textToAnalyze = materialChunks[i];
+        const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
+
+        switch (type) {
+            case 'lesson':
+                prompt = `Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, akıcı, akademik ama abartıdan uzak bir dille detaylıca anlat. Materyaldeki hiçbir konuyu atlama:\n\n${textToAnalyze}`;
+                systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
+Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
+1. **Doğrudan Giriş:** Bu konunun akademik özü ve önemi nedir? 
+2. **Kapsamlı ve Eksiksiz Anlatım:** Sana verilen materyaldeki HİÇBİR BİLGİYİ atlama. Gerekirse alt başlıklar ve TABLOLAR kullanarak mantığını detaylıca anlat.
+3. **Stratejik Vurgular:** Konuyu anlatırken aralara uyarılar serpiştir.
+
+ÖNEMLİ: Akademik metinleri zenginleştirmek için şu 3 özel etiketi satır başında (başka bir işaret olmadan) YERİ GELDİKÇE kullan:
+- [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
+- [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
+- [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.`;
+                break;
+            case 'notes':
+                prompt = `Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur:\n\n${textToAnalyze}`;
+                systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA. Rehber şu 4 ana bölümden oluşmalı:
+1. **Kritik Kavramlar Sözlüğü:** Konudaki en önemli terimler ve net tanımları.
+2. **Süreçler ve İlişkiler:** Konudaki neden-sonuç ilişkileri, etki-tepki mekanizmaları veya mantıksal akış.
+3. **Püf Noktalar / Buraya Dikkat:** Sınavda tuzak olabilecek detaylar. (Yazarken satır başına [TÜYO], [DİKKAT] veya [ÖNEMLİ] etiketlerinden uygun olanı koyarak tasarımsal olarak öne çıkmalarını sağla).
+4. **Muhtemel Sınav Soruları:** Hocaların sınavlarda sorabileceği 3 adet potansiyel açık uçlu soru ve vurucu yanıtları.
+Başka hiçbir gereksiz metin ekleme.`;
+                break;
+            case 'visual':
+                prompt = `Aşağıdaki metni ${partInfo} analiz et ve içeriğin yapısına EN UYGUN görsel şablonu (Zaman çizelgesi, Karşılaştırma, Veri Tablosu veya Kategorik Grid) seçip oluştur:\n\n${textToAnalyze}`;
+                systemInstruction = `Sen uzman bir veri görselleştirme asistanısın. Metni analiz et ve şu 4 formattan BİRİNİ seçerek SADECE JSON objesi dön.
+
+Format 1 (Süreç/Tarihsel Akış):
+{ "title": "Başlık", "layout": "timeline", "items": [ { "subtitle": "Adım", "details": "Açıklama" } ] }
+
+Format 2 (Kategorik Bilgiler):
+{ "title": "Başlık", "layout": "grid", "items": [ { "subtitle": "Kategori", "details": "Açıklama" } ] }
+
+Format 3 (İki Kavramın Kıyaslanması - Örn DNA vs RNA):
+{ "title": "Başlık", "layout": "comparison", "comparisonData": { "conceptA": "Kavram 1", "conceptB": "Kavram 2", "points": [ { "feature": "Özellik", "valA": "1. Durum", "valB": "2. Durum" } ] } }
+
+Format 4 (Sınıflandırma/Sayısal Veri Tablosu):
+{ "title": "Başlık", "layout": "table", "tableData": { "headers": ["Sütun 1", "Sütun 2", "Sütun 3"], "rows": [ ["Değer 1", "Değer 2", "Değer 3"] ] } }
+
+Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin ekleme.`;
+                isJson = true;
+                break;
+            default:
+                break;
+        }
+
+        try {
+            const result = await callGemini(prompt, systemInstruction, null, isJson);
+            let finalData = result;
+            if (isJson) {
+                finalData = parseJSON(result);
+                if (!finalData) throw new Error("JSON parse edilemedi");
+            }
+            setContent(prev => ({ 
+                ...prev, 
+                [type]: { ...prev[type], [i]: finalData } 
+            }));
+        } catch (error) {
+            console.error(`Bölüm ${i+1} üretilirken hata:`, error);
+            setContent(prev => ({ 
+                ...prev, 
+                [type]: { ...prev[type], [i]: type === 'visual' ? null : "> ⚠️ *Sistem bu bölümü sentezlerken geçici bir hata yaşadı. Lütfen metnin orijinaline veya bir sonraki bölüme başvurunuz.*" } 
+            }));
+        }
+    }
+
+    setGeneratingIndex(prev => ({ ...prev, [type]: -1 }));
+    setLoading(prev => ({ ...prev, [type]: false }));
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!currentMessage.trim() || !savedMaterial) return;
+    const userMsg = currentMessage;
+    setCurrentMessage('');
+    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setLoading(prev => ({ ...prev, chat: true }));
+
+    let historyStats = "";
+    if (content.quizHistory && content.quizHistory.length > 0) {
+        historyStats = "ÖĞRENCİ SINAV GEÇMİŞİ VE ZAYIF YÖNLERİ:\n" + content.quizHistory.map((qh, idx) => {
+            const qCorrect = qh.quiz.filter((q, i) => qh.state.verdicts[i]?.isCorrect ?? isAnswerCorrect(qh.state.answers[i], q.dogruCevap)).length;
+            const score = Math.round((qCorrect / qh.quiz.length) * 100);
+            return `Sınav ${idx + 1}: ${qh.config.difficulty} Zorluk, %${score} Başarı.`;
+        }).join('\n');
+    }
+
+    const systemInstruction = `Sen üniversite öğrencilerine rehberlik eden akademik bir asistansın. Aşağıdaki referans materyali ve öğrencinin sınav geçmişini kullanarak soruları yanıtla. Zayıf yönlerini analiz edip tavsiye verebilirsin.\n\nREFERANS MATERYAL:\n${savedMaterial}\n\n${historyStats}`;
+    const chatHistoryText = chatMessages.slice(-5).map(m => `${m.role === 'user' ? 'Öğrenci' : 'Öğretmen'}: ${m.text}`).join('\n');
+    const prompt = `Önceki Sohbet:\n${chatHistoryText}\n\nÖğrenci: ${userMsg}\n\nCevabın:`;
+
+    const response = await callGemini(prompt, systemInstruction);
+    setChatMessages(prev => [...prev, { role: 'model', text: response }]);
+    setLoading(prev => ({ ...prev, chat: false }));
+  };
+
+  const tabs = [
+    { id: 'archive', icon: <Library size={20} />, label: 'Çalışmalarım', requiresMaterial: false },
+    { id: 'material', icon: <UploadCloud size={20} />, label: 'Materyal Ekle', requiresMaterial: false },
+    { id: 'lesson', icon: <BookOpen size={20} />, label: 'Ders Anlatımı', requiresMaterial: true },
+    { id: 'notes', icon: <ClipboardList size={20} />, label: 'Çalışma Rehberi', requiresMaterial: true },
+    { id: 'visual', icon: <PieChart size={20} />, label: 'Görsel Özet', requiresMaterial: true },
+    { id: 'quiz', icon: <GraduationCap size={20} />, label: 'Sınav Modu', requiresMaterial: true },
+    { id: 'chat', icon: <MessageSquare size={20} />, label: 'Soru Sor', requiresMaterial: true },
+  ];
+
+  const renderChapterNav = (type) => {
+    if (materialChunks.length <= 1) return null;
+    return (
+        <div className="flex flex-wrap items-center gap-2 mb-8 p-2 bg-slate-100/80 rounded-2xl border border-slate-200/60 no-print">
+            <span className="text-sm font-bold text-slate-500 ml-2 mr-1">Bölümler:</span>
+            {materialChunks.map((_, idx) => {
+                const isActive = activeChunk[type] === idx;
+                const isCompleted = !!content[type][idx];
+                return (
+                    <button 
+                        key={idx}
+                        onClick={() => { playSound('select', soundEnabled); setActiveChunk(p => ({...p, [type]: idx})); }}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                            isActive 
+                            ? 'bg-white text-indigo-700 shadow-sm border border-indigo-100' 
+                            : 'text-slate-600 hover:bg-slate-200 border border-transparent'
+                        }`}
+                    >
+                        Bölüm {idx + 1}
+                        {isCompleted && <CheckCircle2 size={16} className={isActive ? "text-emerald-500" : "text-emerald-400"} />}
+                    </button>
+                );
+            })}
+        </div>
+    );
+  };
+
+  return (
+    <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full overflow-hidden bg-slate-50 m-0 p-0' : ''}`}>
+      
+      {/* Mobil Header */}
+      <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white p-4 shadow-md z-20 shrink-0">
+        <div className="flex items-center gap-2 font-bold text-xl">
+          <GraduationCap size={28} />
+          <span>Akademik Asistan</span>
+        </div>
+        <div className="flex items-center gap-3">
+            <button onClick={toggleFullScreen} className="p-1 rounded-md hover:bg-indigo-700 transition-colors">
+                {isFullscreen ? <Minimize size={22} /> : <Maximize size={22} />}
+            </button>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside className={`
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+        md:translate-x-0 transition-transform duration-300 ease-in-out
+        ${isFullscreen ? 'sticky' : 'fixed md:sticky'} top-0 left-0 h-screen w-64 bg-indigo-900 text-white shadow-xl flex flex-col z-10 print:hidden shrink-0
+      `}>
+        <div className="p-6 hidden md:flex items-center justify-between border-b border-indigo-800">
+          <div className="flex items-center gap-3">
+              <div className="bg-indigo-500 text-white p-2 rounded-lg">
+                <GraduationCap size={28} />
+              </div>
+              <h1 className="text-xl font-extrabold tracking-wide">Akademik Asistan</h1>
+          </div>
+        </div>
+        
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+          {tabs.map(tab => {
+            const isDisabled = tab.requiresMaterial && !savedMaterial;
+            return (
+              <button
+                key={tab.id}
+                disabled={isDisabled}
+                onClick={() => { playSound('select', soundEnabled); setActiveTab(tab.id); setIsMobileMenuOpen(false); }}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                  ${activeTab === tab.id ? 'bg-indigo-600 shadow-md font-semibold text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}
+                  ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+                `}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {isDisabled && <AlertCircle size={14} className="ml-auto opacity-70" />}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Fullscreen Desktop Button */}
+        <div className="p-4 border-t border-indigo-800 hidden md:block shrink-0">
+            <button 
+                onClick={toggleFullScreen}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-xl transition-colors font-medium text-sm"
+            >
+                {isFullscreen ? <><Minimize size={18}/> Normal Ekran</> : <><Maximize size={18}/> Tam Ekran (Focus)</>}
+            </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 p-4 md:p-8 h-screen overflow-y-auto w-full bg-slate-50/50 relative">
+        <div className="max-w-5xl mx-auto pb-10">
+          
+          {/* TAB 0: ÇALIŞMA ARŞİVİ (YENİ HAFIZA MİMARİSİ) */}
+          {activeTab === 'archive' && (
+            <div className="animate-in fade-in duration-500">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <Library size={32} className="text-indigo-700" />
+                  <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Çalışma Arşivi</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => importFileRef.current?.click()}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
+                    >
+                      <Upload size={18} /> <span className="hidden sm:inline">İçeri Aktar</span>
+                    </button>
+                    <input type="file" accept=".akademik" className="hidden" ref={importFileRef} onChange={handleImportFile} />
+                    
+                    <button 
+                      onClick={createNewSession}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-md"
+                    >
+                      <PlusCircle size={18} /> Yeni Çalışma
+                    </button>
+                </div>
+              </div>
+
+              {sessionsList.length === 0 ? (
+                  <div className="bg-white p-12 rounded-3xl shadow-sm border border-slate-200 text-center">
+                      <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <FolderOpen size={40} className="text-slate-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-700 mb-2">Henüz Kayıtlı Bir Çalışmanız Yok</h3>
+                      <p className="text-slate-500 mb-8 max-w-md mx-auto">Sisteme yüklediğiniz her PDF veya ders notu, otomatik olarak buraya kaydedilecektir. Böylece sekmeyi kapatsanız bile kaldığınız yerden devam edebilirsiniz.</p>
+                      <button 
+                          onClick={createNewSession}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md transition-all inline-flex items-center gap-2"
+                      >
+                          <PlusCircle size={18} /> İlk Çalışmanı Başlat
+                      </button>
+                  </div>
+              ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sessionsList.map(session => {
+                          const isActive = session.id === activeSessionId;
+                          const dateObj = new Date(session.lastModified);
+                          return (
+                              <div 
+                                  key={session.id} 
+                                  onClick={() => loadSession(session)}
+                                  className={`bg-white p-6 rounded-3xl shadow-sm border-2 cursor-pointer transition-all hover:-translate-y-1 relative group
+                                      ${isActive ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-200 hover:border-indigo-300'}
+                                  `}
+                              >
+                                  {isActive && <div className="absolute top-4 right-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">Aktif</div>}
+                                  
+                                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
+                                      <BookOpen size={24} />
+                                  </div>
+                                  <h3 className="font-bold text-lg text-slate-800 mb-1 line-clamp-2" title={session.title}>{session.title}</h3>
+                                  <p className="text-xs text-slate-500 font-medium mb-6">{dateObj.toLocaleDateString('tr-TR')} • {dateObj.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}</p>
+                                  
+                                  <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
+                                      <button 
+                                          onClick={(e) => exportSession(session, e)}
+                                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                          title="Yedeği İndir (.akademik)"
+                                      >
+                                          <Download size={18} />
+                                      </button>
+                                      <button 
+                                          onClick={(e) => deleteSession(session.id, e)}
+                                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                          title="Sil"
+                                      >
+                                          <Trash2 size={18} />
+                                      </button>
+                                      
+                                      <div className="ml-auto text-indigo-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                                          Aç <ChevronRight size={16} />
+                                      </div>
+                                  </div>
+                              </div>
+                          );
+                      })}
+                  </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 1: MATERYAL YÜKLE */}
+          {activeTab === 'material' && (
+            <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+                <div className="p-4 bg-indigo-50 text-indigo-700 rounded-2xl hidden sm:block">
+                  <UploadCloud size={28} />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-3xl font-bold text-slate-800">Ders Materyali Yükle</h2>
+                  <p className="text-slate-500 text-base mt-1">Öğrenmek istediğiniz metni yapıştırın veya PDF yükleyin.</p>
+                </div>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isExtracting}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all border-2 border-slate-200 hover:border-indigo-300 disabled:opacity-50"
+                >
+                  {isExtracting ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                  .txt / .pdf Seç
+                </button>
+                <input type="file" accept=".txt,.pdf,.pptx" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Çalışma Başlığı (Opsiyonel)</label>
+                <input 
+                    type="text" 
+                    value={studyTitle}
+                    onChange={(e) => setStudyTitle(e.target.value)}
+                    placeholder="Örn: Hafta 3 - Enzim Kinetiği"
+                    className="w-full p-4 text-lg rounded-xl border-2 border-slate-200 focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all outline-none font-medium"
+                />
+              </div>
+              
+              <div className="relative">
+                <textarea
+                  value={materialText}
+                  onChange={(e) => setMaterialText(e.target.value)}
+                  disabled={isExtracting}
+                  placeholder="Üzerinde çalışacağımız ders notunu buraya yapıştır..."
+                  className={`w-full h-[300px] md:h-[400px] p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none text-slate-700 text-lg leading-relaxed ${isExtracting ? 'opacity-50' : ''}`}
+                />
+                {isExtracting && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
+                        <Loader2 size={48} className="text-indigo-600 animate-spin mb-4" />
+                        <p className="text-xl font-bold text-indigo-900">PDF Analiz Ediliyor...</p>
+                        <p className="text-indigo-600/80 mt-2 font-medium">Metinler çıkarılıyor ve işleniyor</p>
+                    </div>
+                )}
+              </div>
+              
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                  {materialText.length > 0 ? (
+                    <><CheckCircle2 size={18} className="text-emerald-500"/> {materialText.length} karakter hazır.</>
+                  ) : "Çalışmaya başlamak için en az 50 karakter girilmeli."}
+                </p>
+                <button
+                  onClick={() => { playSound('select', soundEnabled); handleSaveMaterial(); }}
+                  disabled={materialText.length < 50}
+                  className={`
+                    w-full sm:w-auto px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-lg
+                    ${materialText.length >= 50 
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5' 
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+                  `}
+                >
+                  <BookOpen size={20} />
+                  Kaydet ve Derse Başla
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: DERS ANLATIMI */}
+          {activeTab === 'lesson' && (() => {
+            const isStarted = Object.keys(content.lesson).length > 0 || generatingIndex.lesson !== -1;
+            const isFinished = Object.keys(content.lesson).length === materialChunks.length && materialChunks.length > 0;
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <BookOpen size={32} className="text-indigo-700" />
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Ders Anlatımı</h2>
+                    </div>
+                    {isFinished && (
+                      <button 
+                        onClick={() => handlePrint('lesson-content-area', 'Ders Anlatımı (Tüm Bölümler)')}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-indigo-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
+                      >
+                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="bg-white p-6 md:p-12 rounded-3xl shadow-sm border border-slate-200">
+                    {!isStarted ? (
+                      <div className="text-center py-20">
+                        <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                          <GraduationCap size={48} className="text-indigo-600" />
+                        </div>
+                        <h3 className="text-3xl font-bold text-slate-800 mb-4">Akademik Okuma Hazır</h3>
+                        <p className="text-slate-500 text-lg max-w-lg mx-auto mb-10">Materyaliniz incelendi. Üniversite düzeyinde, kavramsal bağlantıları kuran detaylı bir okuma yapalım mı?</p>
+                        <button 
+                          onClick={() => { playSound('select', soundEnabled); generateContent('lesson'); }}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-indigo-600/20 transition-all flex items-center gap-3 mx-auto w-full sm:w-auto justify-center"
+                        >
+                          Tüm Bölümleri Sentezle
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="animate-in fade-in duration-500">
+                        <div id="lesson-content-area" className="space-y-12">
+                          {materialChunks.map((_, idx) => {
+                            if (!content.lesson[idx]) return null;
+                            return (
+                                <div key={idx} className={`page-break ${idx > 0 ? "pt-12 border-t-2 border-slate-100" : ""}`}>
+                                  {materialChunks.length > 1 && (
+                                    <h2 className="text-2xl font-extrabold mb-8 text-indigo-900 flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
+                                        Bölüm {idx + 1}
+                                    </h2>
+                                  )}
+                                  {renderMarkdown(content.lesson[idx])}
+                                </div>
+                            )
+                          })}
+                        </div>
+                        
+                        {generatingIndex.lesson !== -1 && (
+                            <div className="flex flex-col items-center justify-center py-12 text-indigo-600 border-2 border-dashed border-indigo-100 rounded-3xl mt-12 bg-indigo-50/50 no-print">
+                                <Loader2 size={40} className="animate-spin mb-4" />
+                                <p className="text-lg font-bold animate-pulse text-center">Bölüm {generatingIndex.lesson + 1} / {materialChunks.length} sentezleniyor...</p>
+                                <p className="text-indigo-600/60 mt-2 font-medium text-center px-4">Önceki bölümleri okumaya başlayabilirsiniz, yenisi hazırlandığında buraya eklenecektir.</p>
+                            </div>
+                        )}
+                        
+                        {isFinished && (
+                            <div className="mt-16 pt-8 border-t-2 border-slate-100 flex justify-center no-print">
+                                <button 
+                                    onClick={() => setActiveTab('chat')}
+                                    className="text-indigo-700 hover:text-white font-bold flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-600 px-8 py-4 rounded-2xl transition-all shadow-sm w-full sm:w-auto"
+                                >
+                                    <MessageSquare size={20} /> Konuyu Tartışmak İçin Soru Sor
+                                </button>
+                            </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+            );
+          })()}
+
+          {/* TAB 3: DERS NOTLARI (ÇALIŞMA REHBERİ) */}
+          {activeTab === 'notes' && (() => {
+            const isStarted = Object.keys(content.notes).length > 0 || generatingIndex.notes !== -1;
+            const isFinished = Object.keys(content.notes).length === materialChunks.length && materialChunks.length > 0;
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <ClipboardList size={32} className="text-amber-600" />
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Sınav Çalışma Rehberi</h2>
+                    </div>
+                    {isFinished && (
+                      <button 
+                        onClick={() => handlePrint('notes-content-area', 'Çalışma Rehberi (Tüm Bölümler)')}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-amber-300 text-amber-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
+                      >
+                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="bg-amber-50 p-6 md:p-12 rounded-3xl shadow-sm border border-amber-200/60 relative overflow-hidden min-h-[500px]">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-amber-200/30 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+
+                    {!isStarted ? (
+                      <div className="text-center py-20 relative z-10">
+                        <h3 className="text-3xl font-bold text-amber-900 mb-4">Sınav İçin Cheat Sheet Hazırlansın mı?</h3>
+                        <p className="text-amber-800/80 text-lg mb-10 max-w-xl mx-auto">Yapay zeka bu metni analiz ederek senin için kritik kavramları, süreçleri, en çok düşülen tuzakları ve muhtemel sınav sorularını içeren yapılandırılmış bir rehber çıkaracak.</p>
+                        <button 
+                          onClick={() => { playSound('select', soundEnabled); generateContent('notes'); }}
+                          className="bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-amber-500/20 transition-all w-full sm:w-auto justify-center flex"
+                        >
+                          Tüm Bölümleri Sentezle
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative z-10 animate-in fade-in duration-500">
+                        {renderChapterNav('notes')}
+                        <div id="notes-content-area" className="bg-white p-6 md:p-12 rounded-3xl shadow-sm border border-amber-100 space-y-12">
+                          {materialChunks.map((_, idx) => {
+                            if (!content.notes[idx]) return null;
+                            return (
+                                <div key={idx} className={`page-break ${idx > 0 ? "pt-12 border-t-2 border-amber-100" : ""}`}>
+                                  {materialChunks.length > 1 && (
+                                    <h2 className="text-2xl font-extrabold mb-8 text-amber-900 flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
+                                        Bölüm {idx + 1}
+                                    </h2>
+                                  )}
+                                  {renderMarkdown(content.notes[idx])}
+                                </div>
+                            )
+                          })}
+                        </div>
+
+                        {generatingIndex.notes !== -1 && (
+                            <div className="flex flex-col items-center justify-center py-12 text-amber-600 border-2 border-dashed border-amber-200 rounded-3xl mt-8 bg-amber-50/50 no-print">
+                                <Loader2 size={40} className="animate-spin mb-4" />
+                                <p className="text-lg font-bold animate-pulse text-center">Bölüm {generatingIndex.notes + 1} / {materialChunks.length} özetleniyor...</p>
+                                <p className="text-amber-700/60 mt-2 font-medium text-center px-4">Rehber hazırlanırken ekranda okunabilir şekilde belirecektir.</p>
+                            </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+            );
+          })()}
+
+          {/* TAB 3.5: GÖRSEL ÖZET (INFOGRAPHIC) */}
+          {activeTab === 'visual' && (() => {
+            const isStarted = Object.keys(content.visual).length > 0 || generatingIndex.visual !== -1;
+            const isFinished = Object.keys(content.visual).length === materialChunks.length && materialChunks.length > 0;
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <PieChart size={32} className="text-teal-600" />
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Görsel Özet</h2>
+                    </div>
+                    {isFinished && (
+                      <button 
+                        onClick={() => handlePrint('visual-content-area', 'Görsel Özetler (Tüm Bölümler)')}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-teal-300 text-teal-700 font-bold rounded-xl transition-all shadow-sm w-full sm:w-auto"
+                      >
+                        <Printer size={18} /> <span>Tümünü PDF İndir</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="bg-teal-50/50 p-6 md:p-12 rounded-3xl shadow-sm border border-teal-200/60 relative overflow-hidden min-h-[500px]">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-teal-200/20 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+
+                    {!isStarted ? (
+                      <div className="text-center py-20 relative z-10">
+                        <div className="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-8">
+                          <Layers size={48} className="text-teal-600" />
+                        </div>
+                        <h3 className="text-3xl font-bold text-teal-900 mb-4">Metni Görselleştir</h3>
+                        <p className="text-teal-800/80 text-lg mb-10 max-w-xl mx-auto">Yapay zeka metni analiz ederek senin için konunun yapısına en uygun Zaman Çizelgesi, Karşılaştırma, Veri Tablosu veya Kategori Kartlarını otomatik çizecek.</p>
+                        <button 
+                          onClick={() => { playSound('select', soundEnabled); generateContent('visual'); }}
+                          className="bg-teal-600 hover:bg-teal-700 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-teal-600/20 transition-all flex items-center justify-center w-full sm:w-auto mx-auto"
+                        >
+                          Tüm Bölümleri Görselleştir
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative z-10 animate-in fade-in duration-500 overflow-x-auto pb-10">
+                        {renderChapterNav('visual')}
+                        <div id="visual-content-area" className="min-w-full md:min-w-[600px] space-y-12">
+                          {materialChunks.map((_, idx) => {
+                            if (!content.visual[idx]) return null;
+                            return (
+                                <div key={idx} className={`page-break ${idx > 0 ? "pt-12 border-t-2 border-teal-200/50" : ""}`}>
+                                  {materialChunks.length > 1 && (
+                                    <h2 className="text-2xl font-extrabold mb-8 text-teal-900 flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
+                                        Bölüm {idx + 1}
+                                    </h2>
+                                  )}
+                                  <VisualSummaryComponent data={content.visual[idx]} />
+                                </div>
+                            )
+                          })}
+                        </div>
+
+                        {generatingIndex.visual !== -1 && (
+                            <div className="flex flex-col items-center justify-center py-12 text-teal-600 border-2 border-dashed border-teal-200 rounded-3xl mt-8 bg-teal-50/50 no-print">
+                                <Loader2 size={40} className="animate-spin mb-4" />
+                                <p className="text-lg font-bold animate-pulse text-center">Bölüm {generatingIndex.visual + 1} / {materialChunks.length} işleniyor...</p>
+                                <p className="text-teal-700/60 mt-2 font-medium text-center px-4">Şablon seçiliyor, veriler hizalanıyor.</p>
+                            </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+            );
+          })()}
+
+          {/* TAB 4: SINAV MODU */}
+          {activeTab === 'quiz' && (
+            <div className="animate-in fade-in duration-500">
+              <div className="flex items-center gap-3 mb-8 px-2">
+                <GraduationCap size={32} className="text-rose-600" />
+                <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">İnteraktif Sınav</h2>
+              </div>
+              
+              <div className="bg-white p-6 md:p-12 rounded-3xl shadow-sm border border-slate-200">
+                {!content.quiz && !loading.quiz ? (
+                  <div className="py-8 max-w-3xl mx-auto">
+                    
+                    {(content.quizHistory && content.quizHistory.length > 0) && (
+                        <div className="mb-10 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                            <h4 className="font-bold text-indigo-900 mb-4 flex items-center gap-2"><Library size={20}/> Önceki Sınav Performansları</h4>
+                            <div className="space-y-3">
+                                {content.quizHistory.map((qh, idx) => {
+                                    const qCorrect = qh.quiz.filter((q, i) => qh.state.verdicts[i]?.isCorrect ?? isAnswerCorrect(qh.state.answers[i], q.dogruCevap)).length;
+                                    const score = Math.round((qCorrect / qh.quiz.length) * 100);
+                                    return (
+                                        <div key={idx} className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-indigo-50/50">
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-sm">Deneme {idx + 1} <span className="text-slate-400 font-medium ml-2 hidden sm:inline">({qh.config.difficulty}, {qh.config.count} Soru)</span></p>
+                                            </div>
+                                            <div className={`font-black ${score >= 70 ? 'text-emerald-600' : score >= 40 ? 'text-amber-500' : 'text-rose-600'}`}>
+                                                %{score} Başarı
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="text-center mb-10">
+                      <div className="w-24 h-24 bg-rose-50 rounded-3xl rotate-6 flex items-center justify-center mx-auto mb-8 shadow-inner">
+                        <GraduationCap size={48} className="text-rose-500 -rotate-6" />
+                      </div>
+                      <h3 className="text-3xl font-bold text-slate-800 mb-4">Sınav Ayarlarını Belirle</h3>
+                      <p className="text-slate-500 text-lg">Kendini ne kadar zorlamak istediğini ve soru tipini seç.</p>
+                    </div>
+
+                    <div className="space-y-8 bg-slate-50 p-6 md:p-8 rounded-3xl border border-slate-100 mb-10">
+                      
+                      {/* Sınav Kapsamı (Vize/Final) Seçimi */}
+                      <div className="pb-6 border-b border-slate-200">
+                        <label className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4">
+                          <BookOpen size={20} className="text-rose-500"/> Sınav Kapsamı (Müfredat)
+                        </label>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <button
+                                onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, quizScope: 'current'})); }}
+                                className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${
+                                  quizConfig.quizScope === 'current' 
+                                  ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                                }`}
+                              >
+                                <span className="block text-lg mb-1">Sadece Bu Çalışma</span>
+                                <span className="block text-sm font-medium opacity-80">Sadece açık olan nottan soru gelir.</span>
+                              </button>
+                              <button
+                                onClick={() => { 
+                                    playSound('select', soundEnabled); 
+                                    setQuizConfig(p => ({...p, quizScope: 'mixed', selectedSessions: p.selectedSessions.length ? p.selectedSessions : [activeSessionId].filter(Boolean)})); 
+                                }}
+                                className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${
+                                  quizConfig.quizScope === 'mixed' 
+                                  ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                                }`}
+                                disabled={sessionsList.length === 0}
+                              >
+                                <span className="block text-lg mb-1">Karma Sınav (Vize/Final)</span>
+                                <span className="block text-sm font-medium opacity-80">Arşivdeki farklı haftaları birleştir.</span>
+                              </button>
+                            </div>
+
+                            {quizConfig.quizScope === 'mixed' && sessionsList.length > 0 && (
+                                <div className="bg-white border-2 border-rose-200 rounded-xl p-5 max-h-56 overflow-y-auto space-y-2 mt-4 shadow-inner">
+                                    <p className="text-sm font-bold text-slate-600 mb-3 border-b border-slate-100 pb-2">Sınava Dahil Edilecek Çalışmaları (Haftaları) Seçin:</p>
+                                    {sessionsList.map(session => (
+                                        <label key={session.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-5 h-5 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer"
+                                                checked={quizConfig.selectedSessions.includes(session.id)}
+                                                onChange={(e) => {
+                                                    playSound('select', soundEnabled);
+                                                    if (e.target.checked) {
+                                                        setQuizConfig(p => ({...p, selectedSessions: [...p.selectedSessions, session.id]}));
+                                                    } else {
+                                                        setQuizConfig(p => ({...p, selectedSessions: p.selectedSessions.filter(id => id !== session.id)}));
+                                                    }
+                                                }}
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-slate-800 text-sm truncate">{session.title}</p>
+                                                <p className="text-xs text-slate-400 truncate mt-0.5">{new Date(session.lastModified).toLocaleDateString('tr-TR')} tarihinde çalışıldı</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                      </div>
+
+                      {/* Sınav Tipi Seçimi */}
+                      <div className="pb-6 border-b border-slate-200">
+                        <label className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4">
+                          <Layers size={20} className="text-rose-500"/> Sınav Formatı
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, examMode: 'interactive'})); }}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${
+                              quizConfig.examMode === 'interactive' 
+                              ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                            }`}
+                          >
+                            <span className="block text-lg mb-1">İnteraktif Mod</span>
+                            <span className="block text-sm font-medium opacity-80">Soruları tek tek çözüp anında öğren.</span>
+                          </button>
+                          <button
+                            onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, examMode: 'mock'})); }}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${
+                              quizConfig.examMode === 'mock' 
+                              ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                            }`}
+                          >
+                            <span className="block text-lg mb-1">Gerçek Deneme Sınavı</span>
+                            <span className="block text-sm font-medium opacity-80">Tüm soruları gör, sonunda toplu değerlendiril.</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sınav Dili Seçimi */}
+                      <div>
+                        <label className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4">
+                          <Globe size={20} className="text-rose-500"/> Sınav Dili
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, language: 'Turkish'})); }}
+                            className={`py-3 rounded-xl font-bold text-lg transition-all border-2 ${
+                              quizConfig.language === 'Turkish' ? 'bg-rose-100 border-rose-500 text-rose-800' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                            }`}
+                          >Türkçe</button>
+                          <button
+                            onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, language: 'English'})); }}
+                            className={`py-3 rounded-xl font-bold text-lg transition-all border-2 ${
+                              quizConfig.language === 'English' ? 'bg-rose-100 border-rose-500 text-rose-800' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                            }`}
+                          >English</button>
+                        </div>
+                      </div>
+
+                      {/* Soru Sayısı ve Zorluk */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div>
+                            <label className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4">
+                              <Settings2 size={20} className="text-rose-500"/> Soru Sayısı
+                            </label>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[5, 10, 15, 20, 30].map(num => (
+                                <button
+                                  key={num}
+                                  onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, count: num})); }}
+                                  className={`py-3 rounded-xl font-bold transition-all border-2 ${
+                                    quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                                  }`}>{num}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4">
+                              <Target size={20} className="text-rose-500"/> Zorluk
+                            </label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {['Kolay', 'Orta', 'Zor'].map(diff => (
+                                <button
+                                  key={diff}
+                                  onClick={() => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, difficulty: diff})); }}
+                                  className={`py-3 rounded-xl font-bold transition-all border-2 ${
+                                    quizConfig.difficulty === diff ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-rose-300'
+                                  }`}>{diff}</button>
+                              ))}
+                            </div>
+                          </div>
+                      </div>
+
+                      {/* Toggles */}
+                      <div className="pt-6 border-t border-slate-200 space-y-6">
+                        <label className={`flex items-center gap-4 cursor-pointer group ${quizConfig.onlyEssay ? 'opacity-40' : ''}`}>
+                          <div className={`relative flex items-center justify-center w-14 h-7 rounded-full transition-colors shrink-0 ${quizConfig.onlyMultipleChoice ? 'bg-rose-500' : 'bg-slate-300'}`}>
+                            <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${quizConfig.onlyMultipleChoice ? 'translate-x-3.5' : '-translate-x-3.5'}`}></div>
+                          </div>
+                          <div>
+                            <span className="block text-base font-bold text-slate-800 group-hover:text-rose-600 transition-colors">Sadece Test Modu</span>
+                            <span className="block text-sm text-slate-500 font-medium">Tüm sorular çoktan seçmeli olur.</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            disabled={quizConfig.onlyEssay}
+                            checked={quizConfig.onlyMultipleChoice}
+                            onChange={(e) => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, onlyMultipleChoice: e.target.checked})); }}
+                          />
+                        </label>
+
+                        <label className={`flex items-center gap-4 cursor-pointer group ${quizConfig.onlyMultipleChoice ? 'opacity-40' : ''}`}>
+                          <div className={`relative flex items-center justify-center w-14 h-7 rounded-full transition-colors shrink-0 ${quizConfig.onlyEssay ? 'bg-rose-500' : 'bg-slate-300'}`}>
+                            <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${quizConfig.onlyEssay ? 'translate-x-3.5' : '-translate-x-3.5'}`}></div>
+                          </div>
+                          <div>
+                            <span className="flex items-center gap-2 text-base font-bold text-slate-800 group-hover:text-rose-600 transition-colors">
+                              <FileText size={18}/> Sadece Kompozisyon (Essay) Modu
+                            </span>
+                            <span className="block text-sm text-slate-500 font-medium">Sınav sadece uzun açık uçlu analiz sorularından oluşur.</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            disabled={quizConfig.onlyMultipleChoice}
+                            checked={quizConfig.onlyEssay}
+                            onChange={(e) => { playSound('select', soundEnabled); setQuizConfig(p => ({...p, onlyEssay: e.target.checked})); }}
+                          />
+                        </label>
+
+                        <label className="flex items-center gap-4 cursor-pointer group">
+                          <div className={`relative flex items-center justify-center w-14 h-7 rounded-full transition-colors shrink-0 ${soundEnabled ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                            <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${soundEnabled ? 'translate-x-3.5' : '-translate-x-3.5'}`}></div>
+                          </div>
+                          <div>
+                            <span className="flex items-center gap-2 text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                              {soundEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>} Ses Efektleri
+                            </span>
+                            <span className="block text-sm text-slate-500 font-medium">Geri bildirim seslerini açar veya kapatır.</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={soundEnabled}
+                            onChange={(e) => {
+                              setSoundEnabled(e.target.checked);
+                              if(e.target.checked) playSound('select', true);
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                    </div>
+
+                    <button 
+                      onClick={() => { playSound('select', soundEnabled); generateContent('quiz'); }}
+                      disabled={quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length === 0}
+                      className="w-full bg-rose-600 hover:bg-rose-700 text-white py-5 rounded-2xl font-bold text-xl shadow-xl shadow-rose-600/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {quizConfig.quizScope === 'mixed' && quizConfig.selectedSessions.length === 0 
+                          ? "Lütfen Kapsam İçin Konu Seçin" 
+                          : "Sınavı Başlat"}
+                    </button>
+                  </div>
+                ) : loading.quiz ? (
+                  <div className="flex flex-col items-center justify-center py-32 text-rose-600">
+                    <Loader2 size={56} className="animate-spin mb-6" />
+                    <p className="text-xl font-bold animate-pulse text-center">
+                      {quizConfig.count} {quizConfig.language === 'English' ? 'English' : 'Türkçe'} questions are being prepared...
+                    </p>
+                  </div>
+                ) : Array.isArray(content.quiz) && (
+                  <div>
+                    {!quizState.finished ? (
+                      <div className="max-w-3xl mx-auto">
+                        
+                        {quizState.activeMode === 'interactive' && (
+                            <>
+                                <div className="flex items-center justify-between text-base font-bold text-slate-500 mb-4">
+                                  <span className="bg-slate-100 px-4 py-1.5 rounded-lg text-slate-700">Question {quizState.currentIndex + 1} / {content.quiz.length}</span>
+                                  <span className="text-rose-600">{Math.round(((quizState.currentIndex) / content.quiz.length) * 100)}% Completed</span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-3 rounded-full mb-10 overflow-hidden shadow-inner">
+                                  <div 
+                                    className="bg-rose-500 h-full transition-all duration-500 ease-out"
+                                    style={{ width: `${((quizState.currentIndex) / content.quiz.length) * 100}%` }}
+                                  ></div>
+                                </div>
+                            </>
+                        )}
+
+                        {quizState.activeMode === 'interactive' ? (
+                            (() => {
+                              const currentQ = content.quiz[quizState.currentIndex];
+                              const uAns = quizState.answers[quizState.currentIndex];
+                              const currentVerdict = quizState.verdicts[quizState.currentIndex];
+                              const isCurrentCorrect = currentVerdict ? currentVerdict.isCorrect : isAnswerCorrect(uAns, currentQ.dogruCevap);
+                              
+                              return (
+                                <>
+                                  <div className="mb-10">
+                                    <div className="mb-4">
+                                      <span className="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-xs rounded-lg uppercase tracking-widest font-bold">
+                                        {currentQ.tip.replace('_', ' ')}
+                                      </span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">{currentQ.soru}</h3>
+                                    
+                                    <div className="space-y-4">
+                                      {(currentQ.tip === 'multiple_choice' || currentQ.tip === 'true_false') ? (
+                                        currentQ.secenekler.map((secenek, idx) => {
+                                          const isSelected = uAns === secenek;
+                                          const isOptionCorrect = isAnswerCorrect(secenek, currentQ.dogruCevap);
+                                          
+                                          let btnClass = "w-full text-left p-5 rounded-2xl border-2 transition-all text-lg ";
+                                          
+                                          if (!quizState.isChecked) {
+                                            btnClass += isSelected 
+                                              ? "border-rose-500 bg-rose-50 text-rose-800 font-bold" 
+                                              : "border-slate-200 hover:border-rose-400 hover:bg-slate-50 text-slate-700 font-medium";
+                                          } else {
+                                            if (isOptionCorrect) {
+                                              btnClass += "border-emerald-500 bg-emerald-50 text-emerald-800 font-bold";
+                                            } else if (isSelected && !isOptionCorrect) {
+                                              btnClass += "border-red-500 bg-red-50 text-red-800 font-bold";
+                                            } else {
+                                              btnClass += "border-slate-200 opacity-50 text-slate-500 font-medium";
+                                            }
+                                          }
+
+                                          return (
+                                            <button
+                                              key={idx}
+                                              disabled={quizState.isChecked || quizState.isEvaluating}
+                                              onClick={() => {
+                                                playSound('select', soundEnabled);
+                                                setQuizState(p => ({...p, answers: {...p.answers, [p.currentIndex]: secenek}}));
+                                              }}
+                                              className={btnClass}
+                                            >
+                                              <div className="flex items-center justify-between">
+                                                <span>{secenek}</span>
+                                                {quizState.isChecked && isOptionCorrect && <CheckCircle2 size={24} className="text-emerald-500 shrink-0" />}
+                                                {quizState.isChecked && isSelected && !isOptionCorrect && <XIcon size={24} className="text-red-500 shrink-0" />}
+                                              </div>
+                                            </button>
+                                          );
+                                        })
+                                      ) : currentQ.tip === 'essay' ? (
+                                        <div className="relative">
+                                            <textarea 
+                                                disabled={quizState.isChecked || quizState.isEvaluating}
+                                                value={uAns || ''}
+                                                onChange={(e) => setQuizState(p => ({...p, answers: {...p.answers, [p.currentIndex]: e.target.value}}))}
+                                                placeholder={quizConfig.language === 'English' ? "Write your essay/detailed analysis here... (Shift+Enter for new line, Enter to submit)" : "Kompozisyon/Analiz cevabınızı yazın... (Alt satır için Shift+Enter, göndermek için Enter)"}
+                                                className={`w-full h-48 p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 resize-none outline-none
+                                                    ${quizState.isChecked 
+                                                        ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-red-500 bg-red-50 text-red-900')
+                                                        : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'
+                                                    }
+                                                    ${quizState.isEvaluating ? 'opacity-50' : ''}
+                                                `}
+                                            />
+                                        </div>
+                                      ) : (
+                                        <div className="relative">
+                                            <input 
+                                                type="text"
+                                                disabled={quizState.isChecked || quizState.isEvaluating}
+                                                value={uAns || ''}
+                                                onChange={(e) => setQuizState(p => ({...p, answers: {...p.answers, [p.currentIndex]: e.target.value}}))}
+                                                placeholder={quizConfig.language === 'English' ? "Type your answer here... (Press Enter to submit)" : "Cevabınızı yazın... (Göndermek için Enter'a basın)"}
+                                                className={`w-full p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 outline-none
+                                                    ${quizState.isChecked 
+                                                        ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold' : 'border-red-500 bg-red-50 text-red-900 font-bold')
+                                                        : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'
+                                                    }
+                                                    ${quizState.isEvaluating ? 'opacity-50' : ''}
+                                                `}
+                                            />
+                                            {quizState.isChecked && isCurrentCorrect && (
+                                                <CheckCircle2 size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-emerald-500" />
+                                            )}
+                                            {quizState.isChecked && uAns && !isCurrentCorrect && (
+                                                <XIcon size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-red-500" />
+                                            )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {quizState.hintLevel > 0 && !quizState.isChecked && (
+                                    <div className="mb-8 space-y-3">
+                                        <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3 text-amber-900 text-base animate-in fade-in">
+                                          <Lightbulb size={24} className="shrink-0 text-amber-500" />
+                                          <p><strong>{quizConfig.language === 'English' ? 'Hint 1:' : '1. İpucu:'}</strong> {currentQ.ipucu1 || currentQ.ipucu}</p>
+                                        </div>
+                                        {quizState.hintLevel > 1 && currentQ.ipucu2 && (
+                                            <div className="p-5 bg-amber-100 border border-amber-300 rounded-2xl flex gap-3 text-amber-950 text-base animate-in fade-in">
+                                              <Lightbulb size={24} className="shrink-0 text-amber-600" />
+                                              <p><strong>{quizConfig.language === 'English' ? 'Hint 2:' : '2. İpucu:'}</strong> {currentQ.ipucu2}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                  )}
+
+                                  {quizState.isChecked && (
+                                    <div className={`mb-8 p-6 rounded-2xl flex gap-4 text-base animate-in fade-in slide-in-from-bottom-2 ${
+                                      isCurrentCorrect ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-red-50 border border-red-200 text-red-900'
+                                    }`}>
+                                      {isCurrentCorrect ? <CheckCircle2 size={32} className="shrink-0 text-emerald-600" /> : <XIcon size={32} className="shrink-0 text-red-600" />}
+                                      <div className="w-full">
+                                        <p className="font-extrabold text-lg mb-2">
+                                          {isCurrentCorrect 
+                                            ? (quizConfig.language === 'English' ? 'Correct!' : 'Tebrikler, Doğru Cevap!') 
+                                            : (quizConfig.language === 'English' ? 'Incorrect.' : 'Maalesef Yanlış Cevap.')}
+                                        </p>
+                                        
+                                        {currentVerdict?.feedback ? (
+                                          <div className="space-y-3 mt-3">
+                                            <div className="bg-white/60 p-4 rounded-xl border border-current/10">
+                                              <p className="font-bold mb-1 flex items-center gap-2"><Target size={16}/> AI Evaluation:</p>
+                                              <p className="leading-relaxed">{currentVerdict.feedback}</p>
+                                            </div>
+                                            {!isCurrentCorrect && (
+                                              <div className="pt-2 border-t border-current/10">
+                                                <p className="text-sm opacity-80 font-bold uppercase tracking-wider mb-1">Expected Answer</p>
+                                                <p className="font-medium">{currentQ.dogruCevap}</p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <p className="leading-relaxed font-medium">{currentQ.aciklama}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-slate-100 pt-8 mt-4">
+                                    {!quizState.isChecked ? (
+                                      <>
+                                        <button 
+                                          onClick={() => { playSound('select', soundEnabled); setQuizState(p => ({...p, hintLevel: p.hintLevel + 1})); }}
+                                          disabled={quizState.hintLevel >= 2 || quizState.isEvaluating}
+                                          className="flex items-center justify-center gap-2 px-6 py-3 text-amber-700 font-bold hover:bg-amber-100 rounded-xl transition-colors disabled:opacity-50 text-lg w-full sm:w-auto"
+                                        >
+                                          <Lightbulb size={20} /> {quizConfig.language === 'English' ? `Hint (${quizState.hintLevel}/2)` : `İpucu İste (${quizState.hintLevel}/2)`}
+                                        </button>
+                                        <button
+                                          onClick={handleCheckAnswer}
+                                          disabled={!uAns || uAns.toString().trim() === '' || quizState.isEvaluating}
+                                          className="flex items-center gap-2 px-8 py-4 bg-rose-600 text-white font-bold text-lg rounded-xl hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-rose-600/20 w-full sm:w-auto justify-center"
+                                        >
+                                          {quizState.isEvaluating ? <><Loader2 size={20} className="animate-spin" /> AI Checking...</> : <>Check Answer <Check size={20} /></>}
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <div className="w-full flex justify-end">
+                                        {quizState.currentIndex < content.quiz.length - 1 ? (
+                                          <button
+                                            onClick={() => { playSound('select', soundEnabled); setQuizState(p => ({...p, currentIndex: p.currentIndex + 1, isChecked: false, hintLevel: 0, showHint: false})); }}
+                                            className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 w-full sm:w-auto justify-center"
+                                          >
+                                            Next Question <ChevronRight size={20} />
+                                          </button>
+                                        ) : (
+                                          <button
+                                            onClick={() => { 
+                                                playSound('finish', soundEnabled); 
+                                                setQuizState(p => {
+                                                    const newState = { ...p, finished: true };
+                                                    setContent(prev => ({ 
+                                                        ...prev, 
+                                                        quizHistory: [...(prev.quizHistory || []), { quiz: content.quiz, state: newState, config: quizConfig, date: new Date().toISOString() }] 
+                                                    }));
+                                                    return newState;
+                                                }); 
+                                            }}
+                                            className="flex items-center gap-2 px-10 py-4 bg-emerald-600 text-white font-bold text-lg rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto justify-center"
+                                          >
+                                            Finish Exam <GraduationCap size={20} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              );
+                            })()
+                        ) : (
+                            <div>
+                                <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-indigo-900 font-medium">
+                                    <Target size={24} className="mb-2 text-indigo-500" />
+                                    {quizConfig.language === 'English' 
+                                      ? "Mock Exam Mode: Answer all questions below. Your answers will be submitted for holistic AI evaluation at the very end."
+                                      : "Gerçek Deneme Modu: Tüm soruları aşağıdan cevapla. Sınavı bitirdiğinde kompozisyon ve açık uçlu cevapların yapay zeka tarafından değerlendirilecek."}
+                                </div>
+                                
+                                {content.quiz.map((q, i) => {
+                                    const uAns = quizState.answers[i];
+                                    return (
+                                        <div key={i} className="mb-8 p-6 md:p-8 bg-slate-50 rounded-3xl border-2 border-slate-200 break-inside-avoid">
+                                            <div className="mb-4">
+                                              <span className="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-xs rounded-lg uppercase tracking-widest font-bold">
+                                                {q.tip.replace('_', ' ')}
+                                              </span>
+                                            </div>
+                                            <h4 className="font-bold text-xl mb-6 text-slate-800"><span className="text-slate-400 mr-2">{i+1}.</span> {q.soru}</h4>
+                                            
+                                            <div className="space-y-3">
+                                              {(q.tip === 'multiple_choice' || q.tip === 'true_false') ? (
+                                                q.secenekler.map((secenek, idx) => {
+                                                  const isSelected = uAns === secenek;
+                                                  return (
+                                                    <button
+                                                      key={idx}
+                                                      disabled={quizState.isEvaluating}
+                                                      onClick={() => { playSound('select', soundEnabled); setQuizState(p => ({...p, answers: {...p.answers, [i]: secenek}})); }}
+                                                      className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium ${
+                                                        isSelected ? "border-rose-500 bg-white text-rose-800 shadow-sm" : "border-slate-300 hover:border-rose-300 bg-white text-slate-700"
+                                                      }`}
+                                                    >
+                                                      {secenek}
+                                                    </button>
+                                                  );
+                                                })
+                                              ) : q.tip === 'essay' ? (
+                                                <textarea 
+                                                    disabled={quizState.isEvaluating}
+                                                    value={uAns || ''}
+                                                    onChange={(e) => setQuizState(p => ({...p, answers: {...p.answers, [i]: e.target.value}}))}
+                                                    placeholder={quizConfig.language === 'English' ? "Write your detailed essay here..." : "Kompozisyonunuzu buraya yazın..."}
+                                                    className="w-full h-40 p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none resize-none"
+                                                />
+                                              ) : (
+                                                <input 
+                                                    type="text"
+                                                    disabled={quizState.isEvaluating}
+                                                    value={uAns || ''}
+                                                    onChange={(e) => setQuizState(p => ({...p, answers: {...p.answers, [i]: e.target.value}}))}
+                                                    placeholder={quizConfig.language === 'English' ? "Type your answer here..." : "Cevabınızı yazın..."}
+                                                    className="w-full p-5 text-lg rounded-xl border-2 border-slate-300 focus:border-rose-500 bg-white text-slate-800 font-medium transition-all focus:ring-4 focus:ring-rose-500/20 outline-none"
+                                                />
+                                              )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+
+                                <div className="mt-12 text-center border-t-2 border-slate-200 pt-10">
+                                    <button
+                                        onClick={handleMockExamSubmit}
+                                        disabled={quizState.isEvaluating}
+                                        className="inline-flex items-center justify-center gap-3 px-12 py-5 bg-rose-600 text-white font-bold text-xl rounded-2xl hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-rose-600/20 w-full sm:w-auto"
+                                    >
+                                        {quizState.isEvaluating ? <><Loader2 size={24} className="animate-spin" /> AI Evaluation in Progress...</> : <>Submit & Evaluate <CheckCircle2 size={24} /></>}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                      </div>
+                    ) : (
+                      // SINAV SONUCU
+                      <div className="animate-in zoom-in-95 duration-500 max-w-4xl mx-auto">
+                        {(() => {
+                          const correctCount = content.quiz.filter((q, i) => quizState.verdicts[i]?.isCorrect ?? isAnswerCorrect(quizState.answers[i], q.dogruCevap)).length;
+                          const answeredCount = content.quiz.filter((q, i) => quizState.answers[i] && quizState.answers[i].toString().trim() !== '').length;
+                          const wrongCount = answeredCount - correctCount;
+                          const emptyCount = content.quiz.length - answeredCount;
+                          const score = Math.round((correctCount / content.quiz.length) * 100);
+
+                          return (
+                            <div>
+                              <div className="text-center mb-12">
+                                <div className="inline-flex items-center justify-center w-40 h-40 rounded-full border-[10px] border-slate-50 mb-8 bg-white shadow-2xl relative">
+                                  <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                    <path className="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                                    <path className={`${score >= 70 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-rose-500'}`} strokeDasharray={`${score}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                                  </svg>
+                                  <span className="text-5xl font-black text-slate-800">{score}</span>
+                                </div>
+                                <h3 className="text-3xl font-extrabold text-slate-800 mb-2">{quizConfig.language === 'English' ? 'Exam Completed!' : 'Sınav Tamamlandı!'}</h3>
+                                <p className="text-slate-500 text-lg">Performans özetin aşağıda yer alıyor.</p>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-6 mb-12">
+                                <div className="bg-emerald-50 border-2 border-emerald-100 p-4 md:p-6 rounded-3xl text-center">
+                                  <div className="text-3xl md:text-4xl font-black text-emerald-600 mb-2">{correctCount}</div>
+                                  <div className="text-sm md:text-base font-bold text-emerald-800 uppercase tracking-wide">Correct</div>
+                                </div>
+                                <div className="bg-rose-50 border-2 border-rose-100 p-4 md:p-6 rounded-3xl text-center">
+                                  <div className="text-3xl md:text-4xl font-black text-rose-600 mb-2">{wrongCount}</div>
+                                  <div className="text-sm md:text-base font-bold text-rose-800 uppercase tracking-wide">Incorrect</div>
+                                </div>
+                                <div className="bg-slate-50 border-2 border-slate-200 p-4 md:p-6 rounded-3xl text-center">
+                                  <div className="text-3xl md:text-4xl font-black text-slate-600 mb-2">{emptyCount}</div>
+                                  <div className="text-sm md:text-base font-bold text-slate-800 uppercase tracking-wide">Blank</div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-6">
+                                <h4 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"><FileText size={24}/> Detailed Question Analysis</h4>
+                                {content.quiz.map((q, i) => {
+                                  const uAnswer = quizState.answers[i];
+                                  const verdict = quizState.verdicts[i];
+                                  const isCorrect = verdict ? verdict.isCorrect : isAnswerCorrect(uAnswer, q.dogruCevap);
+                                  const isEmpty = !uAnswer || uAnswer.toString().trim() === '';
+                                  
+                                  return (
+                                    <div key={i} className={`p-6 border-2 rounded-2xl transition-all ${isCorrect ? 'bg-white border-emerald-200 shadow-sm' : 'bg-rose-50/50 border-rose-100'}`}>
+                                      <p className="font-bold text-slate-800 mb-4 text-lg leading-relaxed">
+                                        <span className="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-xs rounded-lg uppercase mr-3 tracking-widest font-bold">
+                                          {q.tip.replace('_', ' ')}
+                                        </span>
+                                        {i+1}. {q.soru}
+                                      </p>
+                                      
+                                      <div className="flex flex-col gap-3 text-base">
+                                        <div className={`flex items-start gap-3 ${isCorrect ? 'text-emerald-700' : isEmpty ? 'text-slate-500' : 'text-rose-700'}`}>
+                                          <div className="mt-1">{isCorrect ? <CheckCircle2 size={20}/> : <XIcon size={20}/>}</div>
+                                          <div className="flex-1">
+                                            <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">Your Answer</span>
+                                            <span className="font-medium whitespace-pre-wrap">{isEmpty ? "Left Blank" : uAnswer}</span>
+                                          </div>
+                                        </div>
+                                        
+                                        {!isCorrect && (
+                                          <>
+                                            <div className="flex items-start gap-3 text-emerald-700 mt-4 border-t-2 border-slate-200/60 pt-4">
+                                              <CheckCircle2 size={20} className="mt-1 shrink-0"/>
+                                              <div>
+                                                <span className="font-black opacity-80 text-xs uppercase tracking-widest block mb-1">Expected Key Points</span>
+                                                <span className="font-bold text-lg whitespace-pre-wrap">{q.dogruCevap}</span>
+                                              </div>
+                                            </div>
+                                            <div className="mt-5 p-5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-base">
+                                              <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16}/> {verdict?.feedback ? "AI Evaluation:" : "Academic Explanation:"}</span>
+                                              {verdict?.feedback || q.aciklama}
+                                            </div>
+                                          </>
+                                        )}
+                                        {isCorrect && verdict?.feedback && q.tip !== 'multiple_choice' && q.tip !== 'true_false' && (
+                                            <div className="mt-5 p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 text-base">
+                                              <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16}/> AI Feedback:</span>
+                                              {verdict.feedback}
+                                            </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+
+                              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                                <button
+                                  onClick={() => {
+                                    playSound('select', soundEnabled);
+                                    setQuizState({ activeMode: quizConfig.examMode, currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+                                    generateContent('quiz');
+                                  }}
+                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 text-white font-bold text-lg rounded-2xl hover:bg-slate-900 transition-colors shadow-lg"
+                                >
+                                  <RotateCw size={20} /> Generate New Exam
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    playSound('select', soundEnabled);
+                                    setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+                                    setContent(prev => ({ ...prev, quiz: null }));
+                                  }}
+                                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-50 transition-colors shadow-sm"
+                                >
+                                  <Settings2 size={20} /> Back to Settings
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: SOHBET (SORU SOR) */}
+          {activeTab === 'chat' && (
+            <div className="animate-in fade-in duration-500 flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
+              <div className="flex items-center gap-3 mb-6 px-2 shrink-0">
+                <MessageSquare size={32} className="text-indigo-600" />
+                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Akademik Sohbet</h2>
+              </div>
+              
+              <div className="flex-1 bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50">
+                  {chatMessages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`
+                        max-w-[85%] md:max-w-[75%] rounded-3xl p-5 shadow-sm text-base
+                        ${msg.role === 'user' 
+                          ? 'bg-indigo-600 text-white rounded-tr-none font-medium' 
+                          : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'}
+                      `}>
+                        {msg.role === 'model' ? (
+                          <div className="prose prose-indigo max-w-none">
+                            {renderMarkdown(msg.text)}
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed">{msg.text}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {loading.chat && (
+                    <div className="flex justify-start">
+                      <div className="bg-white border border-slate-200 text-slate-500 rounded-3xl rounded-tl-none p-5 shadow-sm flex items-center gap-3 font-medium">
+                        <Loader2 size={20} className="animate-spin text-indigo-500" />
+                        <span>Asistanınız yanıtlıyor...</span>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                
+                <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-200">
+                  <div className="relative flex items-end gap-3">
+                    <textarea
+                      value={currentMessage}
+                      onChange={(e) => setCurrentMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(e);
+                        }
+                      }}
+                      placeholder="Konuyla ilgili kafanıza takılanı akademik asistana sorun..."
+                      className="w-full bg-slate-100 border-none rounded-2xl pl-5 pr-14 py-4 focus:ring-4 focus:ring-indigo-500/20 resize-none min-h-[60px] max-h-[200px] text-lg text-slate-700 font-medium"
+                      rows={1}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!currentMessage.trim() || loading.chat}
+                      className="absolute right-3 bottom-3 md:bottom-3 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-md shadow-indigo-600/20"
+                    >
+                      <Send size={20} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 text-center font-medium">Bu yanıtlar yapay zeka tarafından üretilmektedir, daima ana kaynağınızı teyit edin.</p>
+                </form>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
+    </div>
+  );
+}
