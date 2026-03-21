@@ -1949,14 +1949,14 @@ ${savedMaterial.slice(0, 10000)}`;
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button
                               onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, quizScope: 'current' })); }}
-                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'current' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'current' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                             >
                               <span className="block text-lg mb-1">{t.quizScopeCurrent}</span>
                               <span className="block text-sm font-medium opacity-80">{t.quizScopeCurrentDesc}</span>
                             </button>
                             <button
                               onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, quizScope: 'mixed', selectedSessions: p.selectedSessions.length ? p.selectedSessions : [activeSessionId].filter(Boolean) })); }}
-                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'mixed' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                              className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.quizScope === 'mixed' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                               disabled={sessionsList.length === 0}
                             >
                               <span className="block text-lg mb-1">{t.quizScopeMixed}</span>
@@ -2001,14 +2001,14 @@ ${savedMaterial.slice(0, 10000)}`;
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <button
                             onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, examMode: 'interactive' })); }}
-                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'interactive' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'interactive' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                           >
                             <span className="block text-lg mb-1">{t.quizInteractive}</span>
                             <span className="block text-sm font-medium opacity-80">{t.quizInteractiveDesc}</span>
                           </button>
                           <button
                             onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, examMode: 'mock' })); }}
-                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'mock' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                            className={`py-4 px-4 text-left rounded-xl font-bold transition-all border-2 ${quizConfig.examMode === 'mock' ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                           >
                             <span className="block text-lg mb-1">{t.quizMock}</span>
                             <span className="block text-sm font-medium opacity-80">{t.quizMockDesc}</span>
@@ -2027,7 +2027,7 @@ ${savedMaterial.slice(0, 10000)}`;
                               <button
                                 key={num}
                                 onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, count: num })); }}
-                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                               >
                                 {num}
                               </button>
@@ -2043,7 +2043,7 @@ ${savedMaterial.slice(0, 10000)}`;
                               <button
                                 key={diff}
                                 onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, difficulty: T.tr.difficulties[idx] })); }}
-                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.difficulty === T.tr.difficulties[idx] ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:border-rose-300'}`}
+                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.difficulty === T.tr.difficulties[idx] ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                               >
                                 {diff}
                               </button>
