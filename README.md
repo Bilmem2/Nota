@@ -1,5 +1,7 @@
 <div align="center">
 
+<sub>[🇬🇧 English](README.en.md)</sub>
+
 <img src="public/favicon.png" alt="Nota" width="72" />
 
 # Nota
