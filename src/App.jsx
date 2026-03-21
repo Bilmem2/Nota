@@ -53,6 +53,8 @@ export default function App() {
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiKey, setSettingsApiKey] = useState('');
+  const [weakAnalysis, setWeakAnalysis] = useState(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState('archive');
@@ -379,9 +381,9 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       if (activeTabRef.current === 'quiz' && state.activeMode === 'interactive' && !state.finished && !state.isEvaluating) {
         if (e.key === 'Enter' && !e.shiftKey) {
           const activeTag = document.activeElement?.tagName;
-          if (activeTag === 'TEXTAREA' || activeTag === 'INPUT' || activeTag === 'BUTTON') {
-            return;
-          }
+          // Allow Enter from input/textarea to trigger check, but not from textarea (multiline essay)
+          if (activeTag === 'TEXTAREA') return;
+          if (activeTag === 'BUTTON') return;
 
           if (!state.isChecked) {
             const uAns = state.answers[state.currentIndex];
@@ -1631,7 +1633,15 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           <>
                             <div className="flex items-center justify-between text-base font-bold text-slate-500 mb-4">
                               <span className="bg-slate-100 px-4 py-1.5 rounded-lg text-slate-700">Soru {quizState.currentIndex + 1} / {content.quiz.length}</span>
-                              <span className="text-rose-600">{Math.round((quizState.currentIndex / content.quiz.length) * 100)}% Tamamlandı</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-rose-600">{Math.round((quizState.currentIndex / content.quiz.length) * 100)}% Tamamlandı</span>
+                                <button
+                                  onClick={() => { if (window.confirm('Sınavı iptal etmek istediğine emin misin? İlerleme kaydedilmeyecek.')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
+                                  className="text-xs text-slate-400 hover:text-rose-500 border border-slate-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                                >
+                                  İptal
+                                </button>
+                              </div>
                             </div>
                             <div className="w-full bg-slate-100 h-3 rounded-full mb-10 overflow-hidden shadow-inner">
                               <div className="bg-rose-500 h-full transition-all duration-500 ease-out" style={{ width: `${(quizState.currentIndex / content.quiz.length) * 100}%` }}></div>
@@ -1779,11 +1789,19 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                           })()
                         ) : (
                           <div>
-                            <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-indigo-900 font-medium">
-                              <Target size={24} className="mb-2 text-indigo-500" />
-                              {quizConfig.language === 'English'
-                                ? 'Mock Exam Mode: Answer all questions below. Your answers will be submitted for holistic AI evaluation at the very end.'
-                                : 'Gerçek Deneme Modu: Tüm soruları aşağıdan cevapla. Sınavı bitirdiğinde kompozisyon ve açık uçlu cevapların yapay zeka tarafından değerlendirilecek.'}
+                            <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-indigo-900 font-medium flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-3">
+                                <Target size={24} className="mb-2 text-indigo-500 shrink-0 mt-0.5" />
+                                <span>{quizConfig.language === 'English'
+                                  ? 'Mock Exam Mode: Answer all questions below. Your answers will be submitted for holistic AI evaluation at the very end.'
+                                  : 'Gerçek Deneme Modu: Tüm soruları aşağıdan cevapla. Sınavı bitirdiğinde kompozisyon ve açık uçlu cevapların yapay zeka tarafından değerlendirilecek.'}</span>
+                              </div>
+                              <button
+                                onClick={() => { if (window.confirm('Sınavı iptal etmek istediğine emin misin?')) { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); } }}
+                                className="shrink-0 text-xs text-indigo-400 hover:text-rose-500 border border-indigo-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                              >
+                                İptal
+                              </button>
                             </div>
 
                             {content.quiz.map((q, i) => {
@@ -1912,13 +1930,61 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
                               </div>
 
                               <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <button onClick={() => { playSound('select', soundEnabled); setQuizState({ activeMode: quizConfig.examMode, currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); generateContent('quiz'); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 text-white font-bold text-lg rounded-2xl hover:bg-slate-900 transition-colors shadow-lg">
+                                <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: quizConfig.examMode, currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); generateContent('quiz'); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 text-white font-bold text-lg rounded-2xl hover:bg-slate-900 transition-colors shadow-lg">
                                   <RotateCw size={20} /> Yeni Sınav Oluştur
                                 </button>
-                                <button onClick={() => { playSound('select', soundEnabled); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
+                                <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
                                   <Settings2 size={20} /> Ayarlara Dön
                                 </button>
+                                <button onClick={() => {
+                                  if (!window.confirm('Bu sınavı geçmişten silmek istediğine emin misin?')) return;
+                                  playSound('select', soundEnabled);
+                                  setWeakAnalysis(null);
+                                  setContent((prev) => {
+                                    const newHistory = prev.quizHistory ? prev.quizHistory.slice(0, -1) : [];
+                                    return { ...prev, quiz: null, quizHistory: newHistory };
+                                  });
+                                  setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
+                                }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-rose-200 text-rose-600 font-bold text-lg rounded-2xl hover:bg-rose-50 transition-colors shadow-sm">
+                                  <Trash2 size={20} /> Sınavı Sil
+                                </button>
                               </div>
+
+                              {/* Zayıf Yönler Analizi */}
+                              {content.quizHistory && content.quizHistory.length >= 2 && (
+                                <div className="mt-10 border-t-2 border-slate-100 pt-10">
+                                  {!weakAnalysis && !loadingAnalysis && (
+                                    <button
+                                      onClick={async () => {
+                                        setLoadingAnalysis(true);
+                                        const historyText = content.quizHistory.map((qh, idx) => {
+                                          const wrongs = qh.quiz.filter((q, i) => !(qh.state.verdicts[i]?.isCorrect ?? isAnswerCorrect(qh.state.answers[i], q.dogruCevap)));
+                                          return `Sınav ${idx + 1} (${qh.config.difficulty}, ${qh.quiz.length} soru):\nYanlış soruların konuları: ${wrongs.map(q => q.soru.slice(0, 80)).join(' | ') || 'Yok'}`;
+                                        }).join('\n\n');
+                                        const prompt = `Öğrencinin sınav geçmişi:\n${historyText}\n\nBu verilere dayanarak öğrencinin güçlü ve zayıf yönlerini analiz et. Hangi konularda tekrar çalışması gerektiğini somut olarak belirt. 3-4 cümle, Türkçe, samimi bir dille yaz.`;
+                                        const result = await callGemini(prompt, 'Sen bir akademik danışmansın. Kısa, net ve motive edici bir analiz yap.', apiKey, null, false, provider);
+                                        setWeakAnalysis(result);
+                                        setLoadingAnalysis(false);
+                                      }}
+                                      className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-indigo-50 border-2 border-indigo-200 text-indigo-700 font-bold text-lg rounded-2xl hover:bg-indigo-100 transition-colors"
+                                    >
+                                      <PieChart size={20} /> Zayıf Yönlerimi Analiz Et
+                                    </button>
+                                  )}
+                                  {loadingAnalysis && (
+                                    <div className="flex items-center justify-center gap-3 py-6 text-indigo-600 font-medium">
+                                      <Loader2 size={24} className="animate-spin" /> Analiz yapılıyor...
+                                    </div>
+                                  )}
+                                  {weakAnalysis && (
+                                    <div className="p-6 bg-indigo-50 border-2 border-indigo-200 rounded-2xl animate-in fade-in">
+                                      <h4 className="font-bold text-indigo-900 flex items-center gap-2 mb-3"><PieChart size={20} /> Performans Analizi</h4>
+                                      <p className="text-indigo-800 leading-relaxed">{weakAnalysis}</p>
+                                      <button onClick={() => setWeakAnalysis(null)} className="mt-4 text-sm text-indigo-500 hover:text-indigo-700 underline">Kapat</button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })()}
