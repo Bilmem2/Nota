@@ -2987,7 +2987,7 @@ ${savedMaterial.slice(0, 10000)}`;
                 <Workflow size={32} className="text-violet-600" />
                 <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.mindMapTitle}</h2>
               </div>
-              <div className={`bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 ${mindMapFullscreen ? 'fixed inset-0 z-[999] rounded-none p-4 flex flex-col' : ''}`}>
+              <div className={`bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 ${mindMapFullscreen ? 'fixed inset-0 z-[999] rounded-none flex flex-col' : 'p-6 md:p-8'}`}>
                 {!content.mindMap && !loading.mindmap && (
                   <div className="text-center py-12">
                     <div className="w-24 h-24 bg-violet-50 dark:bg-violet-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
@@ -3010,22 +3010,23 @@ ${savedMaterial.slice(0, 10000)}`;
                   </div>
                 )}
                 {content.mindMap && !loading.mindmap && (
-                  <div className={mindMapFullscreen ? 'flex-1 flex flex-col' : ''} style={{ minHeight: mindMapFullscreen ? undefined : 700 }}>
+                  <div className={mindMapFullscreen ? 'flex-1 flex flex-col p-4 overflow-hidden' : ''} style={{ minHeight: mindMapFullscreen ? undefined : 700 }}>
                     <div className="flex items-center justify-between mb-4 shrink-0">
                       <p className="text-xs text-slate-400 dark:text-slate-500">{t.mindMapHint}</p>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setMindMapFullscreen(f => !f)}
-                          className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg transition-colors"
-                          title={mindMapFullscreen ? (appLang === 'tr' ? 'Küçült' : 'Exit Fullscreen') : (appLang === 'tr' ? 'Tam Ekran' : 'Fullscreen')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-700 rounded-lg transition-colors"
                         >
-                          {mindMapFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                          {mindMapFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+                          <span className="hidden sm:inline">{mindMapFullscreen ? (appLang === 'tr' ? 'Küçült' : 'Exit') : (appLang === 'tr' ? 'Tam Ekran' : 'Fullscreen')}</span>
                         </button>
                         <button
                           onClick={() => setContent(prev => ({ ...prev, mindMap: null }))}
-                          className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-slate-200 dark:border-slate-600 hover:border-rose-200 rounded-lg transition-colors"
                         >
-                          {t.mindMapRegen}
+                          <RotateCw size={14} />
+                          <span className="hidden sm:inline">{t.mindMapRegen}</span>
                         </button>
                       </div>
                     </div>
