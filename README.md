@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/favicon.png" alt="Nota" width="72" />
+<img src="public/favicon.png" alt="Nota" width="80" />
 
 # Nota
 
