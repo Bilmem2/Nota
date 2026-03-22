@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS } from './utils/gemini';
+import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -1510,6 +1510,7 @@ ${savedMaterial.slice(0, 10000)}`;
       gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
       anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
       zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS, deepseek: DEEPSEEK_MODELS,
+      piapi: PIAPI_MODELS,
     };
     const [localModel, setLocalModel] = React.useState(
       () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
@@ -1528,6 +1529,7 @@ ${savedMaterial.slice(0, 10000)}`;
       kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking...' },
       qwen:      { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo' },
       deepseek:  { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R2 Thinking · Ekonomik' },
+      piapi:     { label: 'PiAPI',          placeholder: 'piapi-...', hint: 'GPT/Claude/Gemini %25-75 indirimli' },
     };
 
     const handleProviderChange = (key) => {
@@ -1725,6 +1727,14 @@ ${savedMaterial.slice(0, 10000)}`;
                         {appLang === 'tr'
                           ? <>deepseek-chat: 8K çıktı · deepseek-reasoner: 64K çıktı (thinking). API anahtarı: platform.deepseek.com</>
                           : <>deepseek-chat: 8K output · deepseek-reasoner: 64K output (thinking). Get key: platform.deepseek.com</>
+                        }
+                      </p>
+                    )}
+                    {settingsProvider === 'piapi' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        {appLang === 'tr'
+                          ? <>💳 Tüm modeller ücretli. OpenAI/Anthropic/Gemini fiyatlarının %25-75'i. API anahtarı: <a href="https://piapi.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">piapi.ai</a></>
+                          : <>💳 All models paid. 25-75% of OpenAI/Anthropic/Gemini prices. Get key: <a href="https://piapi.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">piapi.ai</a></>
                         }
                       </p>
                     )}

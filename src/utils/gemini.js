@@ -9,6 +9,7 @@ const ZAI_URL = 'https://api.z.ai/api/paas/v4/chat/completions';
 const KIMI_URL = 'https://api.moonshot.cn/v1/chat/completions';
 const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
+const PIAPI_URL = 'https://api.piapi.ai/v1/chat/completions';
 
 export const GEMINI_MODELS = [
   { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
@@ -128,6 +129,20 @@ export const DEEPSEEK_MODELS = [
   // Hepsi ücretli (çok düşük fiyatlı ama ücretsiz değil)
   { id: 'deepseek-chat',     label: 'DeepSeek-V3.2 💳 (Ücretli, 128K ctx)',      maxTokens: 8192  },
   { id: 'deepseek-reasoner', label: 'DeepSeek-R2 💳 (Ücretli, Thinking 64K)',    maxTokens: 65536 },
+];
+
+export const PIAPI_MODELS = [
+  // OpenAI/Anthropic/Gemini modellerini %25-75 indirimli sunar
+  { id: 'gpt-5',                        label: 'GPT-5 💳 (İndirimli, %50 OpenAI)',              maxTokens: 32768 },
+  { id: 'gpt-5.2',                      label: 'GPT-5.2 💳 (İndirimli, %50 OpenAI)',            maxTokens: 32768 },
+  { id: 'gpt-4o',                       label: 'GPT-4o 💳 (İndirimli, %50 OpenAI)',             maxTokens: 16384 },
+  { id: 'gpt-4.1',                      label: 'GPT-4.1 💳 (İndirimli, %75 OpenAI)',            maxTokens: 32768 },
+  { id: 'gpt-4.1-mini',                 label: 'GPT-4.1 Mini 💳 (İndirimli, %75 OpenAI)',       maxTokens: 32768 },
+  { id: 'gpt-4.1-nano',                 label: 'GPT-4.1 Nano 💳 (İndirimli, %75 OpenAI)',       maxTokens: 32768 },
+  { id: 'gpt-4o-mini',                  label: 'GPT-4o Mini 💳 (İndirimli, %75 OpenAI)',        maxTokens: 16384 },
+  { id: 'claude-opus-4-6',              label: 'Claude Opus 4.6 💳 (İndirimli, %75 Anthropic)', maxTokens: 64000 },
+  { id: 'claude-sonnet-4-6',            label: 'Claude Sonnet 4.6 💳 (İndirimli, %75 Anthropic)', maxTokens: 64000 },
+  { id: 'gemini-2.5-flash-nothinking',  label: 'Gemini 2.5 Flash 💳 (İndirimli, %25 Gemini)',  maxTokens: 65535 },
 ];
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
@@ -452,9 +467,34 @@ async function callDeepSeekAPI(prompt, systemInstruction, apiKey, model) {
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
 }
 
-/**
+async function callPiAPIAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = PIAPI_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 16384;
+
+  const payload = {
+    model: model || 'gpt-4.1-mini',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: maxTokens,
+  };
+
+  const response = await fetch(PIAPI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`PiAPI HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}/**
  * Unified AI API caller.
- * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek'
+ * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek' | 'piapi'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
   // Kullanıcının seçtiği provider her zaman öncelikli — prefix override yok.
@@ -495,6 +535,9 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
           break;
         case 'deepseek':
           result = await callDeepSeekAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'piapi':
+          result = await callPiAPIAPI(prompt, systemInstruction, apiKey, selectedModel);
           break;
         default:
           result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, selectedModel);
