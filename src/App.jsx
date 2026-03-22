@@ -1525,7 +1525,7 @@ ${savedMaterial.slice(0, 10000)}`;
       anthropic: { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
       xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 3...' },
       perplexity:{ label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro, web aramalı' },
-      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-5, GLM-5-Turbo, GLM-4.5' },
+      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-5, GLM-4.7, GLM-4.5 · GLM-4-Plus ücretsiz' },
       kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking...' },
       qwen:      { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo' },
       deepseek:  { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R2 Thinking · Ekonomik' },
