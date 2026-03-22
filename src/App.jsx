@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS } from './utils/gemini';
+import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS, POLLINATIONS_MODELS, LLM7_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -1511,6 +1511,8 @@ ${savedMaterial.slice(0, 10000)}`;
       anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
       zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS, deepseek: DEEPSEEK_MODELS,
       piapi: PIAPI_MODELS,
+      pollinations: POLLINATIONS_MODELS,
+      llm7: LLM7_MODELS,
     };
     const [localModel, setLocalModel] = React.useState(
       () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
@@ -1518,19 +1520,27 @@ ${savedMaterial.slice(0, 10000)}`;
     const [inputKey, setInputKey] = React.useState('');
 
     const providerInfo = {
-      gemini:    { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: '2.5 Flash ücretsiz · 2.5 Pro ücretli' },
-      groq:      { label: 'Groq',          placeholder: 'gsk_...',   hint: 'Ücretsiz · Llama 3.3 70B · Çok hızlı' },
-      openrouter:{ label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
-      openai:    { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...' },
-      anthropic: { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
-      xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 4.20 Reasoning, Grok 3' },
-      perplexity:{ label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro, web aramalı' },
-      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-5, GLM-4.7, GLM-4.5 · GLM-4-Plus ücretsiz' },
-      kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking...' },
-      qwen:      { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo' },
-      deepseek:  { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R2 Thinking · Ekonomik' },
-      piapi:     { label: 'PiAPI',          placeholder: 'piapi-...', hint: 'GPT/Claude/Gemini %25-75 indirimli' },
+      gemini:      { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: '2.5 Flash ücretsiz · 2.5 Pro ücretli', category: 'free' },
+      groq:        { label: 'Groq',          placeholder: 'gsk_...',   hint: 'Ücretsiz · Llama 3.3 70B · Hızlı',    category: 'free' },
+      openrouter:  { label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler',     category: 'free' },
+      zai:         { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4-Plus / GLM-4.5-Flash ücretsiz', category: 'free' },
+      pollinations:{ label: 'Pollinations',  placeholder: '(gerekmez)', hint: 'API anahtarı yok · GPT/Claude/Gemini', category: 'free' },
+      llm7:        { label: 'llm7.io',       placeholder: '(gerekmez)', hint: 'API anahtarı yok · GPT/Grok/Mistral', category: 'free' },
+      openai:      { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...',               category: 'paid' },
+      anthropic:   { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet',              category: 'paid' },
+      xai:         { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 4.20 Reasoning',       category: 'paid' },
+      perplexity:  { label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro · Web aramalı',            category: 'paid' },
+      kimi:        { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking',            category: 'paid' },
+      qwen:        { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo',              category: 'paid' },
+      deepseek:    { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R1 Thinking · Ekonomik',     category: 'paid' },
+      piapi:       { label: 'PiAPI',         placeholder: 'piapi-...', hint: 'GPT/Claude/Gemini %25-75 indirimli', category: 'discount' },
     };
+
+    const providerCategories = [
+      { key: 'free',     label: '⭐ Ücretsiz' },
+      { key: 'paid',     label: '💳 Ücretli' },
+      { key: 'discount', label: '🏷️ İndirimli' },
+    ];
 
     const handleProviderChange = (key) => {
       setSettingsProvider(key);
@@ -1557,14 +1567,24 @@ ${savedMaterial.slice(0, 10000)}`;
     })();
     const hasMismatch = detectedProvider && detectedProvider !== settingsProvider;
 
+    const noKeyRequired = ['pollinations', 'llm7'].includes(settingsProvider);
     const hasNewKey = inputKey.trim().length > 0;
-    const canSwitch = !hasNewKey && savedKeyForProvider && settingsProvider !== provider;
+    const canSwitch = !hasNewKey && (savedKeyForProvider || noKeyRequired) && settingsProvider !== provider;
     const modelChanged = currentModelList && localModel !== openRouterModel && settingsProvider === provider;
-    const canSave = hasNewKey || canSwitch || modelChanged || keyWasReset;
+    const canSave = hasNewKey || canSwitch || modelChanged || keyWasReset || noKeyRequired;
 
     const handleSave = () => {
       const newKey = inputKey.trim();
-      if (newKey) {
+      if (noKeyRequired && !newKey) {
+        // API key gerektirmeyen provider'lar — boş string ile kaydet
+        const updated = { ...providerKeys, [settingsProvider]: 'no-key' };
+        localStorage.setItem('provider_keys', JSON.stringify(updated));
+        localStorage.setItem('gemini_api_key', '');
+        localStorage.setItem('ai_provider', settingsProvider);
+        if (currentModelList) { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        setProviderKeys(updated); setApiKey(''); setProvider(settingsProvider);
+        setShowSettings(false);
+      } else if (newKey) {
         const updated = { ...providerKeys, [settingsProvider]: newKey };
         localStorage.setItem('provider_keys', JSON.stringify(updated));
         localStorage.setItem('gemini_api_key', newKey);
@@ -1657,25 +1677,30 @@ ${savedMaterial.slice(0, 10000)}`;
               <div className="tab-content space-y-5">
                 <div>
                   <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">AI Sağlayıcısı</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {Object.entries(providerInfo).map(([key, val]) => {
-                      const hasSavedKey = !!providerKeys[key];
-                      const isActive = key === provider;
-                      const isSelected = settingsProvider === key;
-                      return (
-                        <button key={key} type="button" onClick={() => handleProviderChange(key)}
-                          className={`p-3 rounded-xl border-2 text-left transition-all duration-150 relative ${
-                            isSelected
-                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm'
-                              : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                          }`}>
-                          <div className={`font-bold text-sm pr-4 truncate ${isSelected ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>{val.label}</div>
-                          <div className="text-xs mt-0.5 text-slate-400 leading-tight line-clamp-2">{val.hint}</div>
-                          {hasSavedKey && <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-emerald-400/70'}`} />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {providerCategories.map(cat => (
+                    <div key={cat.key} className="mb-3">
+                      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5">{cat.label}</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {Object.entries(providerInfo).filter(([, v]) => v.category === cat.key).map(([key, val]) => {
+                          const hasSavedKey = !!providerKeys[key];
+                          const isActive = key === provider;
+                          const isSelected = settingsProvider === key;
+                          return (
+                            <button key={key} type="button" onClick={() => handleProviderChange(key)}
+                              className={`p-2.5 rounded-xl border-2 text-left transition-all duration-150 relative ${
+                                isSelected
+                                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                              }`}>
+                              <div className={`font-bold text-xs pr-4 truncate ${isSelected ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>{val.label}</div>
+                              <div className="text-xs mt-0.5 text-slate-400 leading-tight line-clamp-1">{val.hint}</div>
+                              {hasSavedKey && <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-emerald-400/70'}`} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <div>
@@ -1736,6 +1761,16 @@ ${savedMaterial.slice(0, 10000)}`;
                           ? <>💳 Tüm modeller ücretli. OpenAI/Anthropic/Gemini fiyatlarının %25-75'i. API anahtarı: <a href="https://piapi.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">piapi.ai</a></>
                           : <>💳 All models paid. 25-75% of OpenAI/Anthropic/Gemini prices. Get key: <a href="https://piapi.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">piapi.ai</a></>
                         }
+                      </p>
+                    )}
+                    {settingsProvider === 'pollinations' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        ⭐ API anahtarı gerekmez — input alanını boş bırakın. GPT-4o, Claude, Gemini, DeepSeek modelleri ücretsiz. <a href="https://pollinations.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">pollinations.ai</a>
+                      </p>
+                    )}
+                    {settingsProvider === 'llm7' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        ⭐ API anahtarı gerekmez — input alanını boş bırakın. 150 istek/dakika limit. GPT, Grok, Mistral, Llama modelleri ücretsiz. <a href="https://llm7.io" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">llm7.io</a>
                       </p>
                     )}
                   </div>

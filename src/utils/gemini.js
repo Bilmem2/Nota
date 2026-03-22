@@ -158,6 +158,34 @@ export const PIAPI_MODELS = [
   { id: 'gemini-2.5-flash-nothinking',  label: 'Gemini 2.5 Flash 💳 (İndirimli, %25 Gemini)',  maxTokens: 65535 },
 ];
 
+export const POLLINATIONS_MODELS = [
+  // Tamamen ücretsiz, API anahtarı gerekmez (boş string gönderin)
+  { id: 'openai-large',    label: 'OpenAI Large ⭐ (Ücretsiz, GPT-4o)',          maxTokens: 16384 },
+  { id: 'openai',          label: 'OpenAI ⭐ (Ücretsiz, GPT-4o-mini)',           maxTokens: 16384 },
+  { id: 'openai-fast',     label: 'OpenAI Fast ⭐ (Ücretsiz, Hızlı)',            maxTokens: 8192  },
+  { id: 'gemini-3-flash',  label: 'Gemini 3 Flash ⭐ (Ücretsiz)',               maxTokens: 16384 },
+  { id: 'deepseek-v3',     label: 'DeepSeek V3 ⭐ (Ücretsiz)',                  maxTokens: 8192  },
+  { id: 'claude-haiku-4.5',label: 'Claude Haiku 4.5 ⭐ (Ücretsiz)',             maxTokens: 8192  },
+  { id: 'claude-sonnet-4.5',label: 'Claude Sonnet 4.5 ⭐ (Ücretsiz)',           maxTokens: 8192  },
+  { id: 'kimi-k2-thinking', label: 'Kimi K2 Thinking ⭐ (Ücretsiz, Reasoning)', maxTokens: 8192  },
+  { id: 'mistral',          label: 'Mistral ⭐ (Ücretsiz)',                      maxTokens: 8192  },
+  { id: 'qwen-coder',       label: 'Qwen Coder ⭐ (Ücretsiz)',                   maxTokens: 8192  },
+];
+// Pollinations: API anahtarı gerekmez, rate limit yok (pollen sistemi)
+
+export const LLM7_MODELS = [
+  // Tamamen ücretsiz, API anahtarı gerekmez (boş string gönderin)
+  { id: 'gpt-4.1-nano-2025-04-14',      label: 'GPT-4.1 Nano ⭐ (Ücretsiz)',          maxTokens: 8192 },
+  { id: 'gpt-4o-mini-2024-07-18',       label: 'GPT-4o Mini ⭐ (Ücretsiz)',           maxTokens: 8192 },
+  { id: 'gpt-o3-2025-04-16',            label: 'o3 ⭐ (Ücretsiz, Reasoning)',         maxTokens: 8192 },
+  { id: 'grok-3-mini-high',             label: 'Grok 3 Mini High ⭐ (Ücretsiz)',      maxTokens: 8192 },
+  { id: 'deepseek-r1-0528',             label: 'DeepSeek R1 ⭐ (Ücretsiz, Thinking)', maxTokens: 8192 },
+  { id: 'mistral-small-3.1-24b',        label: 'Mistral Small 3.1 ⭐ (Ücretsiz)',     maxTokens: 8192 },
+  { id: 'llama-4-scout-17b-16e-instruct',label: 'Llama 4 Scout ⭐ (Ücretsiz)',        maxTokens: 8192 },
+  { id: 'qwen2.5-coder-32b-instruct',   label: 'Qwen2.5 Coder 32B ⭐ (Ücretsiz)',    maxTokens: 8192 },
+];
+// llm7: API anahtarı gerekmez, 150 req/min limit
+
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
   const geminiModel = model || 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
@@ -505,9 +533,66 @@ async function callPiAPIAPI(prompt, systemInstruction, apiKey, model) {
 
   const data = await response.json();
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
-}/**
+}
+
+async function callPollinationsAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = POLLINATIONS_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
+  const payload = {
+    model: model || 'openai-large',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: maxTokens,
+    private: true, // prompt'ları public feed'e gönderme
+  };
+
+  const response = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`Pollinations HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
+async function callLLM7API(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = LLM7_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
+  const payload = {
+    model: model || 'gpt-4.1-nano-2025-04-14',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: maxTokens,
+  };
+
+  const response = await fetch('https://llm7.io/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer no-key' },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`llm7 HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
+/**
  * Unified AI API caller.
- * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek' | 'piapi'
+ * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek' | 'piapi' | 'pollinations' | 'llm7'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
   // Kullanıcının seçtiği provider her zaman öncelikli — prefix override yok.
@@ -551,6 +636,12 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
           break;
         case 'piapi':
           result = await callPiAPIAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'pollinations':
+          result = await callPollinationsAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'llm7':
+          result = await callLLM7API(prompt, systemInstruction, apiKey, selectedModel);
           break;
         default:
           result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, selectedModel);
