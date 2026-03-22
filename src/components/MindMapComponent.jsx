@@ -152,6 +152,8 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   const canvasDrag = useRef(null);
   const nodeDrag = useRef(null);
   const transformRef = useRef(transform);
+  const layoutNodesRef = useRef([]); // orijinal layout pozisyonları (fit için)
+  const nodePosRef = useRef({});     // güncel node pozisyonları (drag için)
   useEffect(() => { transformRef.current = transform; }, [transform]);
 
   // ResizeObserver
@@ -196,6 +198,8 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const pos = {};
     l.nodes.forEach(n => { pos[n.id] = { x: n.x, y: n.y }; });
     setNodePos(pos);
+    nodePosRef.current = pos;
+    layoutNodesRef.current = l.nodes;
     setTransform(computeFit(l.nodes, svgSize.w, svgSize.h));
   }, [data, layoutMode, computeFit]); // svgSize omitted intentionally
 
@@ -228,11 +232,13 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     canvasDrag.current = { startX: e.clientX - transformRef.current.x, startY: e.clientY - transformRef.current.y };
   }, []);
 
-  // Node drag: store initial SVG position of node + initial client position
+  // Node drag: node'un başlangıç pozisyonunu + mouse'un başlangıç SVG koordinatını kaydet
+  // onMouseMove'da: yeniPos = nodeStart + (currentMouseSVG - mouseStart)
   const onNodeMouseDown = useCallback((e, id) => {
     e.stopPropagation();
-    const svgStart = toSVGCoords(e.clientX, e.clientY);
-    nodeDrag.current = { id, clientX: e.clientX, clientY: e.clientY, svgStart, moved: false };
+    const mouseStart = toSVGCoords(e.clientX, e.clientY);
+    const nodeStart = nodePosRef.current[id] ?? { x: 0, y: 0 };
+    nodeDrag.current = { id, clientX: e.clientX, clientY: e.clientY, mouseStart, nodeStart, moved: false };
   }, [toSVGCoords]);
 
   const onMouseMove = useCallback((e) => {
@@ -240,8 +246,13 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const cd = canvasDrag.current;
     if (nd) {
       if (Math.abs(e.clientX - nd.clientX) > 3 || Math.abs(e.clientY - nd.clientY) > 3) nd.moved = true;
-      const c = toSVGCoords(e.clientX, e.clientY);
-      setNodePos(p => ({ ...p, [nd.id]: { x: c.x, y: c.y } }));
+      const cur = toSVGCoords(e.clientX, e.clientY);
+      const newPos = {
+        x: nd.nodeStart.x + (cur.x - nd.mouseStart.x),
+        y: nd.nodeStart.y + (cur.y - nd.mouseStart.y),
+      };
+      nodePosRef.current = { ...nodePosRef.current, [nd.id]: newPos };
+      setNodePos(p => ({ ...p, [nd.id]: newPos }));
     } else if (cd) {
       setTransform(t => ({ ...t, x: e.clientX - cd.startX, y: e.clientY - cd.startY }));
     }
@@ -264,8 +275,9 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   const onNodeTouchStart = useCallback((e, id) => {
     e.stopPropagation();
     if (e.touches.length === 1) {
-      const svgStart = toSVGCoords(e.touches[0].clientX, e.touches[0].clientY);
-      nodeDrag.current = { id, clientX: e.touches[0].clientX, clientY: e.touches[0].clientY, svgStart, moved: false };
+      const mouseStart = toSVGCoords(e.touches[0].clientX, e.touches[0].clientY);
+      const nodeStart = nodePosRef.current[id] ?? { x: 0, y: 0 };
+      nodeDrag.current = { id, clientX: e.touches[0].clientX, clientY: e.touches[0].clientY, mouseStart, nodeStart, moved: false };
     }
   }, [toSVGCoords]);
   const onTouchMove = useCallback((e) => {
@@ -275,8 +287,13 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const cd = canvasDrag.current;
     if (nd) {
       if (Math.abs(t.clientX - nd.clientX) > 5 || Math.abs(t.clientY - nd.clientY) > 5) nd.moved = true;
-      const c = toSVGCoords(t.clientX, t.clientY);
-      setNodePos(p => ({ ...p, [nd.id]: { x: c.x, y: c.y } }));
+      const cur = toSVGCoords(t.clientX, t.clientY);
+      const newPos = {
+        x: nd.nodeStart.x + (cur.x - nd.mouseStart.x),
+        y: nd.nodeStart.y + (cur.y - nd.mouseStart.y),
+      };
+      nodePosRef.current = { ...nodePosRef.current, [nd.id]: newPos };
+      setNodePos(p => ({ ...p, [nd.id]: newPos }));
     } else if (cd) {
       setTransform(tr => ({ ...tr, x: t.clientX - cd.startX, y: t.clientY - cd.startY }));
     }
@@ -397,7 +414,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
           ))}
           {/* Scale to Fit */}
           <button onMouseDown={e => e.stopPropagation()}
-            onClick={() => layout && setTransform(computeFit(layout.nodes, svgSize.w, svgSize.h))}
+            onClick={() => setTransform(computeFit(layoutNodesRef.current, svgSize.w, svgSize.h))}
             title={lang === 'en' ? 'Fit to screen' : 'Ekrana sığdır'}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center">⊡</button>
           {/* Reset */}
