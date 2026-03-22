@@ -54,6 +54,9 @@ export function parseJSON(text) {
 
 /**
  * Compares two answers using Turkish locale case-insensitive comparison.
+ * Also handles partial matches for fill-in-the-blank and short answer questions:
+ * - Normalizes whitespace and punctuation
+ * - Checks if one answer contains the other (for partial credit)
  * Satisfies symmetry: isAnswerCorrect(a, b) === isAnswerCorrect(b, a)
  *
  * @param {string} userAnswer
@@ -62,7 +65,23 @@ export function parseJSON(text) {
  */
 export function isAnswerCorrect(userAnswer, correctAnswer) {
   if (!userAnswer || !correctAnswer) return false;
-  const a = userAnswer.toString().trim().toLocaleLowerCase('tr');
-  const b = correctAnswer.toString().trim().toLocaleLowerCase('tr');
-  return a === b;
+
+  // Normalize: lowercase, trim, collapse whitespace, remove trailing punctuation
+  const normalize = (s) =>
+    s.toString()
+      .trim()
+      .toLocaleLowerCase('tr')
+      .replace(/\s+/g, ' ')
+      .replace(/[.,;:!?]+$/, '');
+
+  const a = normalize(userAnswer);
+  const b = normalize(correctAnswer);
+
+  // Exact match
+  if (a === b) return true;
+
+  // One contains the other (handles "Pfu DNA polimeraz" vs "Pfu DNA polimeraz enzimi" etc.)
+  if (a.includes(b) || b.includes(a)) return true;
+
+  return false;
 }

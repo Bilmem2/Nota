@@ -566,8 +566,11 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
         const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider, openRouterModel);
         const parsed = parseJSON(result);
 
-        const isCorr = parsed?.isCorrect ?? false;
-        const feedback = parsed?.feedback ?? 'Değerlendirme yapılamadı.';
+        // parsed null ise (JSON parse hatası) fallback'e düş
+        if (!parsed) throw new Error('JSON parse failed');
+
+        const isCorr = parsed.isCorrect ?? false;
+        const feedback = parsed.feedback ?? 'Değerlendirme yapılamadı.';
 
         setQuizState((p) => ({
           ...p,
@@ -577,12 +580,16 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
         }));
         playSound(isCorr ? 'success' : 'error', soundEnabled);
       } catch (err) {
+        // AI başarısız olduğunda akıllı string karşılaştırması yap
         const fallbackCorr = isAnswerCorrect(uAns, currentQ.dogruCevap);
+        const langFeedback = appLang === 'en'
+          ? 'Evaluated automatically (AI unavailable).'
+          : 'Otomatik değerlendirildi (AI erişilemedi).';
         setQuizState((p) => ({
           ...p,
           isEvaluating: false,
           isChecked: true,
-          verdicts: { ...p.verdicts, [p.currentIndex]: { isCorrect: fallbackCorr, feedback: 'Otomatik kontrol yapıldı.' } },
+          verdicts: { ...p.verdicts, [p.currentIndex]: { isCorrect: fallbackCorr, feedback: langFeedback } },
         }));
         playSound(fallbackCorr ? 'success' : 'error', soundEnabled);
       }
