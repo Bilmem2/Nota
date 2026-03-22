@@ -618,12 +618,11 @@ async function callLLM7API(prompt, systemInstruction, apiKey, model) {
     max_tokens: maxTokens,
   };
 
-  // apiKey: token.llm7.io'dan alınan ücretsiz token
-  // Token yoksa 'unused' gönder — IP bazlı çok kısıtlı çalışır
-  const token = (apiKey && apiKey !== 'no-key') ? apiKey : 'unused';
+  // apiKey: token.llm7.io'dan alınan ücretsiz token (zorunlu)
+  if (!apiKey || apiKey === 'no-key') throw new Error('llm7 token gerekli — token.llm7.io adresinden ücretsiz alın.');
   const response = await fetch('https://api.llm7.io/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify(payload),
   });
 

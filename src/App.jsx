@@ -1790,7 +1790,7 @@ ${savedMaterial.slice(0, 10000)}`;
                     )}
                     {settingsProvider === 'llm7' && (
                       <p className="text-xs text-slate-400 mt-1.5">
-                        ⭐ API anahtarı gerekmez — input alanını boş bırakın. 150 istek/dakika limit. GPT, Grok, Mistral, Llama modelleri ücretsiz. <a href="https://llm7.io" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">llm7.io</a>
+                        ⭐ Ücretsiz token gerekir — <a href="https://token.llm7.io" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">token.llm7.io</a>'dan alın. Free limit: 2 req/s · 20 req/dk · 100 req/saat. Pro ($12/ay): 25 req/s · 1500 req/dk. <a href="https://llm7.io" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">llm7.io</a>
                       </p>
                     )}
                     {settingsProvider === 'mimo' && (
