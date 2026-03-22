@@ -7,18 +7,26 @@
  */
 export function parseJSON(text) {
   try {
-    let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    // <think>...</think> bloğunu temizle (Qwen3, DeepSeek-R1 vb. reasoning modeller)
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
 
-    if (cleaned.startsWith('[')) {
-      const startIndex = cleaned.indexOf('[');
-      const endIndex = cleaned.lastIndexOf(']');
-      if (startIndex !== -1 && endIndex !== -1) {
-        cleaned = cleaned.substring(startIndex, endIndex + 1);
-      }
-    } else if (cleaned.startsWith('{')) {
-      const startIndex = cleaned.indexOf('{');
-      const endIndex = cleaned.lastIndexOf('}');
-      if (startIndex !== -1 && endIndex !== -1) {
+    // İlk { veya [ karakterinden itibaren al
+    const firstBrace = cleaned.indexOf('{');
+    const firstBracket = cleaned.indexOf('[');
+    let startChar = '';
+    let endChar = '';
+    let startIndex = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+      startChar = '{'; endChar = '}'; startIndex = firstBrace;
+    } else if (firstBracket !== -1) {
+      startChar = '['; endChar = ']'; startIndex = firstBracket;
+    }
+
+    if (startIndex !== -1) {
+      const endIndex = cleaned.lastIndexOf(endChar);
+      if (endIndex > startIndex) {
         cleaned = cleaned.substring(startIndex, endIndex + 1);
       }
     }

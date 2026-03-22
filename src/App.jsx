@@ -1260,8 +1260,17 @@ ${savedMaterial.slice(0, 10000)}`;
       if (!result || !result.trim().startsWith('{')) {
         throw new Error(result || 'Boş yanıt');
       }
-      const cleaned = result.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      // <think> bloğunu ve code fence'leri temizle
+      const cleaned = result
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/```json|```/g, '')
+        .trim();
+      const jsonStart = cleaned.indexOf('{');
+      const jsonEnd = cleaned.lastIndexOf('}');
+      const jsonStr = jsonStart !== -1 && jsonEnd > jsonStart
+        ? cleaned.substring(jsonStart, jsonEnd + 1)
+        : cleaned;
+      const parsed = JSON.parse(jsonStr);
       if (parsed.root && parsed.nodes) {
         setMindMapData(parsed);
       } else {

@@ -164,15 +164,19 @@ async function callGroqAPI(prompt, systemInstruction, apiKey) {
 }
 
 async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJson = false) {
+  // Bazı modeller (Gemini, Llama, Gemma vb.) system role'ünü desteklemez.
+  // System instruction'ı user mesajına prepend ederek evrensel uyumluluk sağlıyoruz.
+  const combinedUserContent = systemInstruction
+    ? `${systemInstruction}\n\n---\n\n${prompt}`
+    : prompt;
+
   const payload = {
     model: model || OPENROUTER_MODELS[0].id,
     messages: [
-      { role: 'system', content: systemInstruction },
-      { role: 'user', content: prompt },
+      { role: 'user', content: combinedUserContent },
     ],
     temperature: 0.4,
     max_tokens: 4096,
-    top_p: 0.9,
   };
 
   if (isJson) {
