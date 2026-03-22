@@ -316,6 +316,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; }
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState('api');
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
@@ -494,7 +495,22 @@ export default function App() {
   }, [savedMaterial, content, chatMessages, studyTitle, activeSessionId, materialChunks]);
 
   const createNewSession = () => {
-    setActiveSessionId(Date.now().toString());
+    const newId = Date.now().toString();
+    const newSession = {
+      id: newId,
+      title: 'İsimsiz Çalışma',
+      lastModified: new Date().toISOString(),
+      savedMaterial: '',
+      materialChunks: [],
+      content: { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] },
+      chatMessages: [{ role: 'model', text: t.chatNewSession, isSystem: true }],
+    };
+    setSessionsList((prev) => {
+      const newList = [newSession, ...prev];
+      localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+      return newList;
+    });
+    setActiveSessionId(newId);
     setStudyTitle('');
     setMaterialText('');
     setSavedMaterial('');
@@ -1419,7 +1435,6 @@ ${savedMaterial.slice(0, 10000)}`;
   const SettingsModal = () => {
     const [settingsProvider, setSettingsProvider] = React.useState(provider);
     const [keyWasReset, setKeyWasReset] = React.useState(false);
-    const [activeSettingsTab, setActiveSettingsTab] = React.useState('api');
 
     const modelLists = {
       gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
