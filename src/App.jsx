@@ -309,6 +309,12 @@ export default function App() {
     return 'en';
   });
   const [mindMapData, setMindMapData] = useState(null);
+  const [toast, setToast] = useState(null); // { message, type: 'error'|'warning'|'info', detail? }
+
+  const showToast = (message, type = 'error', detail = null) => {
+    setToast({ message, type, detail });
+    setTimeout(() => setToast(null), type === 'error' ? 8000 : 5000);
+  };
 
   const t = T[appLang];
 
@@ -537,7 +543,7 @@ export default function App() {
         });
         loadSession(importedSession);
       } catch (err) {
-        alert('Dosya okunamadı. Lütfen geçerli bir .akademik yedek dosyası seçin.');
+        showToast('Dosya okunamadı. Lütfen geçerli bir .akademik yedek dosyası seçin.', 'error');
       }
     };
     reader.readAsText(file);
@@ -797,7 +803,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     if (!file) return;
 
     if (file.name.endsWith('.pptx')) {
-      alert('Sunum dosyalarınızı (PPTX) doğrudan okuyamıyorum, ancak Dosya > Farklı Kaydet diyerek PDF olarak kaydederseniz tüm içeriği anında analiz edebilirim!');
+      showToast('Sunum dosyalarınızı (PPTX) doğrudan okuyamıyorum, ancak Dosya > Farklı Kaydet diyerek PDF olarak kaydederseniz tüm içeriği anında analiz edebilirim!', 'warning');
       e.target.value = null;
       return;
     }
@@ -846,7 +852,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       };
       reader.readAsArrayBuffer(file);
     } else {
-      alert(t.fileTypeAlert);
+      showToast(t.fileTypeAlert, 'error');
     }
     e.target.value = null;
   };
@@ -938,7 +944,11 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
             ? 'An error occurred while generating the quiz. Please try again.'
             : 'Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.';
         }
-        alert(alertMsg);
+        showToast(alertMsg, msg === 'RATE_LIMITED' ? 'warning' : 'error',
+          msg === 'RATE_LIMITED'
+            ? (appLang === 'en' ? 'Free models have request limits. Retrying automatically with backoff...' : 'Ücretsiz modellerin istek limiti var. Otomatik olarak yeniden deneniyor...')
+            : null
+        );
       } finally {
         setLoading((prev) => ({ ...prev, quiz: false }));
       }
@@ -1278,22 +1288,31 @@ ${savedMaterial.slice(0, 10000)}`;
       if (parsed.root && parsed.nodes) {
         setMindMapData(parsed);
       } else {
-        alert(appLang === 'tr' ? 'Kavram haritası oluşturulamadı. Lütfen tekrar deneyin.' : 'Could not generate concept map. Please try again.');
+        showToast(
+          appLang === 'tr' ? 'Kavram haritası oluşturulamadı. Lütfen tekrar deneyin.' : 'Could not generate concept map. Please try again.',
+          'error'
+        );
       }
     } catch (e) {
       console.error('Mind map parse error', e);
       const msg = e.message || '';
-      let alertMsg;
+      let toastMsg, toastDetail;
       if (msg === 'RATE_LIMITED') {
-        alertMsg = appLang === 'tr' ? 'İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.' : 'Rate limit reached. Please wait and try again.';
+        toastMsg = appLang === 'tr' ? 'İstek limitine ulaşıldı.' : 'Rate limit reached.';
+        toastDetail = appLang === 'tr'
+          ? 'Ücretsiz modellerin dakikalık istek limiti var. Birkaç saniye bekleyip tekrar deneyin veya ücretli bir model seçin.'
+          : 'Free models have per-minute request limits. Wait a few seconds and retry, or switch to a paid model.';
       } else if (msg === 'NETWORK_ERROR') {
-        alertMsg = appLang === 'tr' ? 'Bağlantı hatası. İnternet bağlantınızı kontrol edin.' : 'Connection error. Please check your internet.';
+        toastMsg = appLang === 'tr' ? 'Bağlantı hatası.' : 'Connection error.';
+        toastDetail = appLang === 'tr' ? 'İnternet bağlantınızı kontrol edin.' : 'Please check your internet connection.';
       } else if (msg.includes('400')) {
-        alertMsg = appLang === 'tr' ? 'Seçili model 400 hatası döndürdü. Farklı bir model deneyin.' : 'Model returned 400 error. Try a different model.';
+        toastMsg = appLang === 'tr' ? 'Model 400 hatası döndürdü.' : 'Model returned 400 error.';
+        toastDetail = appLang === 'tr' ? 'Farklı bir model deneyin.' : 'Try a different model.';
       } else {
-        alertMsg = appLang === 'tr' ? 'Kavram haritası oluşturulurken hata oluştu. Lütfen tekrar deneyin.' : 'Error generating concept map. Please try again.';
+        toastMsg = appLang === 'tr' ? 'Kavram haritası oluşturulamadı.' : 'Could not generate concept map.';
+        toastDetail = appLang === 'tr' ? 'Lütfen tekrar deneyin.' : 'Please try again.';
       }
-      alert(alertMsg);
+      showToast(toastMsg, msg === 'RATE_LIMITED' ? 'warning' : 'error', toastDetail);
     }
     setLoading(prev => ({ ...prev, mindmap: false }));
   };
@@ -2857,6 +2876,31 @@ ${savedMaterial.slice(0, 10000)}`;
 
         </div>
       </main>
+
+      {/* Toast Bildirimi */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+            toast.type === 'warning'
+              ? 'bg-amber-50 dark:bg-amber-900/90 border border-amber-200 dark:border-amber-700 text-amber-900 dark:text-amber-100'
+              : toast.type === 'info'
+              ? 'bg-blue-50 dark:bg-blue-900/90 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100'
+              : 'bg-rose-50 dark:bg-rose-900/90 border border-rose-200 dark:border-rose-700 text-rose-900 dark:text-rose-100'
+          }`}
+        >
+          <span className="text-xl mt-0.5">
+            {toast.type === 'warning' ? '⚠️' : toast.type === 'info' ? 'ℹ️' : '❌'}
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm leading-snug">{toast.message}</p>
+            {toast.detail && <p className="text-xs mt-1 opacity-80 leading-snug">{toast.detail}</p>}
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="opacity-50 hover:opacity-100 transition-opacity text-lg leading-none mt-0.5"
+          >×</button>
+        </div>
+      )}
     </div>
   );
 }
