@@ -336,6 +336,7 @@ export default function App() {
     return 'en';
   });
   const [mindMapData, setMindMapData] = useState(null);
+  const [mindMapFullscreen, setMindMapFullscreen] = useState(false);
   const [toast, setToast] = useState(null); // { message, type: 'error'|'warning'|'info', detail? }
 
   const showToast = (message, type = 'error', detail = null) => {
@@ -367,6 +368,7 @@ export default function App() {
     visual: {},
     quiz: null,
     quizHistory: [],
+    mindMap: null,
   });
 
   const [loading, setLoading] = useState({
@@ -504,7 +506,7 @@ export default function App() {
       lastModified: new Date().toISOString(),
       savedMaterial: '',
       materialChunks: [],
-      content: { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] },
+      content: { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null },
       chatMessages: [{ role: 'model', text: t.chatNewSession, isSystem: true }],
     };
     setSessionsList((prev) => {
@@ -517,7 +519,7 @@ export default function App() {
     setMaterialText('');
     setSavedMaterial('');
     setMaterialChunks([]);
-    setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
+    setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null });
     setChatMessages([{ role: 'model', text: t.chatNewSession, isSystem: true }]);
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
@@ -531,7 +533,7 @@ export default function App() {
     setSavedMaterial(session.savedMaterial);
     setMaterialText(session.savedMaterial);
     setMaterialChunks(session.materialChunks || []);
-    setContent(session.content || { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [] });
+    setContent(session.content || { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null });
     // Eski kayıtlarda isSystem flag'i olmayabilir — sistem mesajlarını normalize et
     const normalizedMessages = (session.chatMessages || []).map(msg => {
       if (msg.role === 'model' && !msg.isSystem) {
@@ -1197,7 +1199,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
   const generateMindMap = async () => {
     if (!savedMaterial) return;
-    setMindMapData(null);
+    setContent(prev => ({ ...prev, mindMap: null }));
     setLoading(prev => ({ ...prev, mindmap: true }));
     const isEn = appLang === 'en';
     const isGroq = provider === 'groq';
@@ -1355,7 +1357,7 @@ ${savedMaterial.slice(0, 10000)}`;
       const jsonStr = cleaned.substring(jsonStart, jsonEnd + 1);
       const parsed = JSON.parse(jsonStr);
       if (parsed.root && parsed.nodes) {
-        setMindMapData(parsed);
+        setContent(prev => ({ ...prev, mindMap: parsed }));
       } else {
         showToast(
           appLang === 'tr' ? 'Kavram haritası oluşturulamadı. Lütfen tekrar deneyin.' : 'Could not generate concept map. Please try again.',
@@ -2982,8 +2984,8 @@ ${savedMaterial.slice(0, 10000)}`;
                 <Workflow size={32} className="text-violet-600" />
                 <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.mindMapTitle}</h2>
               </div>
-              <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
-                {!mindMapData && !loading.mindmap && (
+              <div className={`bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 ${mindMapFullscreen ? 'fixed inset-0 z-[999] rounded-none p-4 flex flex-col' : ''}`}>
+                {!content.mindMap && !loading.mindmap && (
                   <div className="text-center py-12">
                     <div className="w-24 h-24 bg-violet-50 dark:bg-violet-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
                       <Workflow size={48} className="text-violet-500" />
@@ -3004,20 +3006,31 @@ ${savedMaterial.slice(0, 10000)}`;
                     <p className="font-bold text-lg animate-pulse">{t.mindMapGenerating}</p>
                   </div>
                 )}
-                {mindMapData && !loading.mindmap && (
-                  <div style={{ minHeight: 700 }}>
-                    <div className="flex items-center justify-between mb-4">
+                {content.mindMap && !loading.mindmap && (
+                  <div className={mindMapFullscreen ? 'flex-1 flex flex-col' : ''} style={{ minHeight: mindMapFullscreen ? undefined : 700 }}>
+                    <div className="flex items-center justify-between mb-4 shrink-0">
                       <p className="text-xs text-slate-400 dark:text-slate-500">{t.mindMapHint}</p>
-                      <button
-                        onClick={() => setMindMapData(null)}
-                        className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
-                      >
-                        {t.mindMapRegen}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setMindMapFullscreen(f => !f)}
+                          className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg transition-colors"
+                          title={mindMapFullscreen ? (appLang === 'tr' ? 'Küçült' : 'Exit Fullscreen') : (appLang === 'tr' ? 'Tam Ekran' : 'Fullscreen')}
+                        >
+                          {mindMapFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                        </button>
+                        <button
+                          onClick={() => setContent(prev => ({ ...prev, mindMap: null }))}
+                          className="text-sm text-slate-400 hover:text-rose-500 underline transition-colors"
+                        >
+                          {t.mindMapRegen}
+                        </button>
+                      </div>
                     </div>
-                    <ErrorBoundary>
-                      <MindMapComponent data={mindMapData} darkMode={darkMode} lang={appLang} />
-                    </ErrorBoundary>
+                    <div className={mindMapFullscreen ? 'flex-1' : ''}>
+                      <ErrorBoundary>
+                        <MindMapComponent data={content.mindMap} darkMode={darkMode} lang={appLang} />
+                      </ErrorBoundary>
+                    </div>
                   </div>
                 )}
               </div>
