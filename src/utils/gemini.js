@@ -17,21 +17,35 @@ export const GEMINI_MODELS = [
 ];
 
 export const OPENROUTER_MODELS = [
-  // --- Ücretsiz ---
-  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',          free: true },
+  // --- Ücretsiz (Google) ---
+  { id: 'google/gemini-2.0-flash-exp:free',                  label: 'Gemini 2.0 Flash Exp ⭐ (Free)',    free: true },
+  { id: 'google/gemini-2.0-flash-thinking-exp:free',         label: 'Gemini 2.0 Flash Thinking (Free)', free: true },
+  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true },
+  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true },
+  { id: 'google/gemma-3-4b-it:free',                         label: 'Gemma 3 4B (Free)',                 free: true },
+  { id: 'google/gemma-3n-e4b-it:free',                       label: 'Gemma 3n 4B (Free)',                free: true },
+  { id: 'google/gemma-3n-e2b-it:free',                       label: 'Gemma 3n 2B (Free)',                free: true },
+  // --- Ücretsiz (Diğer) ---
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',           free: true },
   { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',               free: true },
   { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',        free: true },
   { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',             free: true },
   { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',               free: true },
   { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',      free: true },
-  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true },
   { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',        free: true },
   { id: 'qwen/qwen3-4b:free',                                label: 'Qwen3 4B (Free, Hızlı)',            free: true },
-  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true },
-  // --- Ücretli ---
+  // --- Ücretli (Google) ---
+  { id: 'google/gemini-3.1-pro-preview',                     label: 'Gemini 3.1 Pro Preview (Paid)',     free: false },
+  { id: 'google/gemini-3.1-flash-lite-preview',              label: 'Gemini 3.1 Flash Lite (Paid)',      free: false },
+  { id: 'google/gemini-3-flash-preview',                     label: 'Gemini 3 Flash Preview (Paid)',     free: false },
+  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false },
+  { id: 'google/gemini-2.5-flash',                           label: 'Gemini 2.5 Flash (Paid)',           free: false },
+  { id: 'google/gemini-2.5-flash-lite',                      label: 'Gemini 2.5 Flash Lite (Paid)',      free: false },
+  { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false },
+  { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false },
+  // --- Ücretli (Diğer) ---
   { id: 'anthropic/claude-sonnet-4-6',                       label: 'Claude Sonnet 4.6 (Paid)',          free: false },
   { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false },
-  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false },
 ];
 
 export const OPENAI_MODELS = [
