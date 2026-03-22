@@ -176,7 +176,8 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
   };
 
   if (isJson) {
-    payload.response_format = { type: 'json_object' };
+    // Not: response_format bazı modellerde desteklenmediği için gönderilmiyor.
+    // JSON çıktısı sistem prompt'u ile sağlanıyor.
   }
 
   const response = await fetch(OPENROUTER_URL, {
