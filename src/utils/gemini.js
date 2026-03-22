@@ -458,19 +458,22 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
       }
       return result.text;
     } catch (error) {
-      if (i === 4) {
-        throw new Error('NETWORK_ERROR');
-      }
-      // Kalıcı hatalar — retry yapma, direkt fırlat
       const msg = error.message || '';
+      // Kalıcı hatalar — retry yapma, direkt fırlat
       if (
         msg.includes('401') || msg.includes('403') || msg.includes('404') ||
-        msg.includes('400') || msg.includes('geçersiz') || msg.includes('bulunamadı') ||
-        msg.includes('RATE_LIMITED')
+        msg.includes('400') || msg.includes('geçersiz') || msg.includes('bulunamadı')
       ) {
         throw error;
       }
-      await new Promise(res => setTimeout(res, delays[i]));
+      if (i === 4) {
+        // Son denemede de başarısız — rate limit mi yoksa ağ hatası mı?
+        throw new Error(msg === 'RATE_LIMITED' ? 'RATE_LIMITED' : 'NETWORK_ERROR');
+      }
+      // Rate limit — daha uzun bekleyerek retry yap
+      const rateLimitDelays = [5000, 10000, 20000, 40000, 60000];
+      const delay = msg === 'RATE_LIMITED' ? rateLimitDelays[i] : delays[i];
+      await new Promise(res => setTimeout(res, delay));
     }
   }
 }

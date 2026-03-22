@@ -1263,20 +1263,17 @@ ${savedMaterial.slice(0, 10000)}`;
         systemMsg,
         apiKey, null, true, provider, openRouterModel
       );
-      // callGemini hata durumunda Türkçe string döndürebilir — önce kontrol et
-      if (!result || !result.trim().startsWith('{')) {
-        throw new Error(result || 'Boş yanıt');
-      }
-      // <think> bloğunu ve code fence'leri temizle
+      if (!result) throw new Error('Boş yanıt');
+      // <think> bloğunu, code fence'leri ve olası prefix metinleri temizle
       const cleaned = result
         .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .replace(/```json|```/g, '')
+        .replace(/```json\s*/gi, '')
+        .replace(/```/g, '')
         .trim();
       const jsonStart = cleaned.indexOf('{');
       const jsonEnd = cleaned.lastIndexOf('}');
-      const jsonStr = jsonStart !== -1 && jsonEnd > jsonStart
-        ? cleaned.substring(jsonStart, jsonEnd + 1)
-        : cleaned;
+      if (jsonStart === -1 || jsonEnd <= jsonStart) throw new Error('JSON bulunamadı: ' + cleaned.slice(0, 100));
+      const jsonStr = cleaned.substring(jsonStart, jsonEnd + 1);
       const parsed = JSON.parse(jsonStr);
       if (parsed.root && parsed.nodes) {
         setMindMapData(parsed);
