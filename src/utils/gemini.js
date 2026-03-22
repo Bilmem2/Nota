@@ -134,12 +134,17 @@ export const KIMI_MODELS = [
 
 export const QWEN_MODELS = [
   // Hepsi ücretli (DashScope'ta ücretsiz tier yok)
-  { id: 'qwen3-max',        label: 'Qwen3 Max 💳 (Ücretli, En Güçlü)',       maxTokens: 16384 },
-  { id: 'qwen3-max-latest', label: 'Qwen3 Max Latest 💳 (Ücretli, Güncel)',  maxTokens: 16384 },
-  { id: 'qwen-max-latest',  label: 'Qwen Max Latest 💳 (Ücretli, Kararlı)', maxTokens: 8192  },
-  { id: 'qwen-plus-latest', label: 'Qwen Plus Latest 💳 (Ücretli, 1M ctx)', maxTokens: 8192  },
-  { id: 'qwen-turbo',       label: 'Qwen Turbo 💳 (Ücretli, Ekonomik)',     maxTokens: 8192  },
-  { id: 'qwen-long',        label: 'Qwen Long 💳 (Ücretli, 10M ctx)',       maxTokens: 6144  },
+  // Qwen 3.5 serisi (Şubat 2026, en güncel)
+  { id: 'qwen3.5-plus',      label: 'Qwen3.5 Plus 💳 (397B MoE, 1M ctx, En Güçlü)', maxTokens: 16384 },
+  // Qwen 3 serisi
+  { id: 'qwen3-max',         label: 'Qwen3 Max 💳 (Reasoning + Tool, Güçlü)',        maxTokens: 16384 },
+  { id: 'qwen-max-latest',   label: 'Qwen Max Latest 💳 (32K ctx, Kararlı)',         maxTokens: 8192  },
+  { id: 'qwen-plus-latest',  label: 'Qwen Plus Latest 💳 (1M ctx, Dengeli)',         maxTokens: 8192  },
+  { id: 'qwen-flash',        label: 'Qwen Flash 💳 (Hızlı, Düşük Gecikme)',          maxTokens: 8192  },
+  { id: 'qwen-turbo-latest', label: 'Qwen Turbo Latest 💳 (Ekonomik, Hızlı)',        maxTokens: 8192  },
+  { id: 'qwen-long-latest',  label: 'Qwen Long Latest 💳 (10M ctx, Uzun Metin)',     maxTokens: 6144  },
+  // Reasoning
+  { id: 'qwq-plus',          label: 'QwQ Plus 💳 (Reasoning, Ticari)',               maxTokens: 16384 },
 ];
 // Not: Ücretsiz Qwen modelleri için OpenRouter'ı kullanın (qwen/qwen3-next-80b-a3b-instruct:free vb.)
 
