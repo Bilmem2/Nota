@@ -1523,7 +1523,7 @@ ${savedMaterial.slice(0, 10000)}`;
       openrouter:{ label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler' },
       openai:    { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...' },
       anthropic: { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
-      xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 3...' },
+      xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 4.20 Reasoning, Grok 3' },
       perplexity:{ label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro, web aramalı' },
       zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-5, GLM-4.7, GLM-4.5 · GLM-4-Plus ücretsiz' },
       kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking...' },

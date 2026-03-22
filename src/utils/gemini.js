@@ -81,10 +81,10 @@ export const ANTHROPIC_MODELS = [
 
 export const XAI_MODELS = [
   // Hepsi ücretli
-  { id: 'grok-4.20',   label: 'Grok 4.20 💳 (Ücretli, En Yeni)',       maxTokens: 16384 },
-  { id: 'grok-4',      label: 'Grok 4 💳 (Ücretli, 256K ctx)',          maxTokens: 16384 },
-  { id: 'grok-3',      label: 'Grok 3 💳 (Ücretli, Dengeli)',           maxTokens: 16384 },
-  { id: 'grok-3-mini', label: 'Grok 3 Mini 💳 (Ücretli, Ekonomik)',     maxTokens: 16384 },
+  { id: 'grok-4-0709',          label: 'Grok 4 💳 (Ücretli, En Güçlü)',          maxTokens: 16384 },
+  { id: 'grok-4.20-reasoning',  label: 'Grok 4.20 Reasoning 💳 (Ücretli, CoT)', maxTokens: 16384 },
+  { id: 'grok-3',               label: 'Grok 3 💳 (Ücretli, Dengeli)',           maxTokens: 16384 },
+  { id: 'grok-3-mini',          label: 'Grok 3 Mini 💳 (Ücretli, Ekonomik)',     maxTokens: 16384 },
 ];
 
 export const PERPLEXITY_MODELS = [
@@ -319,13 +319,13 @@ async function callXAIAPI(prompt, systemInstruction, apiKey, model) {
   const maxTokens = modelConfig?.maxTokens ?? 16384;
 
   const payload = {
-    model: model || 'grok-4',
+    model: model || 'grok-4-0709',
     messages: [
       { role: 'system', content: systemInstruction },
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: maxTokens,
+    max_completion_tokens: maxTokens,
   };
 
   const response = await fetch(XAI_URL, {
