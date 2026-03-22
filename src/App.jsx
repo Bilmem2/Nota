@@ -1090,8 +1090,56 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     setMindMapData(null);
     setLoading(prev => ({ ...prev, mindmap: true }));
     const isEn = appLang === 'en';
-    const prompt = isEn
+    const isGroq = provider === 'groq';
+    const langNote = isEn
+      ? 'IMPORTANT: ALL text values (labels, descriptions, facts, examples, relations) MUST be in English.'
+      : 'ÖNEMLİ: Tüm metin değerleri (label, description, keyFacts, example, relation, rootDescription) MUTLAKA TÜRKÇE olmalıdır.';
+
+    // Groq için daha basit yapı (token limiti nedeniyle)
+    const groqPrompt = `Aşağıdaki materyali analiz et ve kavram haritası JSON'u üret.
+${langNote}
+
+ÇIKTI FORMATI (SADECE JSON, başka hiçbir şey):
+{
+  "root": "Ana konu adı",
+  "rootDescription": "2 cümlelik genel bakış",
+  "nodes": [
+    {
+      "id": "cat1",
+      "label": "Kategori adı",
+      "description": "2-3 cümle açıklama",
+      "importance": "Neden önemli",
+      "keyFacts": ["Madde 1", "Madde 2"],
+      "example": "Somut örnek",
+      "relation": "ilişki etiketi",
+      "children": [
+        {
+          "id": "cat1_1",
+          "label": "Alt kavram",
+          "description": "1-2 cümle",
+          "importance": "Önemi",
+          "keyFacts": ["Madde"],
+          "example": "Örnek",
+          "relation": "ilişki",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "crossLinks": [
+    { "from": "cat1", "to": "cat2", "label": "ilişki" }
+  ]
+}
+
+Kural: 4-6 node, her node'da 2-3 children. crossLinks 2-4 adet.
+SADECE JSON döndür.
+
+Materyal:
+${savedMaterial.slice(0, 4000)}`;
+
+    const fullPrompt = isEn
       ? `You are an expert academic knowledge mapper. Analyze the following material deeply and produce a rich, comprehensive concept map as JSON.
+${langNote}
 
 STRICT REQUIREMENTS:
 - "root": the central topic (string, concise)
@@ -1099,70 +1147,60 @@ STRICT REQUIREMENTS:
 - "nodes": 5-9 major thematic categories. Each node MUST have:
   - "id": unique string (e.g. "cat1")
   - "label": concise name, max 4 words
-  - "description": 3-5 sentences — explain the concept thoroughly, its significance, and how it fits in the broader topic
+  - "description": 3-5 sentences
   - "importance": one sentence on WHY this concept matters
-  - "keyFacts": array of 2-4 short bullet-point facts (strings)
-  - "example": a concrete, specific real-world example or analogy
-  - "relation": precise relationship label from root (e.g. "is a mechanism of", "causes", "consists of", "regulates")
-  - "children": 3-6 sub-concepts, each with:
-    - "id": unique string (e.g. "cat1_1")
-    - "label": concise name
-    - "description": 2-4 sentences
-    - "importance": one sentence
-    - "keyFacts": array of 1-3 facts
-    - "example": specific example
-    - "relation": precise relationship label from parent
-    - "children": 1-4 detail nodes, each with id, label, description, importance, example, relation (no further nesting)
-- "crossLinks": 3-8 meaningful cross-concept relationships:
-  - "from": node id, "to": node id
-  - "label": precise relationship (e.g. "directly inhibits", "is prerequisite for", "contrasts with", "amplifies")
+  - "keyFacts": array of 2-4 short facts (strings)
+  - "example": a concrete real-world example
+  - "relation": relationship label from root
+  - "children": 3-6 sub-concepts, each with id, label, description, importance, keyFacts, example, relation, and "children": 1-4 detail nodes (no further nesting)
+- "crossLinks": 3-8 cross-concept relationships: { "from": id, "to": id, "label": relationship }
 
-The map must reflect the FULL complexity of the material. Do not oversimplify.
-Output ONLY valid JSON. No markdown, no explanation, no extra text.
+Output ONLY valid JSON. No markdown, no explanation.
 
 Material:
 ${savedMaterial.slice(0, 10000)}`
-      : `Sen uzman bir akademik bilgi haritalayıcısısın. Aşağıdaki materyali derinlemesine analiz et ve zengin, kapsamlı bir kavram haritası JSON'u üret.
+      : `Sen uzman bir akademik bilgi haritalayıcısısın. Aşağıdaki materyali derinlemesine analiz et ve kapsamlı bir kavram haritası JSON'u üret.
+${langNote}
 
 KESİN GEREKSİNİMLER:
 - "root": merkezi konu (string, kısa ve öz)
-- "rootDescription": konunun tamamına 2-3 cümlelik akademik genel bakış
-- "nodes": 5-9 ana tematik kategori. Her düğüm MUTLAKA şunları içermeli:
+- "rootDescription": 2-3 cümlelik akademik genel bakış
+- "nodes": 5-9 ana tematik kategori. Her düğüm MUTLAKA:
   - "id": benzersiz string (örn. "cat1")
   - "label": kısa isim, max 4 kelime
-  - "description": 3-5 cümle — kavramı kapsamlı açıkla, önemini ve geniş konudaki yerini belirt
-  - "importance": bu kavramın NEDEN önemli olduğunu açıklayan tek cümle
-  - "keyFacts": 2-4 kısa madde halinde anahtar bilgi (string dizisi)
-  - "example": somut, özgün bir gerçek hayat örneği veya analoji
-  - "relation": root'tan bu düğüme kesin ilişki etiketi (örn. "mekanizmasıdır", "neden olur", "düzenler", "oluşur")
-  - "children": 3-6 alt kavram, her biri:
-    - "id": benzersiz string (örn. "cat1_1")
-    - "label": kısa isim
-    - "description": 2-4 cümle
-    - "importance": tek cümle
-    - "keyFacts": 1-3 madde
-    - "example": özgün örnek
-    - "relation": ebeveynden kesin ilişki etiketi
-    - "children": 1-4 detay düğümü, her biri id, label, description, importance, example, relation içerir (daha fazla iç içe geçme yok)
-- "crossLinks": 3-8 anlamlı çapraz kavram ilişkisi:
-  - "from": düğüm id, "to": düğüm id
-  - "label": kesin ilişki (örn. "doğrudan inhibe eder", "ön koşuludur", "karşıtıdır", "güçlendirir")
+  - "description": 3-5 cümle açıklama
+  - "importance": neden önemli olduğunu açıklayan tek cümle
+  - "keyFacts": 2-4 kısa madde (string dizisi)
+  - "example": somut gerçek hayat örneği
+  - "relation": root'tan ilişki etiketi
+  - "children": 3-6 alt kavram, her biri id, label, description, importance, keyFacts, example, relation ve "children": 1-4 detay düğümü (daha fazla iç içe yok)
+- "crossLinks": 3-8 çapraz ilişki: { "from": id, "to": id, "label": ilişki }
 
-Harita materyalin TAM karmaşıklığını yansıtmalıdır. Aşırı basitleştirme.
-SADECE geçerli JSON döndür. Markdown, açıklama veya fazladan metin ekleme.
+SADECE geçerli JSON döndür. Markdown veya açıklama ekleme.
 
 Materyal:
 ${savedMaterial.slice(0, 10000)}`;
 
+    const systemMsg = isEn
+      ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else.'
+      : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme. Tüm içerik Türkçe olmalı.';
+
     try {
-      const result = await callGemini(prompt, isEn ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else.' : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme.', apiKey, null, true, provider, openRouterModel);
+      const result = await callGemini(
+        isGroq ? groqPrompt : fullPrompt,
+        systemMsg,
+        apiKey, null, true, provider, openRouterModel
+      );
       const cleaned = result.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleaned);
       if (parsed.root && parsed.nodes) {
         setMindMapData(parsed);
+      } else {
+        alert(appLang === 'tr' ? 'Kavram haritası oluşturulamadı. Lütfen tekrar deneyin.' : 'Could not generate concept map. Please try again.');
       }
     } catch (e) {
       console.error('Mind map parse error', e);
+      alert(appLang === 'tr' ? 'Kavram haritası oluşturulurken hata oluştu. Lütfen tekrar deneyin.' : 'Error generating concept map. Please try again.');
     }
     setLoading(prev => ({ ...prev, mindmap: false }));
   };

@@ -134,11 +134,7 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
     max_tokens: 8192,
     top_p: 0.9,
   };
-  // JSON mode — only add for models that support it (non-free models and some free ones)
-  // Avoids breaking free models that don't support response_format
-  if (isJson && model && !model.endsWith(':free')) {
-    payload.response_format = { type: 'json_object' };
-  }
+  // response_format kaldırıldı — çoğu OpenRouter modeli desteklemiyor, JSON prompt ile isteniyor
 
   const response = await fetch(OPENROUTER_URL, {
     method: 'POST',
