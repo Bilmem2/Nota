@@ -318,6 +318,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('api');
   const [settingsApiKey, setSettingsApiKey] = useState('');
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   // 'auto' | 'light' | 'dark'  — null/undefined → 'auto' (ilk ziyaret)
@@ -560,6 +562,17 @@ export default function App() {
         setActiveTab('archive');
       }
     }
+  };
+
+  const renameSession = (id, newTitle) => {
+    const trimmed = newTitle.trim() || (appLang === 'tr' ? 'İsimsiz Çalışma' : 'Untitled Study');
+    setSessionsList((prev) => {
+      const newList = prev.map((s) => s.id === id ? { ...s, title: trimmed } : s);
+      localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+      return newList;
+    });
+    if (id === activeSessionId) setStudyTitle(trimmed);
+    setEditingSessionId(null);
   };
 
   const exportSession = (session, e) => {
@@ -1933,9 +1946,33 @@ ${savedMaterial.slice(0, 10000)}`;
                         <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
                           <BookOpen size={24} />
                         </div>
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1 line-clamp-2" title={session.title}>
-                          {session.title}
-                        </h3>
+                        {editingSessionId === session.id ? (
+                          <input
+                            autoFocus
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onBlur={() => renameSession(session.id, editingTitle)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') renameSession(session.id, editingTitle);
+                              if (e.key === 'Escape') setEditingSessionId(null);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full font-bold text-lg text-slate-800 dark:text-slate-200 bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-400 rounded-xl px-3 py-1.5 mb-1 outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        ) : (
+                          <div className="flex items-start gap-2 mb-1 group/title">
+                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 line-clamp-2 flex-1" title={session.title}>
+                              {session.title}
+                            </h3>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditingSessionId(session.id); setEditingTitle(session.title); }}
+                              className="shrink-0 mt-1 p-1 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg opacity-0 group-hover/title:opacity-100 transition-all"
+                              title={appLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                          </div>
+                        )}
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6">
                           {dateObj.toLocaleDateString('tr-TR')} • {dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         </p>
