@@ -1402,8 +1402,8 @@ ${savedMaterial.slice(0, 10000)}`;
   const renderChapterNav = (type) => {
     if (materialChunks.length <= 1) return null;
     return (
-      <div className="flex flex-wrap items-center gap-2 mb-8 p-2 bg-slate-100/80 rounded-2xl border border-slate-200/60 no-print">
-        <span className="text-sm font-bold text-slate-500 ml-2 mr-1">{t.chapterNav}</span>
+      <div className="flex items-center gap-2 mb-8 p-2 bg-slate-100/80 rounded-2xl border border-slate-200/60 no-print overflow-x-auto">
+        <span className="text-sm font-bold text-slate-500 ml-2 mr-1 shrink-0">{t.chapterNav}</span>
         {materialChunks.map((_, idx) => {
           const isActive = activeChunk[type] === idx;
           const isCompleted = !!content[type][idx];
@@ -1414,7 +1414,7 @@ ${savedMaterial.slice(0, 10000)}`;
                 playSound('select', soundEnabled);
                 setActiveChunk((p) => ({ ...p, [type]: idx }));
               }}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm transition-all shrink-0 ${
                 isActive ? 'bg-white text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-200 border border-transparent'
               }`}
             >
@@ -1979,7 +1979,7 @@ ${savedMaterial.slice(0, 10000)}`;
                             </h3>
                             <button
                               onClick={(e) => { e.stopPropagation(); setEditingSessionId(session.id); setEditingTitle(session.title); }}
-                              className="shrink-0 mt-1 p-1 text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg opacity-0 group-hover/title:opacity-100 transition-all"
+                              className="shrink-0 mt-1 p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
                               title={appLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -2055,7 +2055,7 @@ ${savedMaterial.slice(0, 10000)}`;
                   onChange={(e) => setMaterialText(e.target.value)}
                   disabled={isExtracting}
                   placeholder={t.materialTextPlaceholder}
-                  className={`w-full h-[300px] md:h-[400px] p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none text-slate-700 text-lg leading-relaxed ${isExtracting ? 'opacity-50' : ''}`}
+                  className={`w-full h-[220px] md:h-[400px] p-4 md:p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none text-slate-700 text-base md:text-lg leading-relaxed ${isExtracting ? 'opacity-50' : ''}`}
                 />
                 {isExtracting && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
@@ -2343,7 +2343,7 @@ ${savedMaterial.slice(0, 10000)}`;
                     ) : (
                       <div className="relative z-10 animate-in fade-in duration-500 overflow-x-auto pb-10">
                         {renderChapterNav('visual')}
-                        <div id="visual-content-area" className="min-w-full md:min-w-[600px] space-y-12">
+                        <div id="visual-content-area" className="w-full overflow-x-auto space-y-12">
                           {materialChunks.map((_, idx) => {
                             if (!content.visual[idx]) return null;
                             const isError = content.visual[idx] === '__ERROR__';
@@ -2521,12 +2521,12 @@ ${savedMaterial.slice(0, 10000)}`;
                           <label className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
                             <Settings2 size={20} className="text-rose-500" /> {t.quizCount}
                           </label>
-                          <div className="grid grid-cols-5 gap-2">
+                          <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                             {[5, 10, 15, 20, 30].map((num) => (
                               <button
                                 key={num}
                                 onClick={() => { playSound('select', soundEnabled); setQuizConfig((p) => ({ ...p, count: num })); }}
-                                className={`py-3 rounded-xl font-bold transition-all border-2 ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
+                                className={`py-2.5 sm:py-3 rounded-xl font-bold transition-all border-2 text-sm sm:text-base ${quizConfig.count === num ? 'bg-rose-100 border-rose-500 text-rose-800 shadow-sm' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-rose-300'}`}
                               >
                                 {num}
                               </button>
@@ -2647,7 +2647,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                       {currentQ.tip.replace('_', ' ')}
                                     </span>
                                   </div>
-                                  <h3 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">{currentQ.soru}</h3>
+                                  <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 md:mb-8 leading-relaxed">{currentQ.soru}</h3>
 
                                   <div className="space-y-4">
                                     {currentQ.tip === 'multiple_choice' || currentQ.tip === 'true_false' ? (
@@ -2792,7 +2792,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                   <div className="mb-4">
                                     <span className="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-xs rounded-lg uppercase tracking-widest font-bold">{q.tip.replace('_', ' ')}</span>
                                   </div>
-                                  <h4 className="font-bold text-xl mb-6 text-slate-800">
+                                  <h4 className="font-bold text-lg md:text-xl mb-5 md:mb-6 text-slate-800">
                                     <span className="text-slate-400 mr-2">{i + 1}.</span> {q.soru}
                                   </h4>
                                   <div className="space-y-3">
