@@ -1481,6 +1481,249 @@ ${savedMaterial.slice(0, 10000)}`;
       : canSwitch ? `${providerInfo[settingsProvider].label}'a Geç`
       : 'Kaydet';
 
+    const Toggle = ({ checked, onChange }) => (
+      <button
+        onClick={(e) => { e.stopPropagation(); onChange(); }}
+        className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${checked ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+      >
+        <span className={`inline-block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0.5'}`} />
+      </button>
+    );
+
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4"
+        style={{ animation: 'fadeIn 0.15s ease-out' }}
+        onClick={(e) => { if (e.target === e.currentTarget) setShowSettings(false); }}
+      >
+        <style>{`
+          @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+          @keyframes slideUp { from { opacity:0; transform:translateY(20px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
+          @keyframes slideIn { from { opacity:0; transform:translateX(6px) } to { opacity:1; transform:translateX(0) } }
+          .modal-panel { animation: slideUp 0.22s cubic-bezier(0.34,1.4,0.64,1) both; }
+          .tab-content { animation: slideIn 0.15s ease-out both; }
+        `}</style>
+
+        <div className="modal-panel bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg border-t sm:border border-slate-200 dark:border-slate-700 max-h-[92vh] flex flex-col">
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                <Settings2 size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t.settings}</h2>
+            </div>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 px-6 pt-3 pb-1 shrink-0">
+            {[
+              ['api', <Key size={14} />, 'API & Model'],
+              ['appearance', <span className="text-sm leading-none">🎨</span>, appLang === 'tr' ? 'Görünüm' : 'Appearance'],
+            ].map(([id, icon, label]) => (
+              <button
+                key={id}
+                onClick={() => setActiveSettingsTab(id)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  activeSettingsTab === id
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {icon}{label}
+              </button>
+            ))}
+          </div>
+
+          {/* Scrollable content */}
+          <div className="overflow-y-auto flex-1 px-6 py-4">
+
+            {/* --- API TAB --- */}
+            {activeSettingsTab === 'api' && (
+              <div className="tab-content space-y-5">
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">AI Sağlayıcısı</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {Object.entries(providerInfo).map(([key, val]) => {
+                      const hasSavedKey = !!providerKeys[key];
+                      const isActive = key === provider;
+                      const isSelected = settingsProvider === key;
+                      return (
+                        <button key={key} type="button" onClick={() => handleProviderChange(key)}
+                          className={`p-3 rounded-xl border-2 text-left transition-all duration-150 relative ${
+                            isSelected
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          }`}>
+                          <div className={`font-bold text-sm pr-4 truncate ${isSelected ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>{val.label}</div>
+                          <div className="text-xs mt-0.5 text-slate-400 leading-tight line-clamp-2">{val.hint}</div>
+                          {hasSavedKey && <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-emerald-400/70'}`} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">{providerInfo[settingsProvider].label} API Anahtarı</p>
+                  {savedKeyForProvider && !keyWasReset && (
+                    <div className="flex items-center gap-2 mb-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                      <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                      <span className="font-mono text-xs text-slate-600 dark:text-slate-300 tracking-wider flex-1">{maskedKey}</span>
+                      {settingsProvider === provider && <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-full font-semibold">Aktif</span>}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={inputKey}
+                    onChange={(e) => setInputKey(e.target.value)}
+                    placeholder={savedKeyForProvider && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `${providerInfo[settingsProvider].placeholder}`}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  {hasMismatch && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+                      <AlertCircle size={12} /> Bu anahtar <strong>{providerInfo[detectedProvider]?.label}</strong> sağlayıcısına ait görünüyor.
+                    </p>
+                  )}
+                </div>
+
+                {currentModelList && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">Model</p>
+                    <select
+                      value={localModel}
+                      onChange={(e) => setLocalModel(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    >
+                      {currentModelList.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                    </select>
+                    {settingsProvider === 'openrouter' && (
+                      <p className="text-xs text-slate-400 mt-1.5">Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">Tüm modeller →</a></p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2.5">
+                  <button onClick={handleSave} disabled={!canSave && !keyWasReset}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-150 text-sm">
+                    {saveLabel}
+                  </button>
+                  <button onClick={() => setShowSettings(false)}
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-300 font-semibold py-3 px-4 rounded-xl transition-all duration-150 text-sm">
+                    {appLang === 'tr' ? 'İptal' : 'Cancel'}
+                  </button>
+                </div>
+
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">{appLang === 'tr' ? 'Tehlikeli Bölge' : 'Danger Zone'}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => {
+                      if (window.confirm('API anahtarı sıfırlanacak. Çalışmalarınız korunacak.')) {
+                        localStorage.removeItem('gemini_api_key'); localStorage.removeItem('ai_provider');
+                        localStorage.removeItem('openrouter_model'); localStorage.removeItem('provider_keys');
+                        setProviderKeys({}); setProvider('gemini'); setOpenRouterModel(OPENROUTER_MODELS[0].id);
+                        setInputKey(''); setKeyWasReset(true);
+                      }
+                    }} className="flex-1 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-medium py-2.5 px-3 rounded-xl transition-all duration-150 text-xs">
+                      {appLang === 'tr' ? 'API Anahtarını Sıfırla' : 'Reset API Key'}
+                    </button>
+                    <button onClick={() => {
+                      if (window.confirm('Tüm çalışmalar, ayarlar ve API anahtarı silinecek. Bu işlem geri alınamaz.')) {
+                        localStorage.clear(); window.location.reload();
+                      }
+                    }} className="flex-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 font-medium py-2.5 px-3 rounded-xl transition-all duration-150 text-xs">
+                      {appLang === 'tr' ? 'Uygulamayı Sıfırla' : 'Reset App'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- APPEARANCE TAB --- */}
+            {activeSettingsTab === 'appearance' && (
+              <div className="tab-content space-y-2.5">
+                {[
+                  {
+                    icon: darkMode ? '☀️' : '🌙',
+                    label: t.darkMode,
+                    desc: darkMode ? (appLang === 'tr' ? 'Karanlık tema aktif' : 'Dark theme active') : (appLang === 'tr' ? 'Açık tema aktif' : 'Light theme active'),
+                    checked: darkMode,
+                    onChange: () => setDarkMode(d => !d),
+                  },
+                  {
+                    icon: soundEnabled ? '🔊' : '🔇',
+                    label: t.soundEffects,
+                    desc: t.soundEffectsDesc,
+                    checked: soundEnabled,
+                    onChange: () => setSoundEnabled(s => !s),
+                  },
+                ].map(({ icon, label, desc, checked, onChange }) => (
+                  <div
+                    key={label}
+                    onClick={onChange}
+                    className="flex items-center justify-between px-4 py-3.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer transition-all duration-150"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl w-8 text-center">{icon}</span>
+                      <div>
+                        <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">{label}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{desc}</p>
+                      </div>
+                    </div>
+                    <Toggle checked={checked} onChange={onChange} />
+                  </div>
+                ))}
+
+                {/* Language */}
+                <div className="flex items-center justify-between px-4 py-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl w-8 text-center">🌐</span>
+                    <div>
+                      <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">{t.language}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{appLang === 'tr' ? 'Türkçe' : 'English'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setAppLang(l => l === 'tr' ? 'en' : 'tr')}
+                    className="text-xs font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 active:scale-95 transition-all duration-150"
+                  >
+                    {appLang === 'tr' ? 'TR → EN' : 'EN → TR'}
+                  </button>
+                </div>
+
+                {/* Fullscreen */}
+                <div className="flex items-center justify-between px-4 py-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl w-8 text-center">{isFullscreen ? '⊡' : '⛶'}</span>
+                    <div>
+                      <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">{isFullscreen ? t.normalScreen : t.fullscreen}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{appLang === 'tr' ? 'Tam ekran modunu aç/kapat' : 'Toggle fullscreen mode'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { toggleFullScreen(); setShowSettings(false); }}
+                    className="text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-150"
+                  >
+                    {isFullscreen ? '↙ Küçült' : '↗ Büyüt'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 pb-2 sm:pb-0" />
+        </div>
+      </div>
+    );
+  };
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
