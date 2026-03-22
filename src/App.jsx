@@ -47,6 +47,27 @@ import OnboardingScreen from './components/OnboardingScreen';
 import VisualSummaryComponent from './components/VisualSummaryComponent';
 import MindMapComponent from './components/MindMapComponent';
 
+// --- Error Boundary ---
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err) { console.error('Component error:', err); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400">
+          <p className="text-lg font-semibold mb-2">Bir şeyler ters gitti.</p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm hover:bg-indigo-700 transition"
+          >Tekrar Dene</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // --- I18N ---
 const T = {
   tr: {
@@ -2801,7 +2822,9 @@ ${savedMaterial.slice(0, 10000)}`;
                         {t.mindMapRegen}
                       </button>
                     </div>
-                    <MindMapComponent data={mindMapData} darkMode={darkMode} lang={appLang} />
+                    <ErrorBoundary>
+                      <MindMapComponent data={mindMapData} darkMode={darkMode} lang={appLang} />
+                    </ErrorBoundary>
                   </div>
                 )}
               </div>
