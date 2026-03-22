@@ -1880,6 +1880,13 @@ ${savedMaterial.slice(0, 10000)}`;
           <span>{t.appName}</span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setActiveTab('archive'); setIsMobileMenuOpen(false); }}
+            className={`p-2 rounded-xl transition-colors ${activeTab === 'archive' ? 'bg-indigo-600' : 'hover:bg-indigo-700'}`}
+            title={t.myStudies}
+          >
+            <Library size={20} />
+          </button>
           <button onClick={toggleFullScreen} className="p-2 rounded-xl hover:bg-indigo-700 transition-colors">
             {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
           </button>
