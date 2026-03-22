@@ -1277,8 +1277,8 @@ ${savedMaterial.slice(0, 10000)}`;
       // <think> bloğunu, code fence'leri ve olası prefix metinleri temizle
       const cleaned = result
         .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .replace(/```json\s*/gi, '')
-        .replace(/```/g, '')
+        .replace(/^[\s\S]*?```(?:json)?[\s\n]*/i, '')  // başındaki ```json veya ``` bloğunu sil
+        .replace(/```[\s\S]*$/i, '')                    // sondaki ``` ve sonrasını sil
         .trim();
       const jsonStart = cleaned.indexOf('{');
       const jsonEnd = cleaned.lastIndexOf('}');
