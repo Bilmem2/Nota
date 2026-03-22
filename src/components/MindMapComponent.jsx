@@ -427,7 +427,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center">⊡</button>
           {/* Reset */}
           <button onMouseDown={e => e.stopPropagation()}
-            onClick={() => setTransformSync(computeFit(layoutNodesRef.current, svgSize.w, svgSize.h))}
+            onClick={() => setTransformSync({ x: 0, y: 0, scale: 1 })}
             title={lang === 'en' ? 'Reset view' : 'Görünümü sıfırla'}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">⊙</button>
           {/* SVG download */}

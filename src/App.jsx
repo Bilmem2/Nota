@@ -1302,7 +1302,7 @@ OUTPUT FORMAT (ONLY JSON, nothing else):
   ]
 }
 
-Rule: 4-6 nodes, each node 2-3 children. crossLinks 2-4 items.
+Rule: 4-6 nodes, each node 2-3 children. crossLinks 2-4 items. Each node must have a UNIQUE description — never repeat the same phrase across nodes.
 RETURN ONLY JSON.
 
 Material:
@@ -1342,7 +1342,7 @@ ${langNote}
   ]
 }
 
-Kural: 4-6 node, her node'da 2-3 children. crossLinks 2-4 adet.
+Kural: 4-6 node, her node'da 2-3 children. crossLinks 2-4 adet. Her düğümün açıklaması ÖZGÜN olmalı — aynı ifadeyi tekrarlama.
 SADECE JSON döndür.
 
 Materyal:
@@ -1366,6 +1366,8 @@ STRICT REQUIREMENTS:
   - "children": 3-6 sub-concepts, each with id, label, description, importance, keyFacts, example, relation, and "children": 1-4 detail nodes (no further nesting)
 - "crossLinks": 3-8 cross-concept relationships: { "from": id, "to": id, "label": relationship }
 
+IMPORTANT: Each node's description and importance fields MUST be completely unique. Never reuse the same phrase across multiple nodes. Each concept needs its own specific, distinct explanation.
+
 Output ONLY valid JSON. No markdown, no explanation.
 
 Material:
@@ -1386,6 +1388,8 @@ KESİN GEREKSİNİMLER:
   - "relation": root'tan ilişki etiketi
   - "children": 3-6 alt kavram, her biri id, label, description, importance, keyFacts, example, relation ve "children": 1-4 detay düğümü (daha fazla iç içe yok)
 - "crossLinks": 3-8 çapraz ilişki: { "from": id, "to": id, "label": ilişki }
+
+ÖNEMLİ: Her düğümün description ve importance alanları birbirinden TAMAMEN FARKLI olmalı. Aynı ifadeyi ("genetik biliminin temelini oluşturdu" gibi) birden fazla düğümde KULLANMA. Her kavramın kendine özgü, spesifik açıklaması olsun.
 
 SADECE geçerli JSON döndür. Markdown veya açıklama ekleme.
 
