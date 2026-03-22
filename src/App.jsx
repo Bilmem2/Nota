@@ -1104,7 +1104,8 @@ Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
 ÖNEMLİ: Akademik metinleri zenginleştirmek için şu 3 özel etiketi satır başında (başka bir işaret olmadan) YERİ GELDİKÇE kullan:
 - [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
 - [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
-- [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.`;
+- [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.
+UYARI: Bu etiketleri SADECE köşeli parantez formatında yaz: [TÜYO], [DİKKAT], [ÖNEMLİ]. Asla > [!TIP], > [!NOTE], > [!WARNING] gibi GitHub callout formatı KULLANMA.`;
           }
           break;
         case 'notes':
@@ -1138,7 +1139,8 @@ ${textToAnalyze}`;
 2. **Süreçler ve İlişkiler:** Konudaki neden-sonuç ilişkileri, etki-tepki mekanizmaları veya mantıksal akış.
 3. **Püf Noktalar / Buraya Dikkat:** Sınavda tuzak olabilecek detaylar. (Yazarken satır başına [TÜYO], [DİKKAT] veya [ÖNEMLİ] etiketlerinden uygun olanı koyarak tasarımsal olarak öne çıkmalarını sağla).
 4. **Muhtemel Sınav Soruları:** Hocaların sınavlarda sorabileceği 3 adet potansiyel açık uçlu soru ve vurucu yanıtları.
-Başka hiçbir gereksiz metin ekleme.`;
+Başka hiçbir gereksiz metin ekleme.
+UYARI: Etiketleri SADECE köşeli parantez formatında yaz: [TÜYO], [DİKKAT], [ÖNEMLİ]. Asla > [!TIP], > [!NOTE], > [!WARNING] gibi GitHub callout formatı KULLANMA.`;
           }
           break;
         case 'visual':
