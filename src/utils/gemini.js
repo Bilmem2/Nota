@@ -44,15 +44,15 @@ export const OPENROUTER_MODELS = [
   { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false },
   { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false },
   // --- Ücretli (Diğer) ---
-  { id: 'anthropic/claude-opus-4-6',                         label: 'Claude Opus 4.6 (Paid)',            free: false },
-  { id: 'anthropic/claude-sonnet-4-6',                       label: 'Claude Sonnet 4.6 (Paid)',          free: false },
-  { id: 'openai/gpt-5',                                      label: 'GPT-5 (Paid)',                      free: false },
-  { id: 'openai/gpt-4.1',                                    label: 'GPT-4.1 (Paid)',                    free: false },
+  { id: 'anthropic/claude-opus-4-5',                         label: 'Claude Opus 4.5 (Paid)',            free: false },
+  { id: 'anthropic/claude-sonnet-4-5',                       label: 'Claude Sonnet 4.5 (Paid)',          free: false },
+  { id: 'anthropic/claude-haiku-4-5',                        label: 'Claude Haiku 4.5 (Paid)',           free: false },
   { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false },
   { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                     free: false },
-  { id: 'moonshotai/kimi-k2',                                label: 'Kimi K2 (Paid)',                    free: false },
-  { id: 'qwen/qwen3-max',                                    label: 'Qwen3 Max (Paid)',                  free: false },
-  { id: 'minimax/minimax-m2',                                label: 'MiniMax M2 (Paid)',                  free: false },
+  { id: 'moonshotai/kimi-k2-0905',                           label: 'Kimi K2 0905 (Paid)',               free: false },
+  { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                 free: false },
+  { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                   free: false },
+  { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',               free: false },
 ];
 
 export const OPENAI_MODELS = [
