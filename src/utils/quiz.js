@@ -83,5 +83,20 @@ export function isAnswerCorrect(userAnswer, correctAnswer) {
   // One contains the other (handles "Pfu DNA polimeraz" vs "Pfu DNA polimeraz enzimi" etc.)
   if (a.includes(b) || b.includes(a)) return true;
 
-  return false;
+  // Token overlap: if user typed a meaningful subset of the correct answer's keywords
+  // e.g. "pfu" matches "pfu dna polimeraz" because "pfu" is a key token
+  const stopWords = new Set(['ve', 'veya', 'ile', 'bir', 'bu', 'the', 'a', 'an', 'and', 'or', 'of', 'is', 'are']);
+  const tokenize = (s) => s.split(/\s+/).filter(t => t.length > 1 && !stopWords.has(t));
+  const aTokens = tokenize(a);
+  const bTokens = tokenize(b);
+
+  if (aTokens.length === 0 || bTokens.length === 0) return false;
+
+  // Count how many of the shorter answer's tokens appear in the longer answer
+  const [shorter, longer] = aTokens.length <= bTokens.length ? [aTokens, bTokens] : [bTokens, aTokens];
+  const matchCount = shorter.filter(t => longer.some(lt => lt.includes(t) || t.includes(lt))).length;
+  const matchRatio = matchCount / shorter.length;
+
+  // If all tokens of the shorter answer match → correct (e.g. "pfu" fully matches in "pfu dna polimeraz")
+  return matchRatio === 1.0;
 }
