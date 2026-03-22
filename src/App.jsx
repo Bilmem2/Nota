@@ -1746,14 +1746,27 @@ ${savedMaterial.slice(0, 10000)}`;
                   <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">{appLang === 'tr' ? 'Tehlikeli Bölge' : 'Danger Zone'}</p>
                   <div className="flex gap-2">
                     <button onClick={() => {
-                      if (window.confirm('API anahtarı sıfırlanacak. Çalışmalarınız korunacak.')) {
-                        localStorage.removeItem('gemini_api_key'); localStorage.removeItem('ai_provider');
-                        localStorage.removeItem('openrouter_model'); localStorage.removeItem('provider_keys');
-                        setProviderKeys({}); setProvider('gemini'); setOpenRouterModel(OPENROUTER_MODELS[0].id);
-                        setInputKey(''); setKeyWasReset(true);
+                      const provLabel = providerInfo[settingsProvider]?.label || settingsProvider;
+                      const confirmMsg = appLang === 'tr'
+                        ? `${provLabel} API anahtarı silinecek. Çalışmalarınız korunacak.`
+                        : `${provLabel} API key will be removed. Your studies will be kept.`;
+                      if (window.confirm(confirmMsg)) {
+                        // Sadece seçili provider'ın anahtarını sil
+                        const updated = { ...providerKeys };
+                        delete updated[settingsProvider];
+                        localStorage.setItem('provider_keys', JSON.stringify(updated));
+                        setProviderKeys(updated);
+                        // Eğer silinen anahtar aktif provider'a aitse, oturumu kapat
+                        if (settingsProvider === provider) {
+                          localStorage.removeItem('gemini_api_key');
+                          localStorage.removeItem('ai_provider');
+                        }
+                        setInputKey('');
+                        setKeyWasReset(settingsProvider === provider);
+                        if (settingsProvider !== provider) setShowSettings(false);
                       }
                     }} className="flex-1 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-medium py-2.5 px-3 rounded-xl transition-all duration-150 text-xs">
-                      {appLang === 'tr' ? 'API Anahtarını Sıfırla' : 'Reset API Key'}
+                      {appLang === 'tr' ? 'Anahtarı Sil' : 'Remove Key'}
                     </button>
                     <button onClick={() => {
                       if (window.confirm('Tüm çalışmalar, ayarlar ve API anahtarı silinecek. Bu işlem geri alınamaz.')) {
