@@ -18,99 +18,99 @@ export const GEMINI_MODELS = [
 
 export const OPENROUTER_MODELS = [
   // --- Ücretsiz (Google) ---
-  { id: 'google/gemini-2.0-flash-exp:free',                  label: 'Gemini 2.0 Flash Exp ⭐ (Free)',    free: true },
-  { id: 'google/gemini-2.0-flash-thinking-exp:free',         label: 'Gemini 2.0 Flash Thinking (Free)', free: true },
-  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true },
-  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true },
-  { id: 'google/gemma-3-4b-it:free',                         label: 'Gemma 3 4B (Free)',                 free: true },
-  { id: 'google/gemma-3n-e4b-it:free',                       label: 'Gemma 3n 4B (Free)',                free: true },
-  { id: 'google/gemma-3n-e2b-it:free',                       label: 'Gemma 3n 2B (Free)',                free: true },
+  { id: 'google/gemini-2.0-flash-exp:free',                  label: 'Gemini 2.0 Flash Exp ⭐ (Free)',    free: true,  maxTokens: 8192   },
+  { id: 'google/gemini-2.0-flash-thinking-exp:free',         label: 'Gemini 2.0 Flash Thinking (Free)', free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-4b-it:free',                         label: 'Gemma 3 4B (Free)',                 free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3n-e4b-it:free',                       label: 'Gemma 3n 4B (Free)',                free: true,  maxTokens: 2048   },
+  { id: 'google/gemma-3n-e2b-it:free',                       label: 'Gemma 3n 2B (Free)',                free: true,  maxTokens: 2048   },
   // --- Ücretsiz (Diğer) ---
-  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',           free: true },
-  { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',               free: true },
-  { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',        free: true },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',             free: true },
-  { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',               free: true },
-  { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',      free: true },
-  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',        free: true },
-  { id: 'qwen/qwen3-4b:free',                                label: 'Qwen3 4B (Free, Hızlı)',            free: true },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',           free: true,  maxTokens: 8192   },
+  { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',               free: true,  maxTokens: 16384  },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',        free: true,  maxTokens: 32768  },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',             free: true,  maxTokens: 8192   },
+  { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',               free: true,  maxTokens: 16384  },
+  { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',      free: true,  maxTokens: 8192   },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',        free: true,  maxTokens: 8192   },
+  { id: 'qwen/qwen3-4b:free',                                label: 'Qwen3 4B (Free, Hızlı)',            free: true,  maxTokens: 8192   },
   // --- Ücretli (Google) ---
-  { id: 'google/gemini-3.1-pro-preview',                     label: 'Gemini 3.1 Pro Preview (Paid)',     free: false },
-  { id: 'google/gemini-3.1-flash-lite-preview',              label: 'Gemini 3.1 Flash Lite (Paid)',      free: false },
-  { id: 'google/gemini-3-flash-preview',                     label: 'Gemini 3 Flash Preview (Paid)',     free: false },
-  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false },
-  { id: 'google/gemini-2.5-flash',                           label: 'Gemini 2.5 Flash (Paid)',           free: false },
-  { id: 'google/gemini-2.5-flash-lite',                      label: 'Gemini 2.5 Flash Lite (Paid)',      free: false },
-  { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false },
-  { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false },
+  { id: 'google/gemini-3.1-pro-preview',                     label: 'Gemini 3.1 Pro Preview (Paid)',     free: false, maxTokens: 65536  },
+  { id: 'google/gemini-3.1-flash-lite-preview',              label: 'Gemini 3.1 Flash Lite (Paid)',      free: false, maxTokens: 65536  },
+  { id: 'google/gemini-3-flash-preview',                     label: 'Gemini 3 Flash Preview (Paid)',     free: false, maxTokens: 65536  },
+  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false, maxTokens: 65536  },
+  { id: 'google/gemini-2.5-flash',                           label: 'Gemini 2.5 Flash (Paid)',           free: false, maxTokens: 65535  },
+  { id: 'google/gemini-2.5-flash-lite',                      label: 'Gemini 2.5 Flash Lite (Paid)',      free: false, maxTokens: 65535  },
+  { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false, maxTokens: 8192   },
+  { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false, maxTokens: 8192   },
   // --- Ücretli (Diğer) ---
-  { id: 'anthropic/claude-opus-4-5',                         label: 'Claude Opus 4.5 (Paid)',            free: false },
-  { id: 'anthropic/claude-sonnet-4-5',                       label: 'Claude Sonnet 4.5 (Paid)',          free: false },
-  { id: 'anthropic/claude-haiku-4-5',                        label: 'Claude Haiku 4.5 (Paid)',           free: false },
-  { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false },
-  { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                     free: false },
-  { id: 'moonshotai/kimi-k2-0905',                           label: 'Kimi K2 0905 (Paid)',               free: false },
-  { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                 free: false },
-  { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                   free: false },
-  { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',               free: false },
+  { id: 'anthropic/claude-opus-4-5',                         label: 'Claude Opus 4.5 (Paid)',            free: false, maxTokens: 64000  },
+  { id: 'anthropic/claude-sonnet-4-5',                       label: 'Claude Sonnet 4.5 (Paid)',          free: false, maxTokens: 64000  },
+  { id: 'anthropic/claude-haiku-4-5',                        label: 'Claude Haiku 4.5 (Paid)',           free: false, maxTokens: 64000  },
+  { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false, maxTokens: 16384  },
+  { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                     free: false, maxTokens: 16384  },
+  { id: 'moonshotai/kimi-k2-0905',                           label: 'Kimi K2 0905 (Paid)',               free: false, maxTokens: 16384  },
+  { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                 free: false, maxTokens: 8192   },
+  { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                   free: false, maxTokens: 8192   },
+  { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',               free: false, maxTokens: 65536  },
 ];
 
 export const OPENAI_MODELS = [
   // GPT-5 serisi
-  { id: 'gpt-5',          label: 'GPT-5 ⭐ (En Güçlü, Agentic)' },
-  { id: 'gpt-5-mini',     label: 'GPT-5 Mini (Ekonomik GPT-5)' },
+  { id: 'gpt-5',          label: 'GPT-5 ⭐ (En Güçlü, Agentic)',   maxTokens: 32768  },
+  { id: 'gpt-5-mini',     label: 'GPT-5 Mini (Ekonomik GPT-5)',     maxTokens: 32768  },
   // GPT-4.1 serisi (yeni üretim standardı)
-  { id: 'gpt-4.1',        label: 'GPT-4.1 (Üretim, 1M ctx)' },
-  { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini (Dengeli)' },
-  { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano (En Ucuz)' },
+  { id: 'gpt-4.1',        label: 'GPT-4.1 (Üretim, 1M ctx)',        maxTokens: 32768  },
+  { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini (Dengeli)',          maxTokens: 32768  },
+  { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano (En Ucuz)',          maxTokens: 32768  },
   // GPT-4o serisi (eski üretim)
-  { id: 'gpt-4o',         label: 'GPT-4o (Eski Üretim)' },
-  { id: 'gpt-4o-mini',    label: 'GPT-4o Mini (Eski Ekonomik)' },
+  { id: 'gpt-4o',         label: 'GPT-4o (Eski Üretim)',            maxTokens: 16384  },
+  { id: 'gpt-4o-mini',    label: 'GPT-4o Mini (Eski Ekonomik)',     maxTokens: 16384  },
   // o-serisi reasoning
-  { id: 'o3',             label: 'o3 (Güçlü Reasoning)' },
-  { id: 'o4-mini',        label: 'o4-mini (Ekonomik Reasoning)' },
+  { id: 'o3',             label: 'o3 (Güçlü Reasoning)',            maxTokens: 100000 },
+  { id: 'o4-mini',        label: 'o4-mini (Ekonomik Reasoning)',    maxTokens: 100000 },
 ];
 
 export const ANTHROPIC_MODELS = [
-  { id: 'claude-opus-4-6',              label: 'Claude Opus 4.6 ⭐ (En Güçlü, Agentic)' },
-  { id: 'claude-sonnet-4-6',            label: 'Claude Sonnet 4.6 (Dengeli, Üretim)' },
-  { id: 'claude-haiku-4-5-20251001',    label: 'Claude Haiku 4.5 (Hızlı, Ekonomik)' },
+  { id: 'claude-opus-4-6',              label: 'Claude Opus 4.6 ⭐ (En Güçlü, Agentic)',  maxTokens: 128000 },
+  { id: 'claude-sonnet-4-6',            label: 'Claude Sonnet 4.6 (Dengeli, Üretim)',     maxTokens: 64000  },
+  { id: 'claude-haiku-4-5-20251001',    label: 'Claude Haiku 4.5 (Hızlı, Ekonomik)',     maxTokens: 8192   },
 ];
 
 export const XAI_MODELS = [
-  { id: 'grok-4.20',      label: 'Grok 4.20 ⭐ (En Yeni, Agentic)' },
-  { id: 'grok-4',         label: 'Grok 4 (Reasoning, 256K ctx)' },
-  { id: 'grok-3',         label: 'Grok 3 (Dengeli)' },
-  { id: 'grok-3-mini',    label: 'Grok 3 Mini (Ekonomik Reasoning)' },
+  { id: 'grok-4.20',      label: 'Grok 4.20 ⭐ (En Yeni, Agentic)',    maxTokens: 16384 },
+  { id: 'grok-4',         label: 'Grok 4 (Reasoning, 256K ctx)',        maxTokens: 16384 },
+  { id: 'grok-3',         label: 'Grok 3 (Dengeli)',                    maxTokens: 16384 },
+  { id: 'grok-3-mini',    label: 'Grok 3 Mini (Ekonomik Reasoning)',    maxTokens: 16384 },
 ];
 
 export const PERPLEXITY_MODELS = [
-  { id: 'sonar-pro', label: 'Sonar Pro ⭐ (En Güçlü)' },
-  { id: 'sonar', label: 'Sonar (Dengeli)' },
-  { id: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro (CoT)' },
+  { id: 'sonar-pro',              label: 'Sonar Pro ⭐ (En Güçlü)',    maxTokens: 8192 },
+  { id: 'sonar',                  label: 'Sonar (Dengeli)',             maxTokens: 8192 },
+  { id: 'sonar-reasoning-pro',    label: 'Sonar Reasoning Pro (CoT)',  maxTokens: 8192 },
 ];
 
 export const ZAI_MODELS = [
-  { id: 'glm-4.7', label: 'GLM-4.7 ⭐ (En Güçlü, 200K)' },
-  { id: 'glm-4.6', label: 'GLM-4.6 (Dengeli)' },
-  { id: 'glm-4-flash', label: 'GLM-4 Flash (Hızlı)' },
+  { id: 'glm-4.7',       label: 'GLM-4.7 ⭐ (En Güçlü, 200K)',  maxTokens: 8192 },
+  { id: 'glm-4.6',       label: 'GLM-4.6 (Dengeli)',             maxTokens: 8192 },
+  { id: 'glm-4-flash',   label: 'GLM-4 Flash (Hızlı)',           maxTokens: 8192 },
 ];
 
 export const KIMI_MODELS = [
-  { id: 'kimi-k2-0905-preview',     label: 'Kimi K2 0905 ⭐ (En Güçlü, 1T param)' },
-  { id: 'kimi-k2-thinking',         label: 'Kimi K2 Thinking (Derin Reasoning)' },
-  { id: 'kimi-k2-thinking-turbo',   label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)' },
-  { id: 'kimi-k2-turbo-preview',    label: 'Kimi K2 Turbo (Hızlı)' },
-  { id: 'moonshot-v1-128k',         label: 'Moonshot v1 128K (Eski)' },
+  { id: 'kimi-k2-0905-preview',     label: 'Kimi K2 0905 ⭐ (En Güçlü, 1T param)',   maxTokens: 16384 },
+  { id: 'kimi-k2-thinking',         label: 'Kimi K2 Thinking (Derin Reasoning)',      maxTokens: 16384 },
+  { id: 'kimi-k2-thinking-turbo',   label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)', maxTokens: 16384 },
+  { id: 'kimi-k2-turbo-preview',    label: 'Kimi K2 Turbo (Hızlı)',                  maxTokens: 16384 },
+  { id: 'moonshot-v1-128k',         label: 'Moonshot v1 128K (Eski)',                maxTokens: 8192  },
 ];
 
 export const QWEN_MODELS = [
-  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü, 1T param)' },
-  { id: 'qwen3-max-latest',   label: 'Qwen3 Max Latest (Güncel)' },
-  { id: 'qwen-max-latest',    label: 'Qwen Max Latest (Kararlı)' },
-  { id: 'qwen-plus-latest',   label: 'Qwen Plus Latest (Dengeli, 1M ctx)' },
-  { id: 'qwen-turbo',         label: 'Qwen Turbo (Hızlı, Ekonomik)' },
-  { id: 'qwen-long',          label: 'Qwen Long (10M ctx)' },
+  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü, 1T param)',   maxTokens: 16384 },
+  { id: 'qwen3-max-latest',   label: 'Qwen3 Max Latest (Güncel)',            maxTokens: 16384 },
+  { id: 'qwen-max-latest',    label: 'Qwen Max Latest (Kararlı)',            maxTokens: 8192  },
+  { id: 'qwen-plus-latest',   label: 'Qwen Plus Latest (Dengeli, 1M ctx)',  maxTokens: 8192  },
+  { id: 'qwen-turbo',         label: 'Qwen Turbo (Hızlı, Ekonomik)',        maxTokens: 8192  },
+  { id: 'qwen-long',          label: 'Qwen Long (10M ctx)',                 maxTokens: 6144  },
 ];
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
@@ -170,13 +170,16 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
     ? `${systemInstruction}\n\n---\n\n${prompt}`
     : prompt;
 
+  const modelConfig = OPENROUTER_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 4096;
+
   const payload = {
     model: model || OPENROUTER_MODELS[0].id,
     messages: [
       { role: 'user', content: combinedUserContent },
     ],
     temperature: 0.4,
-    max_tokens: 4096,
+    max_tokens: maxTokens,
   };
 
   if (isJson) {
@@ -216,6 +219,9 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
 }
 
 async function callOpenAIAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = OPENAI_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 16384;
+
   const payload = {
     model: model || 'gpt-4o',
     messages: [
@@ -223,7 +229,7 @@ async function callOpenAIAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(OPENAI_URL, {
@@ -240,9 +246,12 @@ async function callOpenAIAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callAnthropicAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = ANTHROPIC_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
   const payload = {
     model: model || 'claude-sonnet-4-6',
-    max_tokens: 8192,
+    max_tokens: maxTokens,
     system: systemInstruction,
     messages: [{ role: 'user', content: prompt }],
   };
@@ -265,6 +274,9 @@ async function callAnthropicAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callXAIAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = XAI_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 16384;
+
   const payload = {
     model: model || 'grok-4',
     messages: [
@@ -272,7 +284,7 @@ async function callXAIAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(XAI_URL, {
@@ -289,6 +301,9 @@ async function callXAIAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callPerplexityAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = PERPLEXITY_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
   const payload = {
     model: model || 'sonar-pro',
     messages: [
@@ -296,7 +311,7 @@ async function callPerplexityAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(PERPLEXITY_URL, {
@@ -313,6 +328,9 @@ async function callPerplexityAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callZAIAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = ZAI_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
   const payload = {
     model: model || 'glm-4-plus',
     messages: [
@@ -320,7 +338,7 @@ async function callZAIAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(ZAI_URL, {
@@ -337,6 +355,9 @@ async function callZAIAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callKimiAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = KIMI_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
   const payload = {
     model: model || 'moonshot-v1-128k',
     messages: [
@@ -344,7 +365,7 @@ async function callKimiAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(KIMI_URL, {
@@ -361,6 +382,9 @@ async function callKimiAPI(prompt, systemInstruction, apiKey, model) {
 }
 
 async function callQwenAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = QWEN_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
   const payload = {
     model: model || 'qwen-max',
     messages: [
@@ -368,7 +392,7 @@ async function callQwenAPI(prompt, systemInstruction, apiKey, model) {
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
   };
 
   const response = await fetch(QWEN_URL, {
