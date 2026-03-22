@@ -1539,7 +1539,7 @@ ${savedMaterial.slice(0, 10000)}`;
       xai:         { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 4.20 Reasoning',       category: 'paid' },
       perplexity:  { label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro · Web aramalı',            category: 'paid' },
       kimi:        { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking',            category: 'paid' },
-      qwen:        { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo',              category: 'paid' },
+      qwen:        { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen3.5 Plus · Yeni kullanıcıya 90 gün ücretsiz quota', category: 'paid' },
       deepseek:    { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R1 Thinking · Ekonomik',     category: 'paid' },
       mimo:        { label: 'Xiaomi MiMo',   placeholder: 'mimo-...',  hint: 'V2 Flash 262K · V2 Pro 1M ctx',     category: 'paid' },
       together:    { label: 'Together AI',   placeholder: 'tog-...',   hint: 'Llama/Qwen/DeepSeek · 200+ model',  category: 'paid' },

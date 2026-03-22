@@ -53,8 +53,8 @@ const PROVIDERS = [
     hintEn: 'Kimi K2 · 128K token',
     link: 'https://platform.moonshot.cn/' },
   { id: 'qwen',       label: 'Qwen',          placeholder: 'sk-...',    free: false,
-    hintTr: 'Qwen3 Max · 1M token',
-    hintEn: 'Qwen3 Max · 1M token',
+    hintTr: 'Qwen3.5 Plus · Yeni kullanıcıya 90 gün ücretsiz quota',
+    hintEn: 'Qwen3.5 Plus · 90-day free quota for new users',
     link: 'https://modelstudio.console.alibabacloud.com' },
 ];
 
