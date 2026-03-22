@@ -51,6 +51,10 @@ export const OPENROUTER_MODELS = [
   { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                  free: false, maxTokens: 8192   },
   { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                    free: false, maxTokens: 8192   },
   { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',                free: false, maxTokens: 65536  },
+  // --- Ücretli (Xiaomi MiMo) ---
+  { id: 'xiaomi/mimo-v2-flash',                              label: 'MiMo V2 Flash (Paid, 262K ctx)',     free: false, maxTokens: 16384  },
+  { id: 'xiaomi/mimo-v2-pro',                                label: 'MiMo V2 Pro (Paid, 1M ctx)',         free: false, maxTokens: 32768  },
+  { id: 'xiaomi/mimo-v2-omni',                               label: 'MiMo V2 Omni (Paid, Multimodal)',   free: false, maxTokens: 16384  },
 ];
 
 export const OPENAI_MODELS = [
@@ -163,6 +167,7 @@ export const MIMO_MODELS = [
   // Xiaomi MiMo — Anthropic Messages API uyumlu endpoint
   { id: 'mimo-v2-flash', label: 'MiMo V2 Flash 💳 (309B MoE, 262K ctx, Hızlı)', maxTokens: 8192  },
   { id: 'mimo-v2-pro',   label: 'MiMo V2 Pro 💳 (1T param, 1M ctx, Agentic)',   maxTokens: 16384 },
+  { id: 'mimo-v2-omni',  label: 'MiMo V2 Omni 💳 (Multimodal, 262K ctx)',       maxTokens: 8192  },
 ];
 // MiMo: platform.xiaomimimo.com — Anthropic-uyumlu API, OpenAI-uyumlu değil
 
