@@ -152,9 +152,17 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   const canvasDrag = useRef(null);
   const nodeDrag = useRef(null);
   const transformRef = useRef(transform);
-  const layoutNodesRef = useRef([]); // orijinal layout pozisyonları (fit için)
-  const nodePosRef = useRef({});     // güncel node pozisyonları (drag için)
-  useEffect(() => { transformRef.current = transform; }, [transform]);
+  const layoutNodesRef = useRef([]);
+  const nodePosRef = useRef({});
+
+  // setTransform'u wrap et: her güncellemede ref'i de sync olarak güncelle
+  const setTransformSync = useCallback((updater) => {
+    setTransform(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      transformRef.current = next;
+      return next;
+    });
+  }, []);
 
   // ResizeObserver
   useEffect(() => {
@@ -200,14 +208,14 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     setNodePos(pos);
     nodePosRef.current = pos;
     layoutNodesRef.current = l.nodes;
-    setTransform(computeFit(l.nodes, svgSize.w, svgSize.h));
+    setTransformSync(computeFit(l.nodes, svgSize.w, svgSize.h));
   }, [data, layoutMode, computeFit]); // svgSize omitted intentionally
 
   // Wheel zoom
   const onWheel = useCallback((e) => {
     e.preventDefault();
-    setTransform(t => ({ ...t, scale: Math.min(4, Math.max(0.12, t.scale * (e.deltaY > 0 ? 0.9 : 1.1))) }));
-  }, []);
+    setTransformSync(t => ({ ...t, scale: Math.min(4, Math.max(0.12, t.scale * (e.deltaY > 0 ? 0.9 : 1.1))) }));
+  }, [setTransformSync]);
   useEffect(() => {
     const el = svgRef.current;
     if (!el) return;
@@ -254,9 +262,9 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
       nodePosRef.current = { ...nodePosRef.current, [nd.id]: newPos };
       setNodePos(p => ({ ...p, [nd.id]: newPos }));
     } else if (cd) {
-      setTransform(t => ({ ...t, x: e.clientX - cd.startX, y: e.clientY - cd.startY }));
+      setTransformSync(t => ({ ...t, x: e.clientX - cd.startX, y: e.clientY - cd.startY }));
     }
-  }, [toSVGCoords]);
+  }, [toSVGCoords, setTransformSync]);
 
   const onMouseUp = useCallback(() => {
     const nd = nodeDrag.current;
@@ -295,9 +303,9 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
       nodePosRef.current = { ...nodePosRef.current, [nd.id]: newPos };
       setNodePos(p => ({ ...p, [nd.id]: newPos }));
     } else if (cd) {
-      setTransform(tr => ({ ...tr, x: t.clientX - cd.startX, y: t.clientY - cd.startY }));
+      setTransformSync(tr => ({ ...tr, x: t.clientX - cd.startX, y: t.clientY - cd.startY }));
     }
-  }, [toSVGCoords]);
+  }, [toSVGCoords, setTransformSync]);
   const onTouchEnd = useCallback(() => {
     const nd = nodeDrag.current;
     if (nd) {
@@ -409,17 +417,17 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
         <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
           {[['＋', 1.2], ['－', 0.8]].map(([label, val]) => (
             <button key={label} onMouseDown={e => e.stopPropagation()}
-              onClick={() => setTransform(t => ({ ...t, scale: Math.min(4, Math.max(0.12, t.scale * val)) }))}
+              onClick={() => setTransformSync(t => ({ ...t, scale: Math.min(4, Math.max(0.12, t.scale * val)) }))}
               className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">{label}</button>
           ))}
           {/* Scale to Fit */}
           <button onMouseDown={e => e.stopPropagation()}
-            onClick={() => setTransform(computeFit(layoutNodesRef.current, svgSize.w, svgSize.h))}
+            onClick={() => setTransformSync(computeFit(layoutNodesRef.current, svgSize.w, svgSize.h))}
             title={lang === 'en' ? 'Fit to screen' : 'Ekrana sığdır'}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center">⊡</button>
           {/* Reset */}
           <button onMouseDown={e => e.stopPropagation()}
-            onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}
+            onClick={() => setTransformSync({ x: 0, y: 0, scale: 1 })}
             title={lang === 'en' ? 'Reset view' : 'Görünümü sıfırla'}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">⊙</button>
           {/* SVG download */}
