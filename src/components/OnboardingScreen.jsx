@@ -55,7 +55,7 @@ const PROVIDERS = [
   { id: 'qwen',       label: 'Qwen',          placeholder: 'sk-...',    free: false,
     hintTr: 'Qwen3 Max · 1M token',
     hintEn: 'Qwen3 Max · 1M token',
-    link: 'https://dashscope.aliyuncs.com/' },
+    link: 'https://modelstudio.console.alibabacloud.com' },
 ];
 
 const FREE_PROVIDERS = PROVIDERS.filter(p => p.free);

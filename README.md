@@ -29,7 +29,7 @@
 | **Perplexity** | 💳 Ücretli | [Perplexity API](https://www.perplexity.ai/settings/api) |
 | **z.ai (GLM)** | ✅ Ücretsiz modeller var | [z.ai](https://z.ai/manage-apikey/apikey-list) |
 | **Kimi AI** | 💳 Ücretli | [Moonshot Platform](https://platform.moonshot.cn/) |
-| **Qwen** | 💳 Ücretli | [Alibaba Cloud](https://dashscope.aliyuncs.com/) |
+| **Qwen** | 💳 Ücretli | [Alibaba Model Studio](https://modelstudio.console.alibabacloud.com) |
 | **DeepSeek** | 💳 Ücretli | [DeepSeek Platform](https://platform.deepseek.com/) |
 | **Together AI** | 💳 Ücretli | [Together AI](https://api.together.xyz/) |
 | **Xiaomi MiMo** | 💳 Ücretli | [MiMo Platform](https://platform.xiaomimimo.com/) |
