@@ -17,14 +17,21 @@ export const GEMINI_MODELS = [
 ];
 
 export const OPENROUTER_MODELS = [
-  { id: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (Free) ⭐', free: true },
-  { id: 'deepseek/deepseek-r1:free', label: 'DeepSeek R1 (Free)', free: true },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (Free)', free: true },
-  { id: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B (Free)', free: true },
-  { id: 'moonshotai/kimi-k2:free', label: 'Kimi K2 (Free)', free: true },
-  { id: 'qwen/qwen3-235b-a22b:free', label: 'Qwen3 235B (Free)', free: true },
-  { id: 'anthropic/claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Paid)', free: false },
-  { id: 'openai/gpt-5', label: 'GPT-5 via OpenRouter (Paid)', free: false },
+  // --- Ücretsiz ---
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',          free: true },
+  { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',               free: true },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',        free: true },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',             free: true },
+  { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',               free: true },
+  { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',      free: true },
+  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',        free: true },
+  { id: 'qwen/qwen3-4b:free',                                label: 'Qwen3 4B (Free, Hızlı)',            free: true },
+  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true },
+  // --- Ücretli ---
+  { id: 'anthropic/claude-sonnet-4-6',                       label: 'Claude Sonnet 4.6 (Paid)',          free: false },
+  { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false },
+  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false },
 ];
 
 export const OPENAI_MODELS = [

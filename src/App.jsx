@@ -1108,7 +1108,48 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       : 'ÖNEMLİ: Tüm metin değerleri (label, description, keyFacts, example, relation, rootDescription) MUTLAKA TÜRKÇE olmalıdır.';
 
     // Groq için daha basit yapı (token limiti nedeniyle)
-    const groqPrompt = `Aşağıdaki materyali analiz et ve kavram haritası JSON'u üret.
+    const groqPrompt = isEn
+      ? `Analyze the following material and produce a concept map JSON.
+${langNote}
+
+OUTPUT FORMAT (ONLY JSON, nothing else):
+{
+  "root": "Main topic name",
+  "rootDescription": "2-sentence overview",
+  "nodes": [
+    {
+      "id": "cat1",
+      "label": "Category name",
+      "description": "2-3 sentence description",
+      "importance": "Why it matters",
+      "keyFacts": ["Fact 1", "Fact 2"],
+      "example": "Concrete example",
+      "relation": "relation label",
+      "children": [
+        {
+          "id": "cat1_1",
+          "label": "Sub-concept",
+          "description": "1-2 sentences",
+          "importance": "Importance",
+          "keyFacts": ["Fact"],
+          "example": "Example",
+          "relation": "relation",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "crossLinks": [
+    { "from": "cat1", "to": "cat2", "label": "relation" }
+  ]
+}
+
+Rule: 4-6 nodes, each node 2-3 children. crossLinks 2-4 items.
+RETURN ONLY JSON.
+
+Material:
+${savedMaterial.slice(0, 4000)}`
+      : `Aşağıdaki materyali analiz et ve kavram haritası JSON'u üret.
 ${langNote}
 
 ÇIKTI FORMATI (SADECE JSON, başka hiçbir şey):
@@ -1194,8 +1235,8 @@ Materyal:
 ${savedMaterial.slice(0, 10000)}`;
 
     const systemMsg = isEn
-      ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else.'
-      : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme. Tüm içerik Türkçe olmalı.';
+      ? 'You are an expert knowledge mapper. Output ONLY valid JSON, nothing else. ALL text in the JSON must be in English.'
+      : 'Sen uzman bir akademik bilgi haritalayıcısısın. SADECE geçerli JSON döndür, başka hiçbir şey ekleme. JSON içindeki TÜM metinler Türkçe olmalı.';
 
     try {
       const result = await callGemini(
@@ -1386,7 +1427,7 @@ ${savedMaterial.slice(0, 10000)}`;
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Key size={20} className="text-indigo-600" /> AI Sağlayıcı Ayarları
@@ -1397,7 +1438,7 @@ ${savedMaterial.slice(0, 10000)}`;
           </div>
 
           <p className="text-sm font-medium text-slate-600 mb-2">AI Sağlayıcısı</p>
-          <div className="grid grid-cols-3 gap-2 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-5">
             {Object.entries(providerInfo).map(([key, val]) => {
               const hasSavedKey = !!providerKeys[key];
               const isActive = key === provider;
@@ -1412,8 +1453,8 @@ ${savedMaterial.slice(0, 10000)}`;
                       : 'border-slate-200 text-slate-500 hover:border-slate-300'
                   }`}
                 >
-                  <div className="font-bold text-sm pr-4">{val.label}</div>
-                  <div className="text-xs mt-1 opacity-70">{val.hint}</div>
+                  <div className="font-bold text-sm pr-4 truncate">{val.label}</div>
+                  <div className="text-xs mt-1 opacity-70 leading-tight line-clamp-2">{val.hint}</div>
                   {/* Kayıtlı key badge */}
                   {hasSavedKey && (
                     <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-emerald-400'}`} title="Kayıtlı anahtar var" />
