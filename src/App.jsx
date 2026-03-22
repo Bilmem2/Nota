@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS } from './utils/gemini';
+import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -310,7 +310,12 @@ export default function App() {
   // API Key state - loaded from localStorage
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
-  const [openRouterModel, setOpenRouterModel] = useState(() => localStorage.getItem('openrouter_model') || OPENROUTER_MODELS[0].id);
+  const [openRouterModel, setOpenRouterModel] = useState(() => {
+    const saved = localStorage.getItem('openrouter_model');
+    // Eski/geçersiz model ID'lerini varsayılana düşür
+    if (saved && OPENROUTER_MODELS.find(m => m.id === saved)) return saved;
+    return OPENROUTER_MODELS[0].id;
+  });
   // Per-provider key storage: { gemini: 'AIza...', groq: 'gsk_...', ... }
   const [providerKeys, setProviderKeys] = useState(() => {
     try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; }
@@ -1005,8 +1010,8 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
             : 'Seçili model geçerli bir JSON yanıtı üretemedi. Farklı bir model deneyin (önerilen: Gemini 2.0 Flash veya Kimi K2).';
         } else if (msg === 'RATE_LIMITED') {
           alertMsg = appLang === 'en'
-            ? 'Rate limit reached. Please wait a few seconds and try again.'
-            : 'İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.';
+            ? 'Rate limit reached. Free tier has daily request limits — try again later or tomorrow.'
+            : 'İstek limitine ulaşıldı. Ücretsiz tier günlük istek sınırına sahip — daha sonra veya yarın tekrar deneyin.';
         } else if (msg === 'NETWORK_ERROR') {
           alertMsg = appLang === 'en'
             ? 'Connection error. Please check your internet connection and try again.'
@@ -1067,18 +1072,26 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       switch (type) {
         case 'lesson':
           if (isGroq) {
-            prompt = `${groqContextPrefix}Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde detaylıca anlat. Materyaldeki HİÇBİR konuyu atlama.\n\nMATERYAL:\n${textToAnalyze}\n\nÇIKTI YAPISI (bu sırayla, her bölümü eksiksiz doldur):\n1. KONU GİRİŞİ: Bu konunun akademik önemi ve bağlamı (2-3 paragraf)\n2. DETAYLI ANLATIM: Materyaldeki tüm kavramları alt başlıklarla açıkla. Gerekirse tablolar kullan.\n3. KAVRAMLAR ARASI İLİŞKİLER: Konular arasındaki bağlantıları açıkla\n4. KRİTİK NOKTALAR: [TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle öne çıkan bilgiler`;
-            systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
+            // Sistem prompt: sadece rol + format. User prompt: görev + yapı + materyal.
+            // Yapıyı önceden açmak modeli "tamamlama moduna" sokar → token israfı sıfır.
+            systemInstruction = `Sen üniversite düzeyinde ders anlatan bir akademisyensin. Markdown kullan, selamlama yapma, materyaldeki her kavramı eksiksiz açıkla. [TÜYO] [DİKKAT] [ÖNEMLİ] etiketlerini yerinde kullan.`;
+            prompt = `${groqContextPrefix}Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, eksiksiz ve detaylı biçimde anlat. Materyaldeki hiçbir kavramı, terimi veya süreci atlama. Çıktını şu yapıda ver:
 
-ZORUNLU KURALLAR:
-- Verilen materyaldeki HER kavramı, HER terimi, HER süreci açıkla. Hiçbirini atlama.
-- Her ana başlık için en az 2-3 paragraf yaz.
-- Karmaşık kavramları adım adım açıkla.
-- Akademik metinleri zenginleştirmek için şu 3 özel etiketi satır başında YERİ GELDİKÇE kullan:
-  - [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
-  - [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
-  - [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.
-- Çıktın en az 800 kelime olmalı. Kısa ve yüzeysel anlatımdan kaçın.`;
+## Giriş
+[Konunun akademik önemi ve bağlamı — doğrudan başla]
+
+## Detaylı Anlatım
+[Materyaldeki tüm kavramları alt başlıklarla açıkla. Gerekirse tablolar kullan.]
+
+## Kavramlar Arası İlişkiler
+[Konular arasındaki bağlantılar ve neden-sonuç ilişkileri]
+
+## Kritik Noktalar
+[TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle öne çıkan bilgiler
+
+---
+MATERYAL:
+${textToAnalyze}`;
           } else {
             prompt = `Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, akıcı, akademik ama abartıdan uzak bir dille detaylıca anlat. Materyaldeki hiçbir konuyu atlama:\n\n${textToAnalyze}`;
             systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
@@ -1095,15 +1108,28 @@ Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
           break;
         case 'notes':
           if (isGroq) {
-            prompt = `${groqContextPrefix}Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur.\n\nMATERYAL:\n${textToAnalyze}\n\nAŞAĞIDAKİ 4 BÖLÜMÜ SIRAYLA VE EKSİKSİZ DOLDUR:\n\n## 1. KRİTİK KAVRAMLAR SÖZLÜĞÜ\n(Her önemli terimi tanımla — en az 5-8 kavram)\n\n## 2. SÜREÇLER VE İLİŞKİLER\n(Neden-sonuç ilişkileri, mekanizmalar, mantıksal akış — en az 4-6 madde)\n\n## 3. PÜF NOKTALAR / BURAYA DİKKAT\n([TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle — en az 4-5 madde)\n\n## 4. MUHTEMEL SINAV SORULARI\n(3 adet açık uçlu soru ve model cevapları)`;
-            systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA.
+            systemInstruction = `Sen sınav odaklı bir akademik çalışma asistanısın. Sadece Markdown ver, JSON kullanma. Nokta atışı, özlü ama eksiksiz yaz.`;
+            prompt = `${groqContextPrefix}Aşağıdaki ders materyalinden ${partInfo} sınav rehberi oluştur. Çıktını tam olarak şu yapıda ver:
 
-ZORUNLU KURALLAR:
-- 4 bölümün tamamını eksiksiz doldur. Hiçbir bölümü atlama veya kısaltma.
-- Her bölümde yeterli derinlik ve detay sağla.
-- Kavramlar sözlüğünde en az 5 terim tanımla.
-- Sınav soruları gerçekçi ve düşündürücü olmalı, model cevapları kapsamlı olmalı.
-- Başka hiçbir gereksiz metin ekleme.`;
+## 1. Kritik Kavramlar Sözlüğü
+**[Terim]:** [Net tanım]
+(Materyaldeki tüm önemli terimleri listele)
+
+## 2. Süreçler ve İlişkiler
+- [Neden-sonuç ilişkileri, mekanizmalar, mantıksal akış — madde madde]
+
+## 3. Püf Noktalar
+[TÜYO] [Sınavda çıkabilecek stratejik bilgi]
+[DİKKAT] [Sık yapılan hata veya tuzak]
+[ÖNEMLİ] [Mutlaka bilinmesi gereken]
+
+## 4. Muhtemel Sınav Soruları
+**S:** [Soru]
+**C:** [Model cevap — 3-4 cümle]
+
+---
+MATERYAL:
+${textToAnalyze}`;
           } else {
             prompt = `Aşağıdaki metinden ${partInfo} üniversite düzeyinde, sınav öncesi hızlı tekrar için yapılandırılmış bir "Çalışma Rehberi" oluştur:\n\n${textToAnalyze}`;
             systemInstruction = `Sen stratejik bir akademik çalışma asistanısın. Çıktıyı SADECE Markdown formatında ver. JSON KULLANMA. Rehber şu 4 ana bölümden oluşmalı:
@@ -1400,8 +1426,8 @@ ${savedMaterial.slice(0, 10000)}`;
       if (msg === 'RATE_LIMITED') {
         toastMsg = appLang === 'tr' ? 'İstek limitine ulaşıldı.' : 'Rate limit reached.';
         toastDetail = appLang === 'tr'
-          ? 'Ücretsiz modellerin dakikalık istek limiti var. Birkaç saniye bekleyip tekrar deneyin veya ücretli bir model seçin.'
-          : 'Free models have per-minute request limits. Wait a few seconds and retry, or switch to a paid model.';
+          ? 'Ücretsiz tier günlük istek sınırına sahip. Daha sonra veya yarın tekrar deneyin.'
+          : 'Free tier has daily request limits. Try again later or tomorrow.';
       } else if (msg === 'NETWORK_ERROR') {
         toastMsg = appLang === 'tr' ? 'Bağlantı hatası.' : 'Connection error.';
         toastDetail = appLang === 'tr' ? 'İnternet bağlantınızı kontrol edin.' : 'Please check your internet connection.';
@@ -1483,7 +1509,7 @@ ${savedMaterial.slice(0, 10000)}`;
     const modelLists = {
       gemini: GEMINI_MODELS, openrouter: OPENROUTER_MODELS, openai: OPENAI_MODELS,
       anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
-      zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS,
+      zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS, deepseek: DEEPSEEK_MODELS,
     };
     const [localModel, setLocalModel] = React.useState(
       () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
@@ -1498,9 +1524,10 @@ ${savedMaterial.slice(0, 10000)}`;
       anthropic: { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet' },
       xai:       { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 3...' },
       perplexity:{ label: 'Perplexity',    placeholder: 'pplx-...',  hint: 'Sonar Pro, web aramalı' },
-      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4 Plus, Flash' },
-      kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Moonshot 128K, 32K...' },
+      zai:       { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-5, GLM-5-Turbo, GLM-4.5' },
+      kimi:      { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking...' },
       qwen:      { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo' },
+      deepseek:  { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R2 Thinking · Ekonomik' },
     };
 
     const handleProviderChange = (key) => {
@@ -1684,6 +1711,22 @@ ${savedMaterial.slice(0, 10000)}`;
                     </select>
                     {settingsProvider === 'openrouter' && (
                       <p className="text-xs text-slate-400 mt-1.5">Ücretsiz modeller rate limit'e tabidir. <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">Tüm modeller →</a></p>
+                    )}
+                    {settingsProvider === 'gemini' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        {appLang === 'tr'
+                          ? <>⚠️ Ücretsiz tier: 2.5 Flash ~20 istek/gün, 2.5 Pro ücretsiz değil. Limit dolunca yarın tekrar deneyin.</>
+                          : <>⚠️ Free tier: 2.5 Flash ~20 req/day, 2.5 Pro is not free. If you hit the limit, try again tomorrow.</>
+                        }
+                      </p>
+                    )}
+                    {settingsProvider === 'deepseek' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        {appLang === 'tr'
+                          ? <>deepseek-chat: 8K çıktı · deepseek-reasoner: 64K çıktı (thinking). API anahtarı: platform.deepseek.com</>
+                          : <>deepseek-chat: 8K output · deepseek-reasoner: 64K output (thinking). Get key: platform.deepseek.com</>
+                        }
+                      </p>
                     )}
                   </div>
                 )}

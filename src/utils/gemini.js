@@ -5,9 +5,10 @@ const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const XAI_URL = 'https://api.x.ai/v1/chat/completions';
 const PERPLEXITY_URL = 'https://api.perplexity.ai/chat/completions';
-const ZAI_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+const ZAI_URL = 'https://api.z.ai/api/paas/v4/chat/completions';
 const KIMI_URL = 'https://api.moonshot.cn/v1/chat/completions';
 const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
 export const GEMINI_MODELS = [
   { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
@@ -17,49 +18,46 @@ export const GEMINI_MODELS = [
 ];
 
 export const OPENROUTER_MODELS = [
+  // --- Ücretsiz (En İyi) ---
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free, Önerilen)',  free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                 free: true,  maxTokens: 8192   },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',              free: true,  maxTokens: 8192   },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',         free: true,  maxTokens: 32768  },
+  { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',                free: true,  maxTokens: 16384  },
+  { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',                free: true,  maxTokens: 16384  },
+  { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',       free: true,  maxTokens: 8192   },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',         free: true,  maxTokens: 8192   },
   // --- Ücretsiz (Google) ---
-  { id: 'google/gemini-2.0-flash-exp:free',                  label: 'Gemini 2.0 Flash Exp ⭐ (Free)',    free: true,  maxTokens: 8192   },
-  { id: 'google/gemini-2.0-flash-thinking-exp:free',         label: 'Gemini 2.0 Flash Thinking (Free)', free: true,  maxTokens: 8192   },
-  { id: 'google/gemma-3-27b-it:free',                        label: 'Gemma 3 27B (Free)',                free: true,  maxTokens: 8192   },
-  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                free: true,  maxTokens: 8192   },
-  { id: 'google/gemma-3-4b-it:free',                         label: 'Gemma 3 4B (Free)',                 free: true,  maxTokens: 8192   },
-  { id: 'google/gemma-3n-e4b-it:free',                       label: 'Gemma 3n 4B (Free)',                free: true,  maxTokens: 2048   },
-  { id: 'google/gemma-3n-e2b-it:free',                       label: 'Gemma 3n 2B (Free)',                free: true,  maxTokens: 2048   },
-  // --- Ücretsiz (Diğer) ---
-  { id: 'meta-llama/llama-3.3-70b-instruct:free',            label: 'Llama 3.3 70B ⭐ (Free)',           free: true,  maxTokens: 8192   },
-  { id: 'openai/gpt-oss-120b:free',                          label: 'GPT OSS 120B (Free)',               free: true,  maxTokens: 16384  },
-  { id: 'nvidia/nemotron-3-super-120b-a12b:free',            label: 'Nemotron Super 120B (Free)',        free: true,  maxTokens: 32768  },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',             label: 'Qwen3 Next 80B (Free)',             free: true,  maxTokens: 8192   },
-  { id: 'minimax/minimax-m2.5:free',                         label: 'MiniMax M2.5 (Free)',               free: true,  maxTokens: 16384  },
-  { id: 'mistralai/mistral-small-3.1-24b-instruct:free',     label: 'Mistral Small 3.1 24B (Free)',      free: true,  maxTokens: 8192   },
-  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',         label: 'Hermes 3 Llama 405B (Free)',        free: true,  maxTokens: 8192   },
-  { id: 'qwen/qwen3-4b:free',                                label: 'Qwen3 4B (Free, Hızlı)',            free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-12b-it:free',                        label: 'Gemma 3 12B (Free)',                 free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3-4b-it:free',                         label: 'Gemma 3 4B (Free)',                  free: true,  maxTokens: 8192   },
+  { id: 'google/gemma-3n-e4b-it:free',                       label: 'Gemma 3n 4B (Free)',                 free: true,  maxTokens: 2048   },
+  { id: 'google/gemma-3n-e2b-it:free',                       label: 'Gemma 3n 2B (Free)',                 free: true,  maxTokens: 2048   },
   // --- Ücretli (Google) ---
-  { id: 'google/gemini-3.1-pro-preview',                     label: 'Gemini 3.1 Pro Preview (Paid)',     free: false, maxTokens: 65536  },
-  { id: 'google/gemini-3.1-flash-lite-preview',              label: 'Gemini 3.1 Flash Lite (Paid)',      free: false, maxTokens: 65536  },
-  { id: 'google/gemini-3-flash-preview',                     label: 'Gemini 3 Flash Preview (Paid)',     free: false, maxTokens: 65536  },
-  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',             free: false, maxTokens: 65536  },
-  { id: 'google/gemini-2.5-flash',                           label: 'Gemini 2.5 Flash (Paid)',           free: false, maxTokens: 65535  },
-  { id: 'google/gemini-2.5-flash-lite',                      label: 'Gemini 2.5 Flash Lite (Paid)',      free: false, maxTokens: 65535  },
-  { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false, maxTokens: 8192   },
-  { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false, maxTokens: 8192   },
+  { id: 'google/gemini-2.5-pro',                             label: 'Gemini 2.5 Pro (Paid)',              free: false, maxTokens: 65536  },
+  { id: 'google/gemini-2.5-flash',                           label: 'Gemini 2.5 Flash (Paid)',            free: false, maxTokens: 65535  },
+  { id: 'google/gemini-2.5-flash-lite',                      label: 'Gemini 2.5 Flash Lite (Paid)',       free: false, maxTokens: 65535  },
+  { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',            free: false, maxTokens: 8192   },
+  { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',       free: false, maxTokens: 8192   },
   // --- Ücretli (Diğer) ---
-  { id: 'anthropic/claude-opus-4-5',                         label: 'Claude Opus 4.5 (Paid)',            free: false, maxTokens: 64000  },
-  { id: 'anthropic/claude-sonnet-4-5',                       label: 'Claude Sonnet 4.5 (Paid)',          free: false, maxTokens: 64000  },
-  { id: 'anthropic/claude-haiku-4-5',                        label: 'Claude Haiku 4.5 (Paid)',           free: false, maxTokens: 64000  },
-  { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false, maxTokens: 16384  },
-  { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                     free: false, maxTokens: 16384  },
-  { id: 'moonshotai/kimi-k2-0905',                           label: 'Kimi K2 0905 (Paid)',               free: false, maxTokens: 16384  },
-  { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                 free: false, maxTokens: 8192   },
-  { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                   free: false, maxTokens: 8192   },
-  { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',               free: false, maxTokens: 65536  },
+  { id: 'anthropic/claude-opus-4-5',                         label: 'Claude Opus 4.5 (Paid)',             free: false, maxTokens: 64000  },
+  { id: 'anthropic/claude-sonnet-4-5',                       label: 'Claude Sonnet 4.5 (Paid)',           free: false, maxTokens: 64000  },
+  { id: 'anthropic/claude-haiku-4-5',                        label: 'Claude Haiku 4.5 (Paid)',            free: false, maxTokens: 64000  },
+  { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                      free: false, maxTokens: 16384  },
+  { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                      free: false, maxTokens: 16384  },
+  { id: 'moonshotai/kimi-k2-0905',                           label: 'Kimi K2 0905 (Paid)',                free: false, maxTokens: 16384  },
+  { id: 'qwen/qwen3-235b-a22b',                              label: 'Qwen3 235B (Paid)',                  free: false, maxTokens: 8192   },
+  { id: 'qwen/qwen-max',                                     label: 'Qwen Max (Paid)',                    free: false, maxTokens: 8192   },
+  { id: 'minimax/minimax-m2.5',                              label: 'MiniMax M2.5 (Paid)',                free: false, maxTokens: 65536  },
 ];
 
 export const OPENAI_MODELS = [
+  // GPT-5.4 serisi (Mart 2026, en güncel)
+  { id: 'gpt-5.4',        label: 'GPT-5.4 ⭐ (En Güçlü, Agentic)',  maxTokens: 32768  },
+  { id: 'gpt-5.4-mini',   label: 'GPT-5.4 Mini (Hızlı, Ekonomik)',  maxTokens: 32768  },
+  { id: 'gpt-5.4-nano',   label: 'GPT-5.4 Nano (En Ucuz)',          maxTokens: 32768  },
   // GPT-5 serisi
-  { id: 'gpt-5',          label: 'GPT-5 ⭐ (En Güçlü, Agentic)',   maxTokens: 32768  },
-  { id: 'gpt-5-mini',     label: 'GPT-5 Mini (Ekonomik GPT-5)',     maxTokens: 32768  },
-  // GPT-4.1 serisi (yeni üretim standardı)
+  { id: 'gpt-5',          label: 'GPT-5 (Flagship, Mart 2026)',      maxTokens: 32768  },
+  // GPT-4.1 serisi (üretim standardı)
   { id: 'gpt-4.1',        label: 'GPT-4.1 (Üretim, 1M ctx)',        maxTokens: 32768  },
   { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini (Dengeli)',          maxTokens: 32768  },
   { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano (En Ucuz)',          maxTokens: 32768  },
@@ -85,32 +83,44 @@ export const XAI_MODELS = [
 ];
 
 export const PERPLEXITY_MODELS = [
-  { id: 'sonar-pro',              label: 'Sonar Pro ⭐ (En Güçlü)',    maxTokens: 8192 },
-  { id: 'sonar',                  label: 'Sonar (Dengeli)',             maxTokens: 8192 },
-  { id: 'sonar-reasoning-pro',    label: 'Sonar Reasoning Pro (CoT)',  maxTokens: 8192 },
+  { id: 'sonar-pro',              label: 'Sonar Pro ⭐ (En Güçlü, Web Aramalı)', maxTokens: 8192 },
+  { id: 'sonar',                  label: 'Sonar (Hızlı, Web Aramalı)',           maxTokens: 8192 },
+  { id: 'sonar-reasoning-pro',    label: 'Sonar Reasoning Pro (CoT + Web)',      maxTokens: 8192 },
+  { id: 'sonar-deep-research',    label: 'Sonar Deep Research (Derin Araştırma)', maxTokens: 8192 },
 ];
+// Not: sonar-reasoning Aralık 2025'te kaldırıldı → sonar-reasoning-pro kullanın
 
 export const ZAI_MODELS = [
-  { id: 'glm-4.7',       label: 'GLM-4.7 ⭐ (En Güçlü, 200K)',  maxTokens: 8192 },
-  { id: 'glm-4.6',       label: 'GLM-4.6 (Dengeli)',             maxTokens: 8192 },
-  { id: 'glm-4-flash',   label: 'GLM-4 Flash (Hızlı)',           maxTokens: 8192 },
+  { id: 'glm-5',          label: 'GLM-5 ⭐ (En Güçlü, Feb 2026)',  maxTokens: 8192 },
+  { id: 'glm-5-turbo',    label: 'GLM-5-Turbo (Agentic, Mar 2026)', maxTokens: 8192 },
+  { id: 'glm-4.5',        label: 'GLM-4.5 (Dengeli, MoE)',          maxTokens: 8192 },
+  { id: 'glm-4-flash',    label: 'GLM-4 Flash (Hızlı)',             maxTokens: 8192 },
 ];
 
 export const KIMI_MODELS = [
-  { id: 'kimi-k2-0905-preview',     label: 'Kimi K2 0905 ⭐ (En Güçlü, 1T param)',   maxTokens: 16384 },
-  { id: 'kimi-k2-thinking',         label: 'Kimi K2 Thinking (Derin Reasoning)',      maxTokens: 16384 },
-  { id: 'kimi-k2-thinking-turbo',   label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)', maxTokens: 16384 },
-  { id: 'kimi-k2-turbo-preview',    label: 'Kimi K2 Turbo (Hızlı)',                  maxTokens: 16384 },
-  { id: 'moonshot-v1-128k',         label: 'Moonshot v1 128K (Eski)',                maxTokens: 8192  },
+  { id: 'kimi-k2.5',              label: 'Kimi K2.5 ⭐ (En Güçlü, Multimodal)',    maxTokens: 16384 },
+  { id: 'kimi-k2-thinking',       label: 'Kimi K2 Thinking (Derin Reasoning)',      maxTokens: 16384 },
+  { id: 'kimi-k2-thinking-turbo', label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)', maxTokens: 16384 },
+  { id: 'kimi-k2-0905-preview',   label: 'Kimi K2 0905 (Agentic Coding)',           maxTokens: 16384 },
+  { id: 'kimi-k2-turbo-preview',  label: 'Kimi K2 Turbo (Hızlı, 60+ tok/s)',       maxTokens: 16384 },
+  { id: 'moonshot-v1-128k',       label: 'Moonshot v1 128K (Eski)',                 maxTokens: 8192  },
 ];
 
 export const QWEN_MODELS = [
-  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü, 1T param)',   maxTokens: 16384 },
+  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü)',              maxTokens: 16384 },
   { id: 'qwen3-max-latest',   label: 'Qwen3 Max Latest (Güncel)',            maxTokens: 16384 },
   { id: 'qwen-max-latest',    label: 'Qwen Max Latest (Kararlı)',            maxTokens: 8192  },
   { id: 'qwen-plus-latest',   label: 'Qwen Plus Latest (Dengeli, 1M ctx)',  maxTokens: 8192  },
   { id: 'qwen-turbo',         label: 'Qwen Turbo (Hızlı, Ekonomik)',        maxTokens: 8192  },
   { id: 'qwen-long',          label: 'Qwen Long (10M ctx)',                 maxTokens: 6144  },
+];
+// Not: Qwen'in kendi DashScope API'sinde ücretsiz model yoktur.
+// Ücretsiz Qwen modelleri için OpenRouter'ı kullanın (qwen/qwen3-next-80b-a3b-instruct:free vb.)
+
+export const DEEPSEEK_MODELS = [
+  // DeepSeek-V3.2 (Mart 2026) — OpenAI-compatible endpoint
+  { id: 'deepseek-chat',     label: 'DeepSeek-V3.2 ⭐ (Hızlı, 128K ctx)',       maxTokens: 8192  },
+  { id: 'deepseek-reasoner', label: 'DeepSeek-R2 (Thinking, 64K output)',        maxTokens: 65536 },
 ];
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
@@ -408,9 +418,36 @@ async function callQwenAPI(prompt, systemInstruction, apiKey, model) {
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
 }
 
+async function callDeepSeekAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = DEEPSEEK_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
+  const payload = {
+    model: model || 'deepseek-chat',
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: maxTokens,
+  };
+
+  const response = await fetch(DEEPSEEK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`DeepSeek HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+}
+
 /**
  * Unified AI API caller.
- * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen'
+ * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
   // Kullanıcının seçtiği provider her zaman öncelikli — prefix override yok.
@@ -448,6 +485,9 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
           break;
         case 'qwen':
           result = await callQwenAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'deepseek':
+          result = await callDeepSeekAPI(prompt, systemInstruction, apiKey, selectedModel);
           break;
         default:
           result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, selectedModel);
