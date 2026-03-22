@@ -3063,9 +3063,9 @@ ${savedMaterial.slice(0, 10000)}`;
                       {/* Layout seçici */}
                       <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/60 rounded-xl p-1">
                         {[
-                          { id: 'radial', label: appLang === 'tr' ? 'Dairesel' : 'Radial' },
-                          { id: 'tree',   label: appLang === 'tr' ? 'Ağaç'     : 'Tree'   },
-                          { id: 'force',  label: appLang === 'tr' ? 'Serbest'  : 'Force'  },
+                          { id: 'radial',     label: appLang === 'tr' ? 'Dairesel' : 'Radial'     },
+                          { id: 'tree',       label: appLang === 'tr' ? 'Dikey'    : 'Vertical'   },
+                          { id: 'horizontal', label: appLang === 'tr' ? 'Yatay'    : 'Horizontal' },
                         ].map(opt => (
                           <button key={opt.id}
                             onMouseDown={e => e.stopPropagation()}
