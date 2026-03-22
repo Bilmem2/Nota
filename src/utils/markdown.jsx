@@ -60,6 +60,69 @@ export function renderMarkdown(text) {
     let line = lines[i];
     let cleanLine = line.trim().replace(/^[-*\d+.]\s+/, '').trim();
 
+    // GitHub-style callouts: > [!TIP], > [!NOTE], > [!WARNING], > [!IMPORTANT], > [!CAUTION]
+    if (line.trim().startsWith('>')) {
+      const blockquoteContent = line.trim().replace(/^>\s?/, '').trim();
+      const ghCalloutMatch = blockquoteContent.match(/^\[!(TIP|NOTE|WARNING|IMPORTANT|CAUTION)\]\s*(.*)/i);
+      if (ghCalloutMatch) {
+        const type = ghCalloutMatch[1].toUpperCase();
+        const rest = ghCalloutMatch[2].trim();
+        // Collect continuation lines
+        const contentLines = rest ? [rest] : [];
+        i++;
+        while (i < lines.length && lines[i].trim().startsWith('>')) {
+          const cont = lines[i].trim().replace(/^>\s?/, '').trim();
+          if (cont) contentLines.push(cont);
+          i++;
+        }
+        const fullText = contentLines.join(' ');
+        if (type === 'TIP' || type === 'NOTE') {
+          elements.push(
+            <div key={i} className="my-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:bg-purple-950 dark:from-purple-950 dark:to-indigo-950 border border-purple-100 dark:border-purple-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0"><Lightbulb className="text-purple-600 dark:text-purple-400" size={24} /></div>
+                <div>
+                  <span className="font-extrabold text-purple-700 dark:text-purple-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Sınav Tüyosu</span>
+                  <p className="text-purple-900 dark:text-purple-100 font-medium leading-relaxed">{formatInline(fullText)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        } else if (type === 'WARNING' || type === 'CAUTION') {
+          elements.push(
+            <div key={i} className="my-6 bg-gradient-to-br from-rose-50 to-red-50 dark:bg-rose-950 dark:from-rose-950 dark:to-red-950 border border-rose-100 dark:border-rose-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0"><AlertCircle className="text-rose-600 dark:text-rose-400" size={24} /></div>
+                <div>
+                  <span className="font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kavram Yanılgısı / Tuzak</span>
+                  <p className="text-rose-900 dark:text-rose-100 font-medium leading-relaxed">{formatInline(fullText)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        } else { // IMPORTANT
+          elements.push(
+            <div key={i} className="my-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:bg-emerald-950 dark:from-emerald-950 dark:to-teal-950 border border-emerald-100 dark:border-emerald-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0"><Target className="text-emerald-600 dark:text-emerald-400" size={24} /></div>
+                <div>
+                  <span className="font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kritik Vurgu</span>
+                  <p className="text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed">{formatInline(fullText)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        continue;
+      }
+    }
+
+    // Normalize: **[TÜYO]**, **[DİKKAT]**, **[ÖNEMLİ]** → strip bold markers
+    cleanLine = cleanLine.replace(/^\*\*(\[(?:TÜYO|DİKKAT|ÖNEMLİ)\])\*\*/, '$1');
+
     // [TÜYO] — mor/indigo
     if (cleanLine.startsWith('[TÜYO]')) {
       elements.push(
