@@ -899,15 +899,27 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       try {
         const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider, openRouterModel);
         const finalData = parseJSON(result);
-        if (!finalData) throw new Error('JSON parse edilemedi — model geçersiz format döndürdü');
+        if (!finalData) throw new Error('JSON_PARSE_FAILED');
         setQuizState((p) => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
         setContent((prev) => ({ ...prev, quiz: finalData }));
       } catch (error) {
         console.error('Sınav üretilirken hata:', error);
-        const isJsonErr = error.message?.includes('JSON');
-        alert(isJsonErr
-          ? 'Seçili model JSON formatında yanıt üretemedi. Lütfen farklı bir model deneyin (önerilen: Gemini 2.0 Flash veya Kimi K2).'
-          : 'Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        const msg = error.message || '';
+        let alertMsg;
+        if (msg === 'JSON_PARSE_FAILED') {
+          alertMsg = appLang === 'en'
+            ? 'The selected model could not produce a valid JSON response. Try a different model (recommended: Gemini 2.0 Flash or Kimi K2).'
+            : 'Seçili model geçerli bir JSON yanıtı üretemedi. Farklı bir model deneyin (önerilen: Gemini 2.0 Flash veya Kimi K2).';
+        } else if (msg.includes('OpenRouter') || msg.includes('401') || msg.includes('403')) {
+          alertMsg = appLang === 'en'
+            ? `OpenRouter error: ${msg}. Please check your API key.`
+            : `OpenRouter hatası: ${msg}. API anahtarınızı kontrol edin.`;
+        } else {
+          alertMsg = appLang === 'en'
+            ? 'An error occurred while generating the quiz. Please try again.'
+            : 'Sınav üretilirken bir hata oluştu. Lütfen tekrar deneyin.';
+        }
+        alert(alertMsg);
       } finally {
         setLoading((prev) => ({ ...prev, quiz: false }));
       }

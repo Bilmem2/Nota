@@ -134,7 +134,6 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
     max_tokens: 8192,
     top_p: 0.9,
   };
-  // response_format kaldırıldı — çoğu OpenRouter modeli desteklemiyor, JSON prompt ile isteniyor
 
   const response = await fetch(OPENROUTER_URL, {
     method: 'POST',
@@ -148,10 +147,19 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
   });
 
   if (response.status === 429) return { rateLimited: true };
-  if (!response.ok) throw new Error(`OpenRouter HTTP error: ${response.status}`);
 
   const data = await response.json();
-  return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
+
+  // OpenRouter hata mesajını HTTP 200 ile de döndürebilir
+  if (data.error) {
+    throw new Error(`OpenRouter error: ${data.error.message || JSON.stringify(data.error)}`);
+  }
+
+  if (!response.ok) throw new Error(`OpenRouter HTTP error: ${response.status}`);
+
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('OpenRouter boş yanıt döndürdü');
+  return { text };
 }
 
 async function callOpenAIAPI(prompt, systemInstruction, apiKey, model) {
