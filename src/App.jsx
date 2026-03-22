@@ -937,7 +937,7 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     e.target.value = null;
   };
 
-  const generateContent = async (type) => {
+  const generateContent = async (type, forceRegenerate = false) => {
     if (!savedMaterial && (type !== 'quiz' || quizConfig.quizScope !== 'mixed')) return;
     setLoading((prev) => ({ ...prev, [type]: true }));
 
@@ -1045,7 +1045,7 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
     let prevChunkSummary = '';
 
     for (let i = 0; i < chunks.length; i++) {
-      if (content[type] && content[type][i]) {
+      if (!forceRegenerate && content[type] && content[type][i]) {
         continue;
       }
 
@@ -1179,8 +1179,12 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
   // Tüm chunk'ları sıfırlayıp sıfırdan yeniden oluştur (bağlam tutarlılığı için)
   const regenerateChunk = (type) => {
-    setContent(p => ({ ...p, [type]: {} }));
-    generateContent(type);
+    setContent(p => {
+      const cleared = { ...p, [type]: {} };
+      // generateContent'i state güncellemesi tamamlandıktan sonra çağır
+      setTimeout(() => generateContent(type, true), 0);
+      return cleared;
+    });
   };
 
   const handleSendMessage = async (e) => {
@@ -1823,7 +1827,7 @@ ${savedMaterial.slice(0, 10000)}`;
   };
 
   return (
-    <div className={`flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] overflow-hidden' : 'h-[100dvh] overflow-hidden'}`}>
+    <div className={`flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 overflow-x-hidden ${isFullscreen ? 'fixed inset-0 z-[9999] overflow-hidden' : 'h-[100dvh] overflow-hidden'}`}>
       {showSettings && <SettingsModal />}
 
       {/* Mobil Header */}
@@ -1855,8 +1859,8 @@ ${savedMaterial.slice(0, 10000)}`;
       <aside
         style={{ zIndex: 28 }}
         className={`
-          fixed md:sticky md:top-0 md:self-stretch left-0 top-0 h-[100dvh] w-72 md:w-64
-          bg-indigo-900 text-white shadow-xl flex flex-col shrink-0 print:hidden
+          fixed md:sticky md:top-0 md:self-stretch left-0 top-0 h-[100dvh] w-[min(288px,calc(100vw-48px))] md:w-64
+          bg-indigo-900 text-white shadow-xl flex flex-col shrink-0 print:hidden overflow-x-hidden
           transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
