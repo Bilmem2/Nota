@@ -1796,31 +1796,39 @@ ${savedMaterial.slice(0, 10000)}`;
   };
 
   return (
-    <div className={`flex flex-col md:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full overflow-hidden bg-slate-50 dark:bg-slate-950 m-0 p-0' : ''}`}>
+    <div className={`flex flex-col md:flex-row h-[100dvh] md:h-screen bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[9999] w-full h-full bg-slate-50 dark:bg-slate-950 m-0 p-0' : ''}`}>
       {showSettings && <SettingsModal />}
 
       {/* Mobil Header */}
-      <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white p-4 shadow-md z-20 shrink-0">
+      <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white px-4 py-3 shadow-md z-20 shrink-0">
         <div className="flex items-center gap-2 font-bold text-xl">
           <img src="/Nota/favicon.png" alt="logo" className="w-8 h-8 rounded-lg" />
           <span>{t.appName}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={toggleFullScreen} className="p-1 rounded-md hover:bg-indigo-700 transition-colors">
-            {isFullscreen ? <Minimize size={22} /> : <Maximize size={22} />}
+        <div className="flex items-center gap-2">
+          <button onClick={toggleFullScreen} className="p-2 rounded-xl hover:bg-indigo-700 transition-colors">
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
           </button>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-xl hover:bg-indigo-700 transition-colors">
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
+
+      {/* Mobil overlay — sidebar açıkken arkayı karartır ve tıklayınca kapatır */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-[9] backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <aside
         className={`
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 transition-transform duration-300 ease-in-out
-        ${isFullscreen ? 'sticky' : 'fixed md:sticky'} top-0 left-0 h-screen w-64 bg-indigo-900 text-white shadow-xl flex flex-col z-10 print:hidden shrink-0
+        ${isFullscreen ? 'sticky' : 'fixed md:sticky'} top-0 left-0 h-[100dvh] md:h-screen w-72 md:w-64 bg-indigo-900 text-white shadow-xl flex flex-col z-[10] print:hidden shrink-0
       `}
       >
         <div className="p-6 hidden md:flex items-center justify-between border-b border-indigo-800">
@@ -1881,8 +1889,8 @@ ${savedMaterial.slice(0, 10000)}`;
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 h-screen overflow-y-auto w-full bg-slate-50/50 dark:bg-slate-900 relative">
-        <div className="max-w-5xl mx-auto pb-10">
+      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto bg-slate-50/50 dark:bg-slate-900 relative" style={{ minHeight: 0 }}>
+        <div className="max-w-5xl mx-auto pb-16 md:pb-10">
 
           {/* TAB 0: ÇALIŞMA ARŞİVİ */}
           {activeTab === 'archive' && (
@@ -3018,7 +3026,7 @@ ${savedMaterial.slice(0, 10000)}`;
 
           {/* TAB 5: SOHBET (SORU SOR) */}
           {activeTab === 'chat' && (
-            <div className="animate-in fade-in duration-500 flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
+            <div className="animate-in fade-in duration-500 flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
               <div className="flex items-center gap-3 mb-6 px-2 shrink-0">
                 <MessageSquare size={32} className="text-indigo-600" />
                 <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.chatTitle}</h2>
@@ -3088,7 +3096,7 @@ ${savedMaterial.slice(0, 10000)}`;
       {/* Toast Bildirimi */}
       {toast && (
         <div
-          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl max-w-sm w-[calc(100%-2rem)] transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 ${
             toast.type === 'warning'
               ? 'bg-amber-50 dark:bg-amber-900/90 border border-amber-200 dark:border-amber-700 text-amber-900 dark:text-amber-100'
               : toast.type === 'info'

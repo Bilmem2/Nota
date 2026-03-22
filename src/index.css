@@ -245,3 +245,51 @@
 .dark .border-amber-200\/60 {
   border-color: #78350f !important;
 }
+
+/* ===== MOBİL OPTİMİZASYONLAR ===== */
+
+/* Sanal klavye açılınca viewport kaymasını önle */
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+/* iOS Safari'de dokunma gecikmesini kaldır */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Mobilde minimum dokunma hedefi */
+@media (max-width: 768px) {
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Sidebar nav butonları mobilde daha büyük */
+  aside nav button {
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+  }
+
+  /* Input ve textarea mobilde font-size 16px — iOS zoom'u önler */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Mobilde yatay taşmayı önle */
+  main {
+    overflow-x: hidden;
+  }
+}
+
+/* iOS safe area desteği (notch/home bar) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  aside {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
