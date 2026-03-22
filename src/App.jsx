@@ -2104,7 +2104,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {activeTab === 'lesson' &&
             (() => {
               const isStarted = Object.keys(content.lesson).length > 0 || generatingIndex.lesson !== -1 || loading.lesson;
-              const isFinished = Object.keys(content.lesson).length === materialChunks.length && materialChunks.length > 0;
+              const isFinished = Object.keys(content.lesson).length > 0 && generatingIndex.lesson === -1 && !loading.lesson;
 
               return (
                 <div className="animate-in fade-in duration-500">
@@ -2211,7 +2211,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {activeTab === 'notes' &&
             (() => {
               const isStarted = Object.keys(content.notes).length > 0 || generatingIndex.notes !== -1 || loading.notes;
-              const isFinished = Object.keys(content.notes).length === materialChunks.length && materialChunks.length > 0;
+              const isFinished = Object.keys(content.notes).length > 0 && generatingIndex.notes === -1 && !loading.notes;
 
               return (
                 <div className="animate-in fade-in duration-500">
@@ -2305,7 +2305,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {activeTab === 'visual' &&
             (() => {
               const isStarted = Object.keys(content.visual).length > 0 || generatingIndex.visual !== -1 || loading.visual;
-              const isFinished = Object.keys(content.visual).length === materialChunks.length && materialChunks.length > 0;
+              const isFinished = Object.keys(content.visual).length > 0 && generatingIndex.visual === -1 && !loading.visual;
 
               return (
                 <div className="animate-in fade-in duration-500">
