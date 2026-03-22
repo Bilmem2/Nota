@@ -1165,12 +1165,10 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     setLoading((prev) => ({ ...prev, [type]: false }));
   };
 
-  // Tek bir chunk'ı sıfırlayıp yeniden oluştur
-  const regenerateChunk = (type, idx) => {
-    setContent(p => ({ ...p, [type]: { ...p[type], [idx]: undefined } }));
-    // generateContent döngüsü undefined olan chunk'ları atlamaz, sadece falsy olanları atlar
-    // Bu yüzden kısa bir timeout ile çağırıyoruz ki state güncellensin
-    setTimeout(() => generateContent(type), 50);
+  // Tüm chunk'ları sıfırlayıp sıfırdan yeniden oluştur (bağlam tutarlılığı için)
+  const regenerateChunk = (type) => {
+    setContent(p => ({ ...p, [type]: {} }));
+    generateContent(type);
   };
 
   const handleSendMessage = async (e) => {
@@ -2169,7 +2167,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                   ) : <div />}
                                   {!isError && generatingIndex.lesson === -1 && (
                                     <button
-                                      onClick={() => regenerateChunk('lesson', idx)}
+                                      onClick={() => regenerateChunk('lesson')}
                                       className="no-print flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border border-slate-200 dark:border-slate-700 hover:border-indigo-200 rounded-lg transition-colors shrink-0"
                                       title={appLang === 'tr' ? 'Bu bölümü yeniden oluştur' : 'Regenerate this section'}
                                     >
@@ -2182,7 +2180,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                     <AlertCircle size={32} className="text-rose-400" />
                                     <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
                                     <div className="flex gap-3">
-                                      <button onClick={() => regenerateChunk('lesson', idx)}
+                                      <button onClick={() => regenerateChunk('lesson')}
                                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
                                         <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
                                       </button>
@@ -2287,7 +2285,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                   ) : <div />}
                                   {!isError && generatingIndex.notes === -1 && (
                                     <button
-                                      onClick={() => regenerateChunk('notes', idx)}
+                                      onClick={() => regenerateChunk('notes')}
                                       className="no-print flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-slate-200 dark:border-slate-700 hover:border-amber-200 rounded-lg transition-colors shrink-0"
                                       title={appLang === 'tr' ? 'Bu bölümü yeniden oluştur' : 'Regenerate this section'}
                                     >
@@ -2300,7 +2298,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                     <AlertCircle size={32} className="text-rose-400" />
                                     <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
                                     <div className="flex gap-3">
-                                      <button onClick={() => regenerateChunk('notes', idx)}
+                                      <button onClick={() => regenerateChunk('notes')}
                                         className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
                                         <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
                                       </button>
@@ -2395,7 +2393,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                   ) : <div />}
                                   {!isError && generatingIndex.visual === -1 && (
                                     <button
-                                      onClick={() => regenerateChunk('visual', idx)}
+                                      onClick={() => regenerateChunk('visual')}
                                       className="no-print flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 border border-slate-200 dark:border-slate-700 hover:border-teal-200 rounded-lg transition-colors shrink-0"
                                       title={appLang === 'tr' ? 'Bu bölümü yeniden oluştur' : 'Regenerate this section'}
                                     >
@@ -2408,7 +2406,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                     <AlertCircle size={32} className="text-rose-400" />
                                     <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
                                     <div className="flex gap-3">
-                                      <button onClick={() => regenerateChunk('visual', idx)}
+                                      <button onClick={() => regenerateChunk('visual')}
                                         className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
                                         <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
                                       </button>
@@ -3058,7 +3056,7 @@ ${savedMaterial.slice(0, 10000)}`;
                   </div>
                 )}
                 {content.mindMap && !loading.mindmap && (
-                  <div className={mindMapFullscreen ? 'flex-1 flex flex-col p-4 overflow-hidden' : ''} style={{ minHeight: mindMapFullscreen ? undefined : 700 }}>
+                  <div className={mindMapFullscreen ? 'flex-1 flex flex-col p-4 overflow-hidden' : ''}>
                     <div className="flex flex-wrap items-center justify-between mb-4 gap-3 shrink-0">
                       {/* Layout seçici */}
                       <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/60 rounded-xl p-1">
@@ -3093,9 +3091,9 @@ ${savedMaterial.slice(0, 10000)}`;
                         </button>
                       </div>
                     </div>
-                    <div className={mindMapFullscreen ? 'flex-1' : ''}>
+                    <div className={mindMapFullscreen ? 'flex-1 min-h-0' : ''}>
                       <ErrorBoundary>
-                        <MindMapComponent data={content.mindMap} darkMode={darkMode} lang={appLang} layoutMode={mindMapLayout} />
+                        <MindMapComponent data={content.mindMap} darkMode={darkMode} lang={appLang} layoutMode={mindMapLayout} fullscreen={mindMapFullscreen} />
                       </ErrorBoundary>
                     </div>
                   </div>

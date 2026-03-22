@@ -6,9 +6,9 @@ const LEVEL_COLORS = {
   2: { bg: '#10b981', text: '#fff', border: '#059669', shadow: 'rgba(16,185,129,0.3)' },
   3: { bg: '#f59e0b', text: '#fff', border: '#d97706', shadow: 'rgba(245,158,11,0.3)' },
 };
-const NODE_W = [148, 124, 106, 90];
-const NODE_H = [48, 42, 36, 30];
-const NODE_R = [56, 46, 38, 30];
+const NODE_W = [160, 136, 116, 96];
+const NODE_H = [52, 44, 38, 32];
+const NODE_R = [62, 50, 42, 34];
 
 // ─── Radial ────────────────────────────────────────────────────────────────────
 function computeRadial(data) {
@@ -21,25 +21,25 @@ function computeRadial(data) {
     const angle = (2 * Math.PI * ci) / cats.length - Math.PI / 2;
     const catNode = { id: cat.id, label: cat.label, description: cat.description || '',
       importance: cat.importance || '', keyFacts: cat.keyFacts || [], example: cat.example || '',
-      level: 1, x: Math.cos(angle) * 290, y: Math.sin(angle) * 290 };
+      level: 1, x: Math.cos(angle) * 340, y: Math.sin(angle) * 340 };
     nodes.push(catNode); nodeMap[cat.id] = catNode;
     edges.push({ from: 'root', to: cat.id, label: cat.relation || '' });
     (cat.children || []).forEach((child, chi) => {
       const cc = (cat.children || []).length;
-      const spread = Math.min(Math.PI * 0.65, cc * 0.32);
+      const spread = Math.min(Math.PI * 0.65, cc * 0.35);
       const ca = angle - spread / 2 + (spread / Math.max(cc - 1, 1)) * chi;
       const childNode = { id: child.id, label: child.label, description: child.description || '',
         importance: child.importance || '', keyFacts: child.keyFacts || [], example: child.example || '',
-        level: 2, x: Math.cos(ca) * 540, y: Math.sin(ca) * 540 };
+        level: 2, x: Math.cos(ca) * 640, y: Math.sin(ca) * 640 };
       nodes.push(childNode); nodeMap[child.id] = childNode;
       edges.push({ from: cat.id, to: child.id, label: child.relation || '' });
       (child.children || []).forEach((detail, di) => {
         const dc = (child.children || []).length;
-        const ds = Math.min(Math.PI * 0.35, dc * 0.22);
+        const ds = Math.min(Math.PI * 0.35, dc * 0.25);
         const da = ca - ds / 2 + (ds / Math.max(dc - 1, 1)) * di;
         const detailNode = { id: detail.id, label: detail.label, description: detail.description || '',
           importance: detail.importance || '', keyFacts: detail.keyFacts || [], example: detail.example || '',
-          level: 3, x: Math.cos(da) * 780, y: Math.sin(da) * 780 };
+          level: 3, x: Math.cos(da) * 920, y: Math.sin(da) * 920 };
         nodes.push(detailNode); nodeMap[detail.id] = detailNode;
         edges.push({ from: child.id, to: detail.id, label: detail.relation || '' });
       });
@@ -55,8 +55,7 @@ function computeRadial(data) {
 // ─── Dikey ağaç ────────────────────────────────────────────────────────────────
 function computeTree(data) {
   const nodes = [], edges = [], nodeMap = {};
-  // Geniş boşluklar: yaprak başına 220px yatay, seviye başına 120px dikey
-  const LEAF_W = 220, LEVEL_H = 120;
+  const LEAF_W = 260, LEVEL_H = 140;
   function flatten(node, level, parentId) {
     const n = { id: node.id || 'root', label: node.label || node.root || '',
       description: node.description || node.rootDescription || '',
@@ -93,7 +92,7 @@ function computeTree(data) {
 // ─── Yatay ağaç ────────────────────────────────────────────────────────────────
 function computeHorizontal(data) {
   const nodes = [], edges = [], nodeMap = {};
-  const LEAF_H = 90, LEVEL_W = 230;
+  const LEAF_H = 110, LEVEL_W = 270;
   function flatten(node, level, parentId) {
     const n = { id: node.id || 'root', label: node.label || node.root || '',
       description: node.description || node.rootDescription || '',
@@ -141,7 +140,7 @@ function wrapText(label, level) {
 }
 
 // ─── Ana bileşen ───────────────────────────────────────────────────────────────
-export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMode = 'radial' }) {
+export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMode = 'radial', fullscreen = false }) {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
   const [svgSize, setSvgSize] = useState({ w: 900, h: 580 });
@@ -167,6 +166,24 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     return () => ro.disconnect();
   }, []);
 
+  // Auto-fit hesapla (reusable)
+  const computeFit = useCallback((nodes, w, h) => {
+    if (!nodes || nodes.length === 0) return { x: 0, y: 0, scale: 1 };
+    const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const cw = w || 900, ch = h || 580;
+    const pad = 140;
+    const sx = (cw - pad * 2) / Math.max(maxX - minX, 1);
+    const sy = (ch - pad * 2) / Math.max(maxY - minY, 1);
+    const scale = Math.min(0.85, Math.max(0.18, Math.min(sx, sy)));
+    return {
+      x: -((minX + maxX) / 2) * scale,
+      y: -((minY + maxY) / 2) * scale,
+      scale,
+    };
+  }, []);
+
   // Layout + auto-fit
   useEffect(() => {
     if (!data) return;
@@ -179,21 +196,8 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const pos = {};
     l.nodes.forEach(n => { pos[n.id] = { x: n.x, y: n.y }; });
     setNodePos(pos);
-    // Auto-fit: max scale 0.85 so nodes aren't too cramped
-    if (l.nodes.length > 0) {
-      const xs = l.nodes.map(n => n.x), ys = l.nodes.map(n => n.y);
-      const minX = Math.min(...xs), maxX = Math.max(...xs);
-      const minY = Math.min(...ys), maxY = Math.max(...ys);
-      const cw = svgSize.w || 900, ch = svgSize.h || 580;
-      const pad = 140;
-      const sx = (cw - pad * 2) / Math.max(maxX - minX, 1);
-      const sy = (ch - pad * 2) / Math.max(maxY - minY, 1);
-      const scale = Math.min(0.85, Math.max(0.18, Math.min(sx, sy)));
-      const cx = -((minX + maxX) / 2) * scale;
-      const cy = -((minY + maxY) / 2) * scale;
-      setTransform({ x: cx, y: cy, scale });
-    }
-  }, [data, layoutMode]); // svgSize omitted intentionally
+    setTransform(computeFit(l.nodes, svgSize.w, svgSize.h));
+  }, [data, layoutMode, computeFit]); // svgSize omitted intentionally
 
   // Wheel zoom
   const onWheel = useCallback((e) => {
@@ -207,8 +211,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     return () => el.removeEventListener('wheel', onWheel);
   }, [onWheel]);
 
-  // SVG koordinat dönüşümü — SVG transform: translate(w/2+tx, h/2+ty) scale(s)
-  // clientX → svgX = (clientX - rect.left - (w/2 + tx)) / s
+  // SVG koordinat dönüşümü
   const toSVGCoords = useCallback((clientX, clientY) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
@@ -219,28 +222,37 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     };
   }, []);
 
-  // Mouse
+  // Mouse — canvas pan
   const onMouseDown = useCallback((e) => {
     if (nodeDrag.current || e.button !== 0) return;
     canvasDrag.current = { startX: e.clientX - transformRef.current.x, startY: e.clientY - transformRef.current.y };
   }, []);
+
+  // Node drag: store initial SVG position of node + initial client position
   const onNodeMouseDown = useCallback((e, id) => {
     e.stopPropagation();
-    nodeDrag.current = { id, startX: e.clientX, startY: e.clientY, moved: false };
-  }, []);
+    const svgStart = toSVGCoords(e.clientX, e.clientY);
+    nodeDrag.current = { id, clientX: e.clientX, clientY: e.clientY, svgStart, moved: false };
+  }, [toSVGCoords]);
+
   const onMouseMove = useCallback((e) => {
-    const nd = nodeDrag.current, cd = canvasDrag.current;
+    const nd = nodeDrag.current;
+    const cd = canvasDrag.current;
     if (nd) {
-      if (Math.abs(e.clientX - nd.startX) > 3 || Math.abs(e.clientY - nd.startY) > 3) nd.moved = true;
+      if (Math.abs(e.clientX - nd.clientX) > 3 || Math.abs(e.clientY - nd.clientY) > 3) nd.moved = true;
       const c = toSVGCoords(e.clientX, e.clientY);
       setNodePos(p => ({ ...p, [nd.id]: { x: c.x, y: c.y } }));
     } else if (cd) {
       setTransform(t => ({ ...t, x: e.clientX - cd.startX, y: e.clientY - cd.startY }));
     }
   }, [toSVGCoords]);
+
   const onMouseUp = useCallback(() => {
     const nd = nodeDrag.current;
-    if (nd) { if (!nd.moved) setSelected(p => p === nd.id ? null : nd.id); nodeDrag.current = null; }
+    if (nd) {
+      if (!nd.moved) setSelected(p => p === nd.id ? null : nd.id);
+      nodeDrag.current = null;
+    }
     canvasDrag.current = null;
   }, []);
 
@@ -251,14 +263,18 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   }, []);
   const onNodeTouchStart = useCallback((e, id) => {
     e.stopPropagation();
-    if (e.touches.length === 1)
-      nodeDrag.current = { id, startX: e.touches[0].clientX, startY: e.touches[0].clientY, moved: false };
-  }, []);
+    if (e.touches.length === 1) {
+      const svgStart = toSVGCoords(e.touches[0].clientX, e.touches[0].clientY);
+      nodeDrag.current = { id, clientX: e.touches[0].clientX, clientY: e.touches[0].clientY, svgStart, moved: false };
+    }
+  }, [toSVGCoords]);
   const onTouchMove = useCallback((e) => {
     if (e.touches.length !== 1) return;
-    const t = e.touches[0], nd = nodeDrag.current, cd = canvasDrag.current;
+    const t = e.touches[0];
+    const nd = nodeDrag.current;
+    const cd = canvasDrag.current;
     if (nd) {
-      if (Math.abs(t.clientX - nd.startX) > 5 || Math.abs(t.clientY - nd.startY) > 5) nd.moved = true;
+      if (Math.abs(t.clientX - nd.clientX) > 5 || Math.abs(t.clientY - nd.clientY) > 5) nd.moved = true;
       const c = toSVGCoords(t.clientX, t.clientY);
       setNodePos(p => ({ ...p, [nd.id]: { x: c.x, y: c.y } }));
     } else if (cd) {
@@ -267,7 +283,10 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   }, [toSVGCoords]);
   const onTouchEnd = useCallback(() => {
     const nd = nodeDrag.current;
-    if (nd) { if (!nd.moved) setSelected(p => p === nd.id ? null : nd.id); nodeDrag.current = null; }
+    if (nd) {
+      if (!nd.moved) setSelected(p => p === nd.id ? null : nd.id);
+      nodeDrag.current = null;
+    }
     canvasDrag.current = null;
   }, []);
 
@@ -286,7 +305,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const fontSize = n.level === 0 ? 13 : n.level === 1 ? 11.5 : n.level === 2 ? 10.5 : 9.5;
     const lineH = fontSize * 1.35;
     if (isRect) {
-      const w = NODE_W[n.level] ?? 90, h = Math.max(NODE_H[n.level] ?? 30, lines.length * lineH + 14);
+      const w = NODE_W[n.level] ?? 96, h = Math.max(NODE_H[n.level] ?? 32, lines.length * lineH + 14);
       const rx = n.level === 0 ? 14 : n.level === 1 ? 10 : 7;
       return (
         <g key={n.id} style={{ cursor: 'grab' }}
@@ -303,7 +322,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
         </g>
       );
     }
-    const r = NODE_R[n.level] ?? 30;
+    const r = NODE_R[n.level] ?? 34;
     return (
       <g key={n.id} style={{ cursor: 'grab' }}
         onMouseDown={e => onNodeMouseDown(e, n.id)} onTouchStart={e => onNodeTouchStart(e, n.id)}>
@@ -331,15 +350,15 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const strokeW = isCross ? 1.5 : (toNode.level === 1 ? 2.5 : 1.5);
     let d;
     if (isTree && !isCross) {
-      const fh = NODE_H[fromNode.level] ?? 30, th = NODE_H[toNode.level] ?? 30;
+      const fh = NODE_H[fromNode.level] ?? 32, th = NODE_H[toNode.level] ?? 32;
       const y1 = fp.y + fh / 2, y2 = tp.y - th / 2, my = (y1 + y2) / 2;
       d = `M${fp.x},${y1} C${fp.x},${my} ${tp.x},${my} ${tp.x},${y2}`;
     } else if (isHoriz && !isCross) {
-      const fw = NODE_W[fromNode.level] ?? 90, tw = NODE_W[toNode.level] ?? 90;
+      const fw = NODE_W[fromNode.level] ?? 96, tw = NODE_W[toNode.level] ?? 96;
       const x1 = fp.x + fw / 2, x2 = tp.x - tw / 2, mx = (x1 + x2) / 2;
       d = `M${x1},${fp.y} C${mx},${fp.y} ${mx},${tp.y} ${x2},${tp.y}`;
     } else {
-      const r = NODE_R[toNode.level] ?? 30;
+      const r = NODE_R[toNode.level] ?? 34;
       const dx = tp.x - fp.x, dy = tp.y - fp.y, dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const mx = (fp.x + tp.x) / 2, my = (fp.y + tp.y) / 2;
       d = `M${fp.x},${fp.y} Q${mx + (isCross ? 60 : 0)},${my + (isCross ? -60 : 0)} ${tp.x - (dx / dist) * r},${tp.y - (dy / dist) * r}`;
@@ -360,21 +379,33 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col" style={{ minHeight: 640 }}>
-      {/* Canvas — yatay olarak tam genişlik, sabit yükseklik */}
+    <div className="relative w-full h-full flex flex-col" style={fullscreen ? { flex: 1, minHeight: 0 } : { minHeight: 640 }}>
+      {/* Canvas */}
       <div ref={containerRef}
         className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
         style={{ background: darkMode ? '#0f172a' : '#f8fafc', cursor: 'grab',
-          width: '100%', height: 580, userSelect: 'none' }}
+          width: '100%', height: fullscreen ? '100%' : 660, userSelect: 'none' }}
         onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
 
+        {/* Zoom controls */}
         <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
-          {[['＋', 1.2], ['－', 0.8], ['⊙', 'reset']].map(([label, val]) => (
+          {[['＋', 1.2], ['－', 0.8]].map(([label, val]) => (
             <button key={label} onMouseDown={e => e.stopPropagation()}
-              onClick={() => setTransform(t => val === 'reset' ? { x: 0, y: 0, scale: 1 } : { ...t, scale: Math.min(4, Math.max(0.12, t.scale * val)) })}
+              onClick={() => setTransform(t => ({ ...t, scale: Math.min(4, Math.max(0.12, t.scale * val)) }))}
               className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">{label}</button>
           ))}
+          {/* Scale to Fit */}
+          <button onMouseDown={e => e.stopPropagation()}
+            onClick={() => layout && setTransform(computeFit(layout.nodes, svgSize.w, svgSize.h))}
+            title={lang === 'en' ? 'Fit to screen' : 'Ekrana sığdır'}
+            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center">⊡</button>
+          {/* Reset */}
+          <button onMouseDown={e => e.stopPropagation()}
+            onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}
+            title={lang === 'en' ? 'Reset view' : 'Görünümü sıfırla'}
+            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">⊙</button>
+          {/* SVG download */}
           <button onMouseDown={e => e.stopPropagation()}
             onClick={() => { const el = svgRef.current; if (!el) return; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml;charset=utf-8' })); a.download = 'mindmap.svg'; a.click(); }}
             title={lang === 'en' ? 'Download SVG' : 'SVG İndir'}
