@@ -44,29 +44,44 @@ export const OPENROUTER_MODELS = [
   { id: 'google/gemini-2.0-flash-001',                       label: 'Gemini 2.0 Flash (Paid)',           free: false },
   { id: 'google/gemini-2.0-flash-lite-001',                  label: 'Gemini 2.0 Flash Lite (Paid)',      free: false },
   // --- Ücretli (Diğer) ---
+  { id: 'anthropic/claude-opus-4-6',                         label: 'Claude Opus 4.6 (Paid)',            free: false },
   { id: 'anthropic/claude-sonnet-4-6',                       label: 'Claude Sonnet 4.6 (Paid)',          free: false },
+  { id: 'openai/gpt-5',                                      label: 'GPT-5 (Paid)',                      free: false },
+  { id: 'openai/gpt-4.1',                                    label: 'GPT-4.1 (Paid)',                    free: false },
   { id: 'openai/gpt-4o',                                     label: 'GPT-4o (Paid)',                     free: false },
+  { id: 'x-ai/grok-4',                                       label: 'Grok 4 (Paid)',                     free: false },
+  { id: 'moonshotai/kimi-k2',                                label: 'Kimi K2 (Paid)',                    free: false },
+  { id: 'qwen/qwen3-max',                                    label: 'Qwen3 Max (Paid)',                  free: false },
+  { id: 'minimax/minimax-m2',                                label: 'MiniMax M2 (Paid)',                  free: false },
 ];
 
 export const OPENAI_MODELS = [
-  { id: 'gpt-5', label: 'GPT-5 ⭐ (En Güçlü)' },
-  { id: 'gpt-4o', label: 'GPT-4o' },
-  { id: 'gpt-4o-mini', label: 'GPT-4o Mini (Ekonomik)' },
-  { id: 'o3', label: 'o3 (Reasoning)' },
-  { id: 'o4-mini', label: 'o4-mini (Reasoning, Hızlı)' },
+  // GPT-5 serisi
+  { id: 'gpt-5',          label: 'GPT-5 ⭐ (En Güçlü, Agentic)' },
+  { id: 'gpt-5-mini',     label: 'GPT-5 Mini (Ekonomik GPT-5)' },
+  // GPT-4.1 serisi (yeni üretim standardı)
+  { id: 'gpt-4.1',        label: 'GPT-4.1 (Üretim, 1M ctx)' },
+  { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini (Dengeli)' },
+  { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano (En Ucuz)' },
+  // GPT-4o serisi (eski üretim)
+  { id: 'gpt-4o',         label: 'GPT-4o (Eski Üretim)' },
+  { id: 'gpt-4o-mini',    label: 'GPT-4o Mini (Eski Ekonomik)' },
+  // o-serisi reasoning
+  { id: 'o3',             label: 'o3 (Güçlü Reasoning)' },
+  { id: 'o4-mini',        label: 'o4-mini (Ekonomik Reasoning)' },
 ];
 
 export const ANTHROPIC_MODELS = [
-  { id: 'claude-opus-4-6', label: 'Claude Opus 4.6 ⭐ (En Güçlü)' },
-  { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Dengeli)' },
-  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (Hızlı)' },
+  { id: 'claude-opus-4-6',              label: 'Claude Opus 4.6 ⭐ (En Güçlü, Agentic)' },
+  { id: 'claude-sonnet-4-6',            label: 'Claude Sonnet 4.6 (Dengeli, Üretim)' },
+  { id: 'claude-haiku-4-5-20251001',    label: 'Claude Haiku 4.5 (Hızlı, Ekonomik)' },
 ];
 
 export const XAI_MODELS = [
-  { id: 'grok-4', label: 'Grok 4 ⭐ (En Güçlü)' },
-  { id: 'grok-4-fast', label: 'Grok 4 Fast (Hızlı)' },
-  { id: 'grok-3', label: 'Grok 3' },
-  { id: 'grok-3-fast', label: 'Grok 3 Fast (Ekonomik)' },
+  { id: 'grok-4.20',      label: 'Grok 4.20 ⭐ (En Yeni, Agentic)' },
+  { id: 'grok-4',         label: 'Grok 4 (Reasoning, 256K ctx)' },
+  { id: 'grok-3',         label: 'Grok 3 (Dengeli)' },
+  { id: 'grok-3-mini',    label: 'Grok 3 Mini (Ekonomik Reasoning)' },
 ];
 
 export const PERPLEXITY_MODELS = [
@@ -82,16 +97,20 @@ export const ZAI_MODELS = [
 ];
 
 export const KIMI_MODELS = [
-  { id: 'kimi-k2', label: 'Kimi K2 ⭐ (En Güçlü, 128K)' },
-  { id: 'kimi-k2-thinking', label: 'Kimi K2 Thinking (Reasoning)' },
-  { id: 'moonshot-v1-128k', label: 'Moonshot v1 128K (Eski)' },
+  { id: 'kimi-k2-0905-preview',     label: 'Kimi K2 0905 ⭐ (En Güçlü, 1T param)' },
+  { id: 'kimi-k2-thinking',         label: 'Kimi K2 Thinking (Derin Reasoning)' },
+  { id: 'kimi-k2-thinking-turbo',   label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)' },
+  { id: 'kimi-k2-turbo-preview',    label: 'Kimi K2 Turbo (Hızlı)' },
+  { id: 'moonshot-v1-128k',         label: 'Moonshot v1 128K (Eski)' },
 ];
 
 export const QWEN_MODELS = [
-  { id: 'qwen3-max', label: 'Qwen3 Max ⭐ (En Güçlü)' },
-  { id: 'qwen-max-latest', label: 'Qwen Max Latest (Güncel)' },
-  { id: 'qwen-plus-latest', label: 'Qwen Plus Latest (Dengeli)' },
-  { id: 'qwen-turbo', label: 'Qwen Turbo (Hızlı)' },
+  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü, 1T param)' },
+  { id: 'qwen3-max-latest',   label: 'Qwen3 Max Latest (Güncel)' },
+  { id: 'qwen-max-latest',    label: 'Qwen Max Latest (Kararlı)' },
+  { id: 'qwen-plus-latest',   label: 'Qwen Plus Latest (Dengeli, 1M ctx)' },
+  { id: 'qwen-turbo',         label: 'Qwen Turbo (Hızlı, Ekonomik)' },
+  { id: 'qwen-long',          label: 'Qwen Long (10M ctx)' },
 ];
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
