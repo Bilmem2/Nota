@@ -21,25 +21,25 @@ function computeRadial(data) {
     const angle = (2 * Math.PI * ci) / cats.length - Math.PI / 2;
     const catNode = { id: cat.id, label: cat.label, description: cat.description || '',
       importance: cat.importance || '', keyFacts: cat.keyFacts || [], example: cat.example || '',
-      level: 1, x: Math.cos(angle) * 340, y: Math.sin(angle) * 340 };
+      level: 1, x: Math.cos(angle) * 420, y: Math.sin(angle) * 420 };
     nodes.push(catNode); nodeMap[cat.id] = catNode;
     edges.push({ from: 'root', to: cat.id, label: cat.relation || '' });
     (cat.children || []).forEach((child, chi) => {
       const cc = (cat.children || []).length;
-      const spread = Math.min(Math.PI * 0.65, cc * 0.35);
+      const spread = Math.min(Math.PI * 0.65, cc * 0.38);
       const ca = angle - spread / 2 + (spread / Math.max(cc - 1, 1)) * chi;
       const childNode = { id: child.id, label: child.label, description: child.description || '',
         importance: child.importance || '', keyFacts: child.keyFacts || [], example: child.example || '',
-        level: 2, x: Math.cos(ca) * 640, y: Math.sin(ca) * 640 };
+        level: 2, x: Math.cos(ca) * 780, y: Math.sin(ca) * 780 };
       nodes.push(childNode); nodeMap[child.id] = childNode;
       edges.push({ from: cat.id, to: child.id, label: child.relation || '' });
       (child.children || []).forEach((detail, di) => {
         const dc = (child.children || []).length;
-        const ds = Math.min(Math.PI * 0.35, dc * 0.25);
+        const ds = Math.min(Math.PI * 0.35, dc * 0.28);
         const da = ca - ds / 2 + (ds / Math.max(dc - 1, 1)) * di;
         const detailNode = { id: detail.id, label: detail.label, description: detail.description || '',
           importance: detail.importance || '', keyFacts: detail.keyFacts || [], example: detail.example || '',
-          level: 3, x: Math.cos(da) * 920, y: Math.sin(da) * 920 };
+          level: 3, x: Math.cos(da) * 1100, y: Math.sin(da) * 1100 };
         nodes.push(detailNode); nodeMap[detail.id] = detailNode;
         edges.push({ from: child.id, to: detail.id, label: detail.relation || '' });
       });
@@ -55,7 +55,7 @@ function computeRadial(data) {
 // ─── Dikey ağaç ────────────────────────────────────────────────────────────────
 function computeTree(data) {
   const nodes = [], edges = [], nodeMap = {};
-  const LEAF_W = 260, LEVEL_H = 140;
+  const LEAF_W = 320, LEVEL_H = 160;
   function flatten(node, level, parentId) {
     const n = { id: node.id || 'root', label: node.label || node.root || '',
       description: node.description || node.rootDescription || '',
@@ -92,7 +92,7 @@ function computeTree(data) {
 // ─── Yatay ağaç ────────────────────────────────────────────────────────────────
 function computeHorizontal(data) {
   const nodes = [], edges = [], nodeMap = {};
-  const LEAF_H = 110, LEVEL_W = 270;
+  const LEAF_H = 140, LEVEL_W = 320;
   function flatten(node, level, parentId) {
     const n = { id: node.id || 'root', label: node.label || node.root || '',
       description: node.description || node.rootDescription || '',
@@ -183,10 +183,10 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const cw = w || 900, ch = h || 580;
-    const pad = 140;
-    const sx = (cw - pad * 2) / Math.max(maxX - minX, 1);
-    const sy = (ch - pad * 2) / Math.max(maxY - minY, 1);
-    const scale = Math.min(0.85, Math.max(0.18, Math.min(sx, sy)));
+    const pad = 100;
+    const sx = (cw - pad * 2) / Math.max(maxX - minX + 200, 1);
+    const sy = (ch - pad * 2) / Math.max(maxY - minY + 100, 1);
+    const scale = Math.min(0.75, Math.max(0.12, Math.min(sx, sy)));
     return {
       x: -((minX + maxX) / 2) * scale,
       y: -((minY + maxY) / 2) * scale,
@@ -427,7 +427,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr', layoutMo
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center">⊡</button>
           {/* Reset */}
           <button onMouseDown={e => e.stopPropagation()}
-            onClick={() => setTransformSync({ x: 0, y: 0, scale: 1 })}
+            onClick={() => setTransformSync(computeFit(layoutNodesRef.current, svgSize.w, svgSize.h))}
             title={lang === 'en' ? 'Reset view' : 'Görünümü sıfırla'}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition">⊙</button>
           {/* SVG download */}
