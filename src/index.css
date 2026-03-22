@@ -254,6 +254,16 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* Masaüstünde sidebar tam yüksekliği kaplasın */
+@media (min-width: 768px) {
+  aside {
+    height: 100dvh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+  }
+}
+
 /* iOS Safari'de dokunma gecikmesini kaldır */
 * {
   -webkit-tap-highlight-color: transparent;
