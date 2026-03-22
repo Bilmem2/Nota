@@ -910,6 +910,18 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
           alertMsg = appLang === 'en'
             ? 'The selected model could not produce a valid JSON response. Try a different model (recommended: Gemini 2.0 Flash or Kimi K2).'
             : 'Seçili model geçerli bir JSON yanıtı üretemedi. Farklı bir model deneyin (önerilen: Gemini 2.0 Flash veya Kimi K2).';
+        } else if (msg === 'RATE_LIMITED') {
+          alertMsg = appLang === 'en'
+            ? 'Rate limit reached. Please wait a few seconds and try again.'
+            : 'İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.';
+        } else if (msg === 'NETWORK_ERROR') {
+          alertMsg = appLang === 'en'
+            ? 'Connection error. Please check your internet connection and try again.'
+            : 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+        } else if (msg.includes('400')) {
+          alertMsg = appLang === 'en'
+            ? 'The selected model returned a 400 error. Try a different model.'
+            : 'Seçili model 400 hatası döndürdü. Farklı bir model deneyin.';
         } else if (msg.includes('OpenRouter') || msg.includes('401') || msg.includes('403')) {
           alertMsg = appLang === 'en'
             ? `OpenRouter error: ${msg}. Please check your API key.`
@@ -1244,6 +1256,10 @@ ${savedMaterial.slice(0, 10000)}`;
         systemMsg,
         apiKey, null, true, provider, openRouterModel
       );
+      // callGemini hata durumunda Türkçe string döndürebilir — önce kontrol et
+      if (!result || !result.trim().startsWith('{')) {
+        throw new Error(result || 'Boş yanıt');
+      }
       const cleaned = result.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleaned);
       if (parsed.root && parsed.nodes) {
@@ -1253,7 +1269,18 @@ ${savedMaterial.slice(0, 10000)}`;
       }
     } catch (e) {
       console.error('Mind map parse error', e);
-      alert(appLang === 'tr' ? 'Kavram haritası oluşturulurken hata oluştu. Lütfen tekrar deneyin.' : 'Error generating concept map. Please try again.');
+      const msg = e.message || '';
+      let alertMsg;
+      if (msg === 'RATE_LIMITED') {
+        alertMsg = appLang === 'tr' ? 'İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.' : 'Rate limit reached. Please wait and try again.';
+      } else if (msg === 'NETWORK_ERROR') {
+        alertMsg = appLang === 'tr' ? 'Bağlantı hatası. İnternet bağlantınızı kontrol edin.' : 'Connection error. Please check your internet.';
+      } else if (msg.includes('400')) {
+        alertMsg = appLang === 'tr' ? 'Seçili model 400 hatası döndürdü. Farklı bir model deneyin.' : 'Model returned 400 error. Try a different model.';
+      } else {
+        alertMsg = appLang === 'tr' ? 'Kavram haritası oluşturulurken hata oluştu. Lütfen tekrar deneyin.' : 'Error generating concept map. Please try again.';
+      }
+      alert(alertMsg);
     }
     setLoading(prev => ({ ...prev, mindmap: false }));
   };

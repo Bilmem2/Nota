@@ -171,7 +171,7 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
-    max_tokens: 8192,
+    max_tokens: 4096,
     top_p: 0.9,
   };
 
@@ -426,16 +426,20 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
       }
 
       if (result.rateLimited) {
-        return 'İstek limitine ulaşıldı. Lütfen birkaç saniye bekleyip tekrar deneyin.';
+        throw new Error('RATE_LIMITED');
       }
       return result.text;
     } catch (error) {
       if (i === 4) {
-        return 'Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip daha sonra tekrar deneyin.';
+        throw new Error('NETWORK_ERROR');
       }
-      // Kalıcı hatalar (auth, model bulunamadı) — retry yapma, direkt fırlat
+      // Kalıcı hatalar — retry yapma, direkt fırlat
       const msg = error.message || '';
-      if (msg.includes('401') || msg.includes('403') || msg.includes('404') || msg.includes('geçersiz') || msg.includes('bulunamadı')) {
+      if (
+        msg.includes('401') || msg.includes('403') || msg.includes('404') ||
+        msg.includes('400') || msg.includes('geçersiz') || msg.includes('bulunamadı') ||
+        msg.includes('RATE_LIMITED')
+      ) {
         throw error;
       }
       await new Promise(res => setTimeout(res, delays[i]));
