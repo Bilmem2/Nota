@@ -175,6 +175,10 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
     top_p: 0.9,
   };
 
+  if (isJson) {
+    payload.response_format = { type: 'json_object' };
+  }
+
   const response = await fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
@@ -189,7 +193,11 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
   if (response.status === 429) return { rateLimited: true };
   if (response.status === 401 || response.status === 403) throw new Error('OpenRouter API anahtarı geçersiz veya yetkisiz (401/403).');
   if (response.status === 404) throw new Error('OpenRouter model bulunamadı (404). Lütfen farklı bir model seçin.');
-  if (!response.ok) throw new Error(`OpenRouter HTTP error: ${response.status}`);
+  if (!response.ok) {
+    let errBody = '';
+    try { errBody = await response.text(); } catch {}
+    throw new Error(`OpenRouter HTTP ${response.status}: ${errBody}`);
+  }
 
   let data;
   try { data = await response.json(); } catch { throw new Error('OpenRouter geçersiz yanıt döndürdü.'); }
