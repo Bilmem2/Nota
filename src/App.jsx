@@ -37,7 +37,7 @@ import {
   Key,
 } from 'lucide-react';
 
-import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS, POLLINATIONS_MODELS, LLM7_MODELS } from './utils/gemini';
+import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS, LLM7_MODELS, MIMO_MODELS, TOGETHER_MODELS } from './utils/gemini';
 import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
@@ -309,6 +309,7 @@ const T = {
 export default function App() {
   // API Key state - loaded from localStorage
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [onboardingDone, setOnboardingDone] = useState(() => localStorage.getItem('onboarding_done') === 'true');
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
   const [openRouterModel, setOpenRouterModel] = useState(() => {
     const saved = localStorage.getItem('openrouter_model');
@@ -1482,13 +1483,14 @@ ${savedMaterial.slice(0, 10000)}`;
     );
   };
 
-  // --- ONBOARDING: API anahtarı yoksa onboarding ekranını göster ---
-  if (!apiKey) {
+  // --- ONBOARDING: İlk ziyarette (hiç anahtar kaydedilmemişse) göster ---
+  if (!apiKey && !onboardingDone) {
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
           localStorage.setItem('gemini_api_key', key);
           localStorage.setItem('ai_provider', prov);
+          localStorage.setItem('onboarding_done', 'true');
           // Per-provider keys'e de kaydet
           const existing = (() => { try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; } })();
           const updated = { ...existing, [prov]: key };
@@ -1496,6 +1498,12 @@ ${savedMaterial.slice(0, 10000)}`;
           setProviderKeys(updated);
           setApiKey(key);
           setProvider(prov);
+          setOnboardingDone(true);
+        }}
+        onSkip={() => {
+          localStorage.setItem('onboarding_done', 'true');
+          setOnboardingDone(true);
+          // apiKey boş kalır — AI özellikleri çalışmaz ama uygulama açılır
         }}
       />
     );
@@ -1511,8 +1519,9 @@ ${savedMaterial.slice(0, 10000)}`;
       anthropic: ANTHROPIC_MODELS, xai: XAI_MODELS, perplexity: PERPLEXITY_MODELS,
       zai: ZAI_MODELS, kimi: KIMI_MODELS, qwen: QWEN_MODELS, deepseek: DEEPSEEK_MODELS,
       piapi: PIAPI_MODELS,
-      pollinations: POLLINATIONS_MODELS,
       llm7: LLM7_MODELS,
+      mimo: MIMO_MODELS,
+      together: TOGETHER_MODELS,
     };
     const [localModel, setLocalModel] = React.useState(
       () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
@@ -1524,8 +1533,7 @@ ${savedMaterial.slice(0, 10000)}`;
       groq:        { label: 'Groq',          placeholder: 'gsk_...',   hint: 'Ücretsiz · Llama 3.3 70B · Hızlı',    category: 'free' },
       openrouter:  { label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler',     category: 'free' },
       zai:         { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4-Plus / GLM-4.5-Flash ücretsiz', category: 'free' },
-      pollinations:{ label: 'Pollinations',  placeholder: '(gerekmez)', hint: 'API anahtarı yok · GPT/Claude/Gemini', category: 'free' },
-      llm7:        { label: 'llm7.io',       placeholder: '(gerekmez)', hint: 'API anahtarı yok · GPT/Grok/Mistral', category: 'free' },
+      llm7:        { label: 'llm7.io',       placeholder: 'llm7-...', hint: 'Ücretsiz token · 100 req/h · token.llm7.io', category: 'free' },
       openai:      { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...',               category: 'paid' },
       anthropic:   { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet',              category: 'paid' },
       xai:         { label: 'xAI (Grok)',    placeholder: 'xai-...',   hint: 'Grok 4, Grok 4.20 Reasoning',       category: 'paid' },
@@ -1533,6 +1541,8 @@ ${savedMaterial.slice(0, 10000)}`;
       kimi:        { label: 'Kimi AI',       placeholder: 'sk-...',    hint: 'Kimi K2.5, K2 Thinking',            category: 'paid' },
       qwen:        { label: 'Qwen',          placeholder: 'sk-...',    hint: 'Qwen Max, Plus, Turbo',              category: 'paid' },
       deepseek:    { label: 'DeepSeek',      placeholder: 'sk-...',    hint: 'V3.2 · R1 Thinking · Ekonomik',     category: 'paid' },
+      mimo:        { label: 'Xiaomi MiMo',   placeholder: 'mimo-...',  hint: 'V2 Flash 262K · V2 Pro 1M ctx',     category: 'paid' },
+      together:    { label: 'Together AI',   placeholder: 'tog-...',   hint: 'Llama/Qwen/DeepSeek · 200+ model',  category: 'paid' },
       piapi:       { label: 'PiAPI',         placeholder: 'piapi-...', hint: 'GPT/Claude/Gemini %25-75 indirimli', category: 'discount' },
     };
 
@@ -1567,7 +1577,7 @@ ${savedMaterial.slice(0, 10000)}`;
     })();
     const hasMismatch = detectedProvider && detectedProvider !== settingsProvider;
 
-    const noKeyRequired = ['pollinations', 'llm7'].includes(settingsProvider);
+    const noKeyRequired = false;
     const hasNewKey = inputKey.trim().length > 0;
     const canSwitch = !hasNewKey && (savedKeyForProvider || noKeyRequired) && settingsProvider !== provider;
     const modelChanged = currentModelList && localModel !== openRouterModel && settingsProvider === provider;
@@ -1576,13 +1586,13 @@ ${savedMaterial.slice(0, 10000)}`;
     const handleSave = () => {
       const newKey = inputKey.trim();
       if (noKeyRequired && !newKey) {
-        // API key gerektirmeyen provider'lar — boş string ile kaydet
+        // API key gerektirmeyen provider'lar — 'no-key' sentinel ile kaydet
         const updated = { ...providerKeys, [settingsProvider]: 'no-key' };
         localStorage.setItem('provider_keys', JSON.stringify(updated));
-        localStorage.setItem('gemini_api_key', '');
+        localStorage.setItem('gemini_api_key', 'no-key');
         localStorage.setItem('ai_provider', settingsProvider);
         if (currentModelList) { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
-        setProviderKeys(updated); setApiKey(''); setProvider(settingsProvider);
+        setProviderKeys(updated); setApiKey('no-key'); setProvider(settingsProvider);
         setShowSettings(false);
       } else if (newKey) {
         const updated = { ...providerKeys, [settingsProvider]: newKey };
@@ -1704,25 +1714,38 @@ ${savedMaterial.slice(0, 10000)}`;
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">{providerInfo[settingsProvider].label} API Anahtarı</p>
-                  {savedKeyForProvider && !keyWasReset && (
-                    <div className="flex items-center gap-2 mb-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">
+                    {noKeyRequired ? (appLang === 'tr' ? 'API Anahtarı' : 'API Key') : `${providerInfo[settingsProvider].label} API Anahtarı`}
+                  </p>
+                  {noKeyRequired ? (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                       <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-                      <span className="font-mono text-xs text-slate-600 dark:text-slate-300 tracking-wider flex-1">{maskedKey}</span>
-                      {settingsProvider === provider && <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-full font-semibold">Aktif</span>}
+                      <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                        {appLang === 'tr' ? 'Bu sağlayıcı için API anahtarı gerekmez.' : 'No API key required for this provider.'}
+                      </span>
                     </div>
-                  )}
-                  <input
-                    type="text"
-                    value={inputKey}
-                    onChange={(e) => setInputKey(e.target.value)}
-                    placeholder={savedKeyForProvider && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `${providerInfo[settingsProvider].placeholder}`}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  />
-                  {hasMismatch && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1">
-                      <AlertCircle size={12} /> Bu anahtar <strong>{providerInfo[detectedProvider]?.label}</strong> sağlayıcısına ait görünüyor.
-                    </p>
+                  ) : (
+                    <>
+                      {savedKeyForProvider && !keyWasReset && (
+                        <div className="flex items-center gap-2 mb-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                          <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                          <span className="font-mono text-xs text-slate-600 dark:text-slate-300 tracking-wider flex-1">{maskedKey}</span>
+                          {settingsProvider === provider && <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-full font-semibold">Aktif</span>}
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        value={inputKey}
+                        onChange={(e) => setInputKey(e.target.value)}
+                        placeholder={savedKeyForProvider && !keyWasReset ? 'Değiştirmek için yeni anahtar girin...' : `${providerInfo[settingsProvider].placeholder}`}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      />
+                      {hasMismatch && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+                          <AlertCircle size={12} /> Bu anahtar <strong>{providerInfo[detectedProvider]?.label}</strong> sağlayıcısına ait görünüyor.
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -1763,14 +1786,19 @@ ${savedMaterial.slice(0, 10000)}`;
                         }
                       </p>
                     )}
-                    {settingsProvider === 'pollinations' && (
-                      <p className="text-xs text-slate-400 mt-1.5">
-                        ⭐ API anahtarı gerekmez — input alanını boş bırakın. GPT-4o, Claude, Gemini, DeepSeek modelleri ücretsiz. <a href="https://pollinations.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">pollinations.ai</a>
-                      </p>
-                    )}
                     {settingsProvider === 'llm7' && (
                       <p className="text-xs text-slate-400 mt-1.5">
                         ⭐ API anahtarı gerekmez — input alanını boş bırakın. 150 istek/dakika limit. GPT, Grok, Mistral, Llama modelleri ücretsiz. <a href="https://llm7.io" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">llm7.io</a>
+                      </p>
+                    )}
+                    {settingsProvider === 'mimo' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        💳 Xiaomi MiMo — Anthropic API uyumlu endpoint. V2 Flash (262K ctx) ve V2 Pro (1M ctx, 1T param). <a href="https://platform.xiaomimimo.com" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">platform.xiaomimimo.com</a>
+                      </p>
+                    )}
+                    {settingsProvider === 'together' && (
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        💳 NVIDIA & Salesforce destekli, $3.3B değerleme. Llama, Qwen, DeepSeek, Kimi dahil 200+ model. <a href="https://api.together.ai" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">api.together.ai</a>
                       </p>
                     )}
                   </div>
@@ -1931,8 +1959,26 @@ ${savedMaterial.slice(0, 10000)}`;
     <div className={`flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans text-slate-800 overflow-x-hidden ${isFullscreen ? 'fixed inset-0 z-[9999] overflow-hidden' : 'h-[100dvh] overflow-hidden'}`}>
       {showSettings && <SettingsModal />}
 
+      {/* API anahtarı yokken uyarı banner'ı */}
+      {(!apiKey || apiKey === '') && onboardingDone && (
+        <div className="fixed top-0 left-0 right-0 z-[9998] bg-amber-500 text-amber-950 text-xs font-semibold text-center py-2 px-4 flex items-center justify-center gap-2 shadow-md">
+          <span>⚠️</span>
+          <span>
+            {appLang === 'tr'
+              ? 'AI özellikleri devre dışı — Ayarlar\'dan bir API anahtarı ekleyin.'
+              : 'AI features disabled — Add an API key from Settings.'}
+          </span>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="ml-2 underline underline-offset-2 hover:text-amber-900 transition"
+          >
+            {appLang === 'tr' ? 'Ayarlar →' : 'Settings →'}
+          </button>
+        </div>
+      )}
+
       {/* Mobil Header */}
-      <div className="md:hidden flex items-center justify-between bg-indigo-800 text-white px-4 py-3 shadow-md shrink-0" style={{ zIndex: 30 }}>
+      <div className={`md:hidden flex items-center justify-between bg-indigo-800 text-white px-4 py-3 shadow-md shrink-0 ${!apiKey ? 'mt-8' : ''}`} style={{ zIndex: 30 }}>
         <div className="flex items-center gap-2 font-bold text-xl">
           <img src="/Nota/favicon.png" alt="logo" className="w-8 h-8 rounded-lg" />
           <span>{t.appName}</span>
@@ -2031,7 +2077,7 @@ ${savedMaterial.slice(0, 10000)}`;
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-slate-50/50 dark:bg-slate-900">
+      <main className={`flex-1 min-w-0 overflow-y-auto bg-slate-50/50 dark:bg-slate-900 ${!apiKey ? 'pt-8' : ''}`}>
         <div className={`${activeTab === 'mindmap' ? 'max-w-none' : 'max-w-5xl'} mx-auto p-4 md:p-8 pb-16 md:pb-10`}>
 
           {/* TAB 0: ÇALIŞMA ARŞİVİ */}

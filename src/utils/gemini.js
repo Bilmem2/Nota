@@ -9,7 +9,8 @@ const ZAI_URL = 'https://api.z.ai/api/paas/v4/chat/completions';
 const KIMI_URL = 'https://api.moonshot.cn/v1/chat/completions';
 const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
-const PIAPI_URL = 'https://api.piapi.ai/v1/chat/completions';
+const TOGETHER_URL = 'https://api.together.xyz/v1/chat/completions';
+const MIMO_URL = 'https://api.xiaomimimo.com/anthropic/v1/messages';
 
 export const GEMINI_MODELS = [
   { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
@@ -158,33 +159,35 @@ export const PIAPI_MODELS = [
   { id: 'gemini-2.5-flash-nothinking',  label: 'Gemini 2.5 Flash 💳 (İndirimli, %25 Gemini)',  maxTokens: 65535 },
 ];
 
-export const POLLINATIONS_MODELS = [
-  // Tamamen ücretsiz, API anahtarı gerekmez (boş string gönderin)
-  { id: 'openai-large',    label: 'OpenAI Large ⭐ (Ücretsiz, GPT-4o)',          maxTokens: 16384 },
-  { id: 'openai',          label: 'OpenAI ⭐ (Ücretsiz, GPT-4o-mini)',           maxTokens: 16384 },
-  { id: 'openai-fast',     label: 'OpenAI Fast ⭐ (Ücretsiz, Hızlı)',            maxTokens: 8192  },
-  { id: 'gemini-3-flash',  label: 'Gemini 3 Flash ⭐ (Ücretsiz)',               maxTokens: 16384 },
-  { id: 'deepseek-v3',     label: 'DeepSeek V3 ⭐ (Ücretsiz)',                  maxTokens: 8192  },
-  { id: 'claude-haiku-4.5',label: 'Claude Haiku 4.5 ⭐ (Ücretsiz)',             maxTokens: 8192  },
-  { id: 'claude-sonnet-4.5',label: 'Claude Sonnet 4.5 ⭐ (Ücretsiz)',           maxTokens: 8192  },
-  { id: 'kimi-k2-thinking', label: 'Kimi K2 Thinking ⭐ (Ücretsiz, Reasoning)', maxTokens: 8192  },
-  { id: 'mistral',          label: 'Mistral ⭐ (Ücretsiz)',                      maxTokens: 8192  },
-  { id: 'qwen-coder',       label: 'Qwen Coder ⭐ (Ücretsiz)',                   maxTokens: 8192  },
+export const MIMO_MODELS = [
+  // Xiaomi MiMo — Anthropic Messages API uyumlu endpoint
+  { id: 'mimo-v2-flash', label: 'MiMo V2 Flash 💳 (309B MoE, 262K ctx, Hızlı)', maxTokens: 8192  },
+  { id: 'mimo-v2-pro',   label: 'MiMo V2 Pro 💳 (1T param, 1M ctx, Agentic)',   maxTokens: 16384 },
 ];
-// Pollinations: API anahtarı gerekmez, rate limit yok (pollen sistemi)
+// MiMo: platform.xiaomimimo.com — Anthropic-uyumlu API, OpenAI-uyumlu değil
+
+export const TOGETHER_MODELS = [
+  // OpenAI-uyumlu API, kullandıkça öde
+  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',  label: 'Llama 4 Maverick 17B 💳 (524K ctx)',    maxTokens: 16384 },
+  { id: 'meta-llama/Llama-4-Scout-17B-16E-Instruct',           label: 'Llama 4 Scout 17B 💳 (327K ctx)',      maxTokens: 16384 },
+  { id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',             label: 'Llama 3.3 70B Turbo 💳 (Hızlı)',      maxTokens: 8192  },
+  { id: 'Qwen/Qwen3-235B-A22B-Instruct-2507-tput',             label: 'Qwen3 235B 💳 (En Güçlü)',            maxTokens: 16384 },
+  { id: 'Qwen/Qwen3-Next-80B-A3B-Instruct',                    label: 'Qwen3 Next 80B 💳 (Dengeli)',         maxTokens: 8192  },
+  { id: 'deepseek-ai/DeepSeek-R1-0528',                        label: 'DeepSeek R1 💳 (Thinking, 163K ctx)', maxTokens: 16384 },
+  { id: 'deepseek-ai/DeepSeek-V3.1',                           label: 'DeepSeek V3.1 💳 (Ekonomik)',         maxTokens: 8192  },
+  { id: 'moonshotai/Kimi-K2.5',                                label: 'Kimi K2.5 💳 (Coding)',               maxTokens: 16384 },
+  { id: 'mistralai/Mistral-Small-24B-Instruct-2501',           label: 'Mistral Small 24B 💳 (Ekonomik)',     maxTokens: 8192  },
+];
+// Together AI: $3.3B değerleme, NVIDIA/Salesforce destekli, 200+ açık kaynak model
 
 export const LLM7_MODELS = [
-  // Tamamen ücretsiz, API anahtarı gerekmez (boş string gönderin)
-  { id: 'gpt-4.1-nano-2025-04-14',      label: 'GPT-4.1 Nano ⭐ (Ücretsiz)',          maxTokens: 8192 },
-  { id: 'gpt-4o-mini-2024-07-18',       label: 'GPT-4o Mini ⭐ (Ücretsiz)',           maxTokens: 8192 },
-  { id: 'gpt-o3-2025-04-16',            label: 'o3 ⭐ (Ücretsiz, Reasoning)',         maxTokens: 8192 },
-  { id: 'grok-3-mini-high',             label: 'Grok 3 Mini High ⭐ (Ücretsiz)',      maxTokens: 8192 },
-  { id: 'deepseek-r1-0528',             label: 'DeepSeek R1 ⭐ (Ücretsiz, Thinking)', maxTokens: 8192 },
-  { id: 'mistral-small-3.1-24b',        label: 'Mistral Small 3.1 ⭐ (Ücretsiz)',     maxTokens: 8192 },
-  { id: 'llama-4-scout-17b-16e-instruct',label: 'Llama 4 Scout ⭐ (Ücretsiz)',        maxTokens: 8192 },
-  { id: 'qwen2.5-coder-32b-instruct',   label: 'Qwen2.5 Coder 32B ⭐ (Ücretsiz)',    maxTokens: 8192 },
+  // Ücretsiz token gerekir — token.llm7.io'dan ücretsiz alınır
+  // llm7 kendi routing'ini yapıyor: default/fast/pro selector'ları
+  { id: 'default',  label: 'Default ⭐ (Dengeli, Önerilen)',       maxTokens: 8192 },
+  { id: 'fast',     label: 'Fast ⭐ (En Hızlı, Düşük Gecikme)',    maxTokens: 8192 },
+  { id: 'pro',      label: 'Pro ⭐ (En Güçlü, Yavaş)',             maxTokens: 8192 },
 ];
-// llm7: API anahtarı gerekmez, 150 req/min limit
+// llm7: token.llm7.io'dan ücretsiz token al · 100 req/h, 20 req/min, 2 req/s
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
   const geminiModel = model || 'gemini-2.0-flash';
@@ -535,29 +538,57 @@ async function callPiAPIAPI(prompt, systemInstruction, apiKey, model) {
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
 }
 
-async function callPollinationsAPI(prompt, systemInstruction, apiKey, model) {
-  const modelConfig = POLLINATIONS_MODELS.find(m => m.id === model);
+async function callMiMoAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = MIMO_MODELS.find(m => m.id === model);
+  const maxTokens = modelConfig?.maxTokens ?? 8192;
+
+  // MiMo, Anthropic Messages API formatını kullanır
+  const payload = {
+    model: model || 'mimo-v2-flash',
+    max_tokens: maxTokens,
+    system: systemInstruction,
+    messages: [{ role: 'user', content: prompt }],
+  };
+
+  const response = await fetch(MIMO_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 429) return { rateLimited: true };
+  if (!response.ok) throw new Error(`MiMo HTTP error: ${response.status}`);
+
+  const data = await response.json();
+  return { text: data.content?.[0]?.text || 'Bir yanıt oluşturulamadı.' };
+}
+
+async function callTogetherAPI(prompt, systemInstruction, apiKey, model) {
+  const modelConfig = TOGETHER_MODELS.find(m => m.id === model);
   const maxTokens = modelConfig?.maxTokens ?? 8192;
 
   const payload = {
-    model: model || 'openai-large',
+    model: model || TOGETHER_MODELS[0].id,
     messages: [
       { role: 'system', content: systemInstruction },
       { role: 'user', content: prompt },
     ],
     temperature: 0.4,
     max_tokens: maxTokens,
-    private: true, // prompt'ları public feed'e gönderme
   };
 
-  const response = await fetch('https://text.pollinations.ai/openai', {
+  const response = await fetch(TOGETHER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify(payload),
   });
 
   if (response.status === 429) return { rateLimited: true };
-  if (!response.ok) throw new Error(`Pollinations HTTP error: ${response.status}`);
+  if (!response.ok) throw new Error(`Together AI HTTP error: ${response.status}`);
 
   const data = await response.json();
   return { text: data.choices?.[0]?.message?.content || 'Bir yanıt oluşturulamadı.' };
@@ -568,7 +599,7 @@ async function callLLM7API(prompt, systemInstruction, apiKey, model) {
   const maxTokens = modelConfig?.maxTokens ?? 8192;
 
   const payload = {
-    model: model || 'gpt-4.1-nano-2025-04-14',
+    model: model || 'default',
     messages: [
       { role: 'system', content: systemInstruction },
       { role: 'user', content: prompt },
@@ -577,9 +608,12 @@ async function callLLM7API(prompt, systemInstruction, apiKey, model) {
     max_tokens: maxTokens,
   };
 
-  const response = await fetch('https://llm7.io/v1/chat/completions', {
+  // apiKey: token.llm7.io'dan alınan ücretsiz token
+  // Token yoksa 'unused' gönder — IP bazlı çok kısıtlı çalışır
+  const token = (apiKey && apiKey !== 'no-key') ? apiKey : 'unused';
+  const response = await fetch('https://api.llm7.io/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer no-key' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
@@ -592,7 +626,7 @@ async function callLLM7API(prompt, systemInstruction, apiKey, model) {
 
 /**
  * Unified AI API caller.
- * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek' | 'piapi' | 'pollinations' | 'llm7'
+ * @param {string} provider - 'gemini' | 'groq' | 'openrouter' | 'openai' | 'anthropic' | 'xai' | 'perplexity' | 'zai' | 'kimi' | 'qwen' | 'deepseek' | 'piapi' | 'llm7' | 'mimo'
  */
 export async function callGemini(prompt, systemInstruction, apiKey, inlineData = null, isJson = false, provider = 'gemini', selectedModel = null) {
   // Kullanıcının seçtiği provider her zaman öncelikli — prefix override yok.
@@ -637,11 +671,14 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
         case 'piapi':
           result = await callPiAPIAPI(prompt, systemInstruction, apiKey, selectedModel);
           break;
-        case 'pollinations':
-          result = await callPollinationsAPI(prompt, systemInstruction, apiKey, selectedModel);
-          break;
         case 'llm7':
           result = await callLLM7API(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'mimo':
+          result = await callMiMoAPI(prompt, systemInstruction, apiKey, selectedModel);
+          break;
+        case 'together':
+          result = await callTogetherAPI(prompt, systemInstruction, apiKey, selectedModel);
           break;
         default:
           result = await callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, selectedModel);
