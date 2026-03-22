@@ -98,21 +98,20 @@ export const PERPLEXITY_MODELS = [
 
 export const ZAI_MODELS = [
   // Ücretli
-  { id: 'glm-5',           label: 'GLM-5 💳 (Ücretli, En Güçlü, c:2)',          maxTokens: 8192  },
-  { id: 'glm-5-turbo',     label: 'GLM-5-Turbo 💳 (Ücretli, Agentic, c:1)',     maxTokens: 8192  },
-  { id: 'glm-4.7',         label: 'GLM-4.7 💳 (Ücretli, c:2)',                  maxTokens: 8192  },
-  { id: 'glm-4.7-flash',   label: 'GLM-4.7-Flash 💳 (Ücretli, Hızlı, c:1)',    maxTokens: 8192  },
-  { id: 'glm-4.6',         label: 'GLM-4.6 💳 (Ücretli, c:3)',                  maxTokens: 8192  },
-  { id: 'glm-4.5',         label: 'GLM-4.5 💳 (Ücretli, MoE, c:10)',            maxTokens: 8192  },
-  { id: 'glm-4.5-air',     label: 'GLM-4.5-Air 💳 (Ücretli, Hafif, c:5)',      maxTokens: 8192  },
-  { id: 'glm-4.5-airx',    label: 'GLM-4.5-AirX 💳 (Ücretli, Hızlı, c:5)',    maxTokens: 8192  },
-  { id: 'glm-4.5-flash',   label: 'GLM-4.5-Flash 💳 (Ücretli, Flash, c:2)',    maxTokens: 8192  },
+  { id: 'glm-5',           label: 'GLM-5 💳 (Ücretli, En Güçlü)',       maxTokens: 8192  },
+  { id: 'glm-5-turbo',     label: 'GLM-5-Turbo 💳 (Ücretli, Agentic)',  maxTokens: 8192  },
+  { id: 'glm-4.7',         label: 'GLM-4.7 💳 (Ücretli)',               maxTokens: 8192  },
+  { id: 'glm-4.7-flash',   label: 'GLM-4.7-Flash 💳 (Ücretli, Hızlı)', maxTokens: 8192  },
+  { id: 'glm-4.6',         label: 'GLM-4.6 💳 (Ücretli)',               maxTokens: 8192  },
+  { id: 'glm-4.5',         label: 'GLM-4.5 💳 (Ücretli, MoE)',          maxTokens: 8192  },
+  { id: 'glm-4.5-air',     label: 'GLM-4.5-Air 💳 (Ücretli, Hafif)',   maxTokens: 8192  },
+  { id: 'glm-4.5-airx',    label: 'GLM-4.5-AirX 💳 (Ücretli, Hızlı)', maxTokens: 8192  },
+  { id: 'glm-4.5-flash',   label: 'GLM-4.5-Flash 💳 (Ücretli, Flash)', maxTokens: 8192  },
   // Ücretsiz (rate limit var)
-  { id: 'glm-4-plus',      label: 'GLM-4-Plus ⭐ (Ücretsiz*, c:20)',            maxTokens: 8192  },
-  { id: 'glm-4-32b',       label: 'GLM-4-32B ⭐ (Ücretsiz*, 128K, c:15)',       maxTokens: 8192  },
+  { id: 'glm-4-plus',      label: 'GLM-4-Plus ⭐ (Ücretsiz*)',          maxTokens: 8192  },
+  { id: 'glm-4-32b',       label: 'GLM-4-32B ⭐ (Ücretsiz*, 128K ctx)', maxTokens: 8192  },
 ];
-// c: = concurrency limit (eş zamanlı istek sayısı)
-// * Ücretsiz tier: z.ai üzerinde rate limit var (concurrency bazlı)
+// * Ücretsiz tier: z.ai üzerinde concurrency bazlı rate limit var
 
 export const KIMI_MODELS = [
   // Hepsi ücretli
