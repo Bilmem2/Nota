@@ -15,13 +15,14 @@
 ## How to Use
 
 1. [Open the app](https://Bilmem2.github.io/Nota/)
-2. Get an API key from any supported provider:
+2. Get an API key from any supported provider (or skip and enter without one):
 
 | Provider | Free? | Key Link |
 |---|---|---|
-| **Gemini** | ✅ Free | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| **Gemini** | ✅ Free tier | [Google AI Studio](https://aistudio.google.com/app/apikey) |
 | **Groq** | ✅ Free | [Groq Console](https://console.groq.com/keys) |
 | **OpenRouter** | ✅ Free models available | [OpenRouter](https://openrouter.ai/keys) |
+| **llm7.io** | ✅ Free token | [token.llm7.io](https://token.llm7.io) |
 | **OpenAI** | 💳 Paid | [OpenAI Platform](https://platform.openai.com/api-keys) |
 | **Anthropic** | 💳 Paid | [Anthropic Console](https://console.anthropic.com/) |
 | **xAI (Grok)** | 💳 Paid | [xAI Console](https://console.x.ai/) |
@@ -29,11 +30,16 @@
 | **z.ai (GLM)** | 💳 Paid | [Zhipu AI](https://open.bigmodel.cn/) |
 | **Kimi AI** | 💳 Paid | [Moonshot Platform](https://platform.moonshot.cn/) |
 | **Qwen** | 💳 Paid | [Alibaba Cloud](https://dashscope.aliyuncs.com/) |
+| **DeepSeek** | 💳 Paid | [DeepSeek Platform](https://platform.deepseek.com/) |
+| **Together AI** | 💳 Paid | [Together AI](https://api.together.xyz/) |
+| **Xiaomi MiMo** | 💳 Paid | [MiMo Platform](https://platform.xiaomimimo.com/) |
+| **PiAPI** | 💳 Discounted | [PiAPI](https://piapi.ai/) |
 
 3. Select your provider and model in the settings menu, then paste your key
 4. Upload a PDF or text file and start studying
 
 > Your key is stored only in your browser. It is never sent to any server.
+> You can also enter the app without an API key — a key is required for AI features.
 
 ---
 

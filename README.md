@@ -15,13 +15,14 @@
 ## Nasıl Kullanılır?
 
 1. [Uygulamayı aç](https://Bilmem2.github.io/Nota/)
-2. Desteklenen sağlayıcılardan birinden API anahtarı al:
+2. Desteklenen sağlayıcılardan birinden API anahtarı al (veya anahtarsız giriş yap):
 
 | Sağlayıcı | Ücretsiz mi? | Anahtar Linki |
 |---|---|---|
-| **Gemini** | ✅ Ücretsiz | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| **Gemini** | ✅ Ücretsiz tier | [Google AI Studio](https://aistudio.google.com/app/apikey) |
 | **Groq** | ✅ Ücretsiz | [Groq Console](https://console.groq.com/keys) |
 | **OpenRouter** | ✅ Ücretsiz modeller var | [OpenRouter](https://openrouter.ai/keys) |
+| **llm7.io** | ✅ Ücretsiz token | [token.llm7.io](https://token.llm7.io) |
 | **OpenAI** | 💳 Ücretli | [OpenAI Platform](https://platform.openai.com/api-keys) |
 | **Anthropic** | 💳 Ücretli | [Anthropic Console](https://console.anthropic.com/) |
 | **xAI (Grok)** | 💳 Ücretli | [xAI Console](https://console.x.ai/) |
@@ -29,11 +30,16 @@
 | **z.ai (GLM)** | 💳 Ücretli | [Zhipu AI](https://open.bigmodel.cn/) |
 | **Kimi AI** | 💳 Ücretli | [Moonshot Platform](https://platform.moonshot.cn/) |
 | **Qwen** | 💳 Ücretli | [Alibaba Cloud](https://dashscope.aliyuncs.com/) |
+| **DeepSeek** | 💳 Ücretli | [DeepSeek Platform](https://platform.deepseek.com/) |
+| **Together AI** | 💳 Ücretli | [Together AI](https://api.together.xyz/) |
+| **Xiaomi MiMo** | 💳 Ücretli | [MiMo Platform](https://platform.xiaomimimo.com/) |
+| **PiAPI** | 💳 İndirimli | [PiAPI](https://piapi.ai/) |
 
 3. Ayarlar menüsünden sağlayıcını ve modelini seç, anahtarını yapıştır
 4. PDF veya metin dosyanı yükle, çalışmaya başla
 
 > Anahtarın yalnızca tarayıcında saklanır. Hiçbir sunucuya gönderilmez.
+> API anahtarı olmadan da uygulamaya girebilirsin — AI özellikleri için anahtar gerekir.
 
 ---
 
