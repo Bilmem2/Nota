@@ -11,11 +11,12 @@ const QWEN_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/complet
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
 export const GEMINI_MODELS = [
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash ⭐ (Ücretsiz, Hızlı)' },
-  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Ücretsiz, Kararlı)' },
-  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Ücretsiz, Eski)' },
+  { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash ⭐ (Ücretsiz*, Hızlı)' },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Ücretsiz*, Kararlı)' },
+  { id: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro (Ücretsiz*, Eski)' },
 ];
+// * Ücretsiz tier: günlük istek limiti var (2.5 Flash ~20 istek/gün)
 
 export const OPENROUTER_MODELS = [
   // --- Ücretsiz (En İyi) ---
@@ -51,76 +52,82 @@ export const OPENROUTER_MODELS = [
 ];
 
 export const OPENAI_MODELS = [
+  // Hepsi ücretli — API anahtarı gerektirir
   // GPT-5.4 serisi (Mart 2026, en güncel)
-  { id: 'gpt-5.4',        label: 'GPT-5.4 ⭐ (En Güçlü, Agentic)',  maxTokens: 32768  },
-  { id: 'gpt-5.4-mini',   label: 'GPT-5.4 Mini (Hızlı, Ekonomik)',  maxTokens: 32768  },
-  { id: 'gpt-5.4-nano',   label: 'GPT-5.4 Nano (En Ucuz)',          maxTokens: 32768  },
+  { id: 'gpt-5.4',        label: 'GPT-5.4 💳 (Ücretli, En Güçlü)',      maxTokens: 32768  },
+  { id: 'gpt-5.4-mini',   label: 'GPT-5.4 Mini 💳 (Ücretli, Ekonomik)', maxTokens: 32768  },
+  { id: 'gpt-5.4-nano',   label: 'GPT-5.4 Nano 💳 (Ücretli, En Ucuz)',  maxTokens: 32768  },
   // GPT-5 serisi
-  { id: 'gpt-5',          label: 'GPT-5 (Flagship, Mart 2026)',      maxTokens: 32768  },
-  // GPT-4.1 serisi (üretim standardı)
-  { id: 'gpt-4.1',        label: 'GPT-4.1 (Üretim, 1M ctx)',        maxTokens: 32768  },
-  { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini (Dengeli)',          maxTokens: 32768  },
-  { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano (En Ucuz)',          maxTokens: 32768  },
-  // GPT-4o serisi (eski üretim)
-  { id: 'gpt-4o',         label: 'GPT-4o (Eski Üretim)',            maxTokens: 16384  },
-  { id: 'gpt-4o-mini',    label: 'GPT-4o Mini (Eski Ekonomik)',     maxTokens: 16384  },
+  { id: 'gpt-5',          label: 'GPT-5 💳 (Ücretli, Flagship)',         maxTokens: 32768  },
+  // GPT-4.1 serisi
+  { id: 'gpt-4.1',        label: 'GPT-4.1 💳 (Ücretli, 1M ctx)',        maxTokens: 32768  },
+  { id: 'gpt-4.1-mini',   label: 'GPT-4.1 Mini 💳 (Ücretli, Dengeli)',  maxTokens: 32768  },
+  { id: 'gpt-4.1-nano',   label: 'GPT-4.1 Nano 💳 (Ücretli, En Ucuz)', maxTokens: 32768  },
+  // GPT-4o serisi
+  { id: 'gpt-4o',         label: 'GPT-4o 💳 (Ücretli)',                 maxTokens: 16384  },
+  { id: 'gpt-4o-mini',    label: 'GPT-4o Mini 💳 (Ücretli, Ekonomik)',  maxTokens: 16384  },
   // o-serisi reasoning
-  { id: 'o3',             label: 'o3 (Güçlü Reasoning)',            maxTokens: 100000 },
-  { id: 'o4-mini',        label: 'o4-mini (Ekonomik Reasoning)',    maxTokens: 100000 },
+  { id: 'o3',             label: 'o3 💳 (Ücretli, Güçlü Reasoning)',    maxTokens: 100000 },
+  { id: 'o4-mini',        label: 'o4-mini 💳 (Ücretli, Ekonomik)',      maxTokens: 100000 },
 ];
 
 export const ANTHROPIC_MODELS = [
-  { id: 'claude-opus-4-6',              label: 'Claude Opus 4.6 ⭐ (En Güçlü, Agentic)',  maxTokens: 128000 },
-  { id: 'claude-sonnet-4-6',            label: 'Claude Sonnet 4.6 (Dengeli, Üretim)',     maxTokens: 64000  },
-  { id: 'claude-haiku-4-5-20251001',    label: 'Claude Haiku 4.5 (Hızlı, Ekonomik)',     maxTokens: 8192   },
+  // Hepsi ücretli
+  { id: 'claude-opus-4-6',           label: 'Claude Opus 4.6 💳 (Ücretli, En Güçlü)',   maxTokens: 128000 },
+  { id: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 💳 (Ücretli, Dengeli)',  maxTokens: 64000  },
+  { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 💳 (Ücretli, Ekonomik)', maxTokens: 8192   },
 ];
 
 export const XAI_MODELS = [
-  { id: 'grok-4.20',      label: 'Grok 4.20 ⭐ (En Yeni, Agentic)',    maxTokens: 16384 },
-  { id: 'grok-4',         label: 'Grok 4 (Reasoning, 256K ctx)',        maxTokens: 16384 },
-  { id: 'grok-3',         label: 'Grok 3 (Dengeli)',                    maxTokens: 16384 },
-  { id: 'grok-3-mini',    label: 'Grok 3 Mini (Ekonomik Reasoning)',    maxTokens: 16384 },
+  // Hepsi ücretli
+  { id: 'grok-4.20',   label: 'Grok 4.20 💳 (Ücretli, En Yeni)',       maxTokens: 16384 },
+  { id: 'grok-4',      label: 'Grok 4 💳 (Ücretli, 256K ctx)',          maxTokens: 16384 },
+  { id: 'grok-3',      label: 'Grok 3 💳 (Ücretli, Dengeli)',           maxTokens: 16384 },
+  { id: 'grok-3-mini', label: 'Grok 3 Mini 💳 (Ücretli, Ekonomik)',     maxTokens: 16384 },
 ];
 
 export const PERPLEXITY_MODELS = [
-  { id: 'sonar-pro',              label: 'Sonar Pro ⭐ (En Güçlü, Web Aramalı)', maxTokens: 8192 },
-  { id: 'sonar',                  label: 'Sonar (Hızlı, Web Aramalı)',           maxTokens: 8192 },
-  { id: 'sonar-reasoning-pro',    label: 'Sonar Reasoning Pro (CoT + Web)',      maxTokens: 8192 },
-  { id: 'sonar-deep-research',    label: 'Sonar Deep Research (Derin Araştırma)', maxTokens: 8192 },
+  // Hepsi ücretli
+  { id: 'sonar-pro',           label: 'Sonar Pro 💳 (Ücretli, Web Aramalı)',        maxTokens: 8192 },
+  { id: 'sonar',               label: 'Sonar 💳 (Ücretli, Hızlı Web Aramalı)',     maxTokens: 8192 },
+  { id: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro 💳 (Ücretli, CoT+Web)', maxTokens: 8192 },
+  { id: 'sonar-deep-research', label: 'Sonar Deep Research 💳 (Ücretli, Derin)',   maxTokens: 8192 },
 ];
 // Not: sonar-reasoning Aralık 2025'te kaldırıldı → sonar-reasoning-pro kullanın
 
 export const ZAI_MODELS = [
-  { id: 'glm-5',          label: 'GLM-5 ⭐ (En Güçlü, Feb 2026)',  maxTokens: 8192 },
-  { id: 'glm-5-turbo',    label: 'GLM-5-Turbo (Agentic, Mar 2026)', maxTokens: 8192 },
-  { id: 'glm-4.5',        label: 'GLM-4.5 (Dengeli, MoE)',          maxTokens: 8192 },
-  { id: 'glm-4-flash',    label: 'GLM-4 Flash (Hızlı)',             maxTokens: 8192 },
+  { id: 'glm-5',       label: 'GLM-5 💳 (Ücretli, En Güçlü)',        maxTokens: 8192 },
+  { id: 'glm-5-turbo', label: 'GLM-5-Turbo 💳 (Ücretli, Agentic)',   maxTokens: 8192 },
+  { id: 'glm-4.5',     label: 'GLM-4.5 💳 (Ücretli, MoE)',           maxTokens: 8192 },
+  { id: 'glm-4-flash', label: 'GLM-4 Flash ⭐ (Ücretsiz*, Hızlı)',   maxTokens: 8192 },
 ];
+// * GLM-4 Flash: z.ai üzerinde ücretsiz tier mevcut (rate limit var)
 
 export const KIMI_MODELS = [
-  { id: 'kimi-k2.5',              label: 'Kimi K2.5 ⭐ (En Güçlü, Multimodal)',    maxTokens: 16384 },
-  { id: 'kimi-k2-thinking',       label: 'Kimi K2 Thinking (Derin Reasoning)',      maxTokens: 16384 },
-  { id: 'kimi-k2-thinking-turbo', label: 'Kimi K2 Thinking Turbo (Hızlı Reasoning)', maxTokens: 16384 },
-  { id: 'kimi-k2-0905-preview',   label: 'Kimi K2 0905 (Agentic Coding)',           maxTokens: 16384 },
-  { id: 'kimi-k2-turbo-preview',  label: 'Kimi K2 Turbo (Hızlı, 60+ tok/s)',       maxTokens: 16384 },
-  { id: 'moonshot-v1-128k',       label: 'Moonshot v1 128K (Eski)',                 maxTokens: 8192  },
+  // Hepsi ücretli
+  { id: 'kimi-k2.5',              label: 'Kimi K2.5 💳 (Ücretli, En Güçlü)',          maxTokens: 16384 },
+  { id: 'kimi-k2-thinking',       label: 'Kimi K2 Thinking 💳 (Ücretli, Reasoning)',  maxTokens: 16384 },
+  { id: 'kimi-k2-thinking-turbo', label: 'Kimi K2 Thinking Turbo 💳 (Ücretli, Hızlı)', maxTokens: 16384 },
+  { id: 'kimi-k2-0905-preview',   label: 'Kimi K2 0905 💳 (Ücretli, Coding)',         maxTokens: 16384 },
+  { id: 'kimi-k2-turbo-preview',  label: 'Kimi K2 Turbo 💳 (Ücretli, 60+ tok/s)',    maxTokens: 16384 },
+  { id: 'moonshot-v1-128k',       label: 'Moonshot v1 128K 💳 (Ücretli, Eski)',       maxTokens: 8192  },
 ];
 
 export const QWEN_MODELS = [
-  { id: 'qwen3-max',          label: 'Qwen3 Max ⭐ (En Güçlü)',              maxTokens: 16384 },
-  { id: 'qwen3-max-latest',   label: 'Qwen3 Max Latest (Güncel)',            maxTokens: 16384 },
-  { id: 'qwen-max-latest',    label: 'Qwen Max Latest (Kararlı)',            maxTokens: 8192  },
-  { id: 'qwen-plus-latest',   label: 'Qwen Plus Latest (Dengeli, 1M ctx)',  maxTokens: 8192  },
-  { id: 'qwen-turbo',         label: 'Qwen Turbo (Hızlı, Ekonomik)',        maxTokens: 8192  },
-  { id: 'qwen-long',          label: 'Qwen Long (10M ctx)',                 maxTokens: 6144  },
+  // Hepsi ücretli (DashScope'ta ücretsiz tier yok)
+  { id: 'qwen3-max',        label: 'Qwen3 Max 💳 (Ücretli, En Güçlü)',       maxTokens: 16384 },
+  { id: 'qwen3-max-latest', label: 'Qwen3 Max Latest 💳 (Ücretli, Güncel)',  maxTokens: 16384 },
+  { id: 'qwen-max-latest',  label: 'Qwen Max Latest 💳 (Ücretli, Kararlı)', maxTokens: 8192  },
+  { id: 'qwen-plus-latest', label: 'Qwen Plus Latest 💳 (Ücretli, 1M ctx)', maxTokens: 8192  },
+  { id: 'qwen-turbo',       label: 'Qwen Turbo 💳 (Ücretli, Ekonomik)',     maxTokens: 8192  },
+  { id: 'qwen-long',        label: 'Qwen Long 💳 (Ücretli, 10M ctx)',       maxTokens: 6144  },
 ];
-// Not: Qwen'in kendi DashScope API'sinde ücretsiz model yoktur.
-// Ücretsiz Qwen modelleri için OpenRouter'ı kullanın (qwen/qwen3-next-80b-a3b-instruct:free vb.)
+// Not: Ücretsiz Qwen modelleri için OpenRouter'ı kullanın (qwen/qwen3-next-80b-a3b-instruct:free vb.)
 
 export const DEEPSEEK_MODELS = [
-  // DeepSeek-V3.2 (Mart 2026) — OpenAI-compatible endpoint
-  { id: 'deepseek-chat',     label: 'DeepSeek-V3.2 ⭐ (Hızlı, 128K ctx)',       maxTokens: 8192  },
-  { id: 'deepseek-reasoner', label: 'DeepSeek-R2 (Thinking, 64K output)',        maxTokens: 65536 },
+  // Hepsi ücretli (çok düşük fiyatlı ama ücretsiz değil)
+  { id: 'deepseek-chat',     label: 'DeepSeek-V3.2 💳 (Ücretli, 128K ctx)',      maxTokens: 8192  },
+  { id: 'deepseek-reasoner', label: 'DeepSeek-R2 💳 (Ücretli, Thinking 64K)',    maxTokens: 65536 },
 ];
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
