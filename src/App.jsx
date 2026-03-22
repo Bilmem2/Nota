@@ -707,8 +707,16 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
       try {
         const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider, openRouterModel);
         const parsed = parseJSON(result);
+        // parseJSON obje döndürebilir (AI {results:[...]} şeklinde sardıysa) — içindeki array'i bul
+        let evalArray = null;
         if (Array.isArray(parsed)) {
-          parsed.forEach((res) => {
+          evalArray = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          const arr = Object.values(parsed).find(v => Array.isArray(v));
+          if (arr) evalArray = arr;
+        }
+        if (evalArray) {
+          evalArray.forEach((res) => {
             if (res.index !== undefined) {
               newVerdicts[res.index] = { isCorrect: res.isCorrect, feedback: res.feedback };
             }
@@ -721,7 +729,11 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
 
     content.quiz.forEach((q, i) => {
       if (!newVerdicts[i]) {
-        newVerdicts[i] = { isCorrect: isAnswerCorrect(quizState.answers[i], q.dogruCevap), feedback: 'Auto-checked.' };
+        const isCorr = isAnswerCorrect(quizState.answers[i], q.dogruCevap);
+        const fallbackMsg = appLang === 'tr'
+          ? (q.tip === 'essay' || q.tip === 'short_answer' ? 'AI değerlendirmesi alınamadı, otomatik kontrol edildi.' : 'Otomatik kontrol edildi.')
+          : (q.tip === 'essay' || q.tip === 'short_answer' ? 'AI evaluation unavailable, auto-checked.' : 'Auto-checked.');
+        newVerdicts[i] = { isCorrect: isCorr, feedback: fallbackMsg };
       }
     });
 
