@@ -81,10 +81,12 @@ export const ANTHROPIC_MODELS = [
 
 export const XAI_MODELS = [
   // Hepsi ücretli
-  { id: 'grok-4-0709',          label: 'Grok 4 💳 (Ücretli, En Güçlü)',          maxTokens: 16384 },
-  { id: 'grok-4.20-reasoning',  label: 'Grok 4.20 Reasoning 💳 (Ücretli, CoT)', maxTokens: 16384 },
-  { id: 'grok-3',               label: 'Grok 3 💳 (Ücretli, Dengeli)',           maxTokens: 16384 },
-  { id: 'grok-3-mini',          label: 'Grok 3 Mini 💳 (Ücretli, Ekonomik)',     maxTokens: 16384 },
+  { id: 'grok-4-0709',              label: 'Grok 4 💳 (Ücretli, En Güçlü, 256K)',       maxTokens: 16384 },
+  { id: 'grok-4-fast-reasoning',    label: 'Grok 4 Fast Reasoning 💳 (Ücretli, Hızlı)', maxTokens: 16384 },
+  { id: 'grok-4-fast-non-reasoning',label: 'Grok 4 Fast 💳 (Ücretli, Hızlı)',           maxTokens: 16384 },
+  { id: 'grok-4.20-reasoning',      label: 'Grok 4.20 Reasoning 💳 (Ücretli, CoT)',     maxTokens: 16384 },
+  { id: 'grok-3',                   label: 'Grok 3 💳 (Ücretli, Dengeli)',               maxTokens: 16384 },
+  { id: 'grok-3-mini',              label: 'Grok 3 Mini 💳 (Ücretli, Ekonomik)',         maxTokens: 16384 },
 ];
 
 export const PERPLEXITY_MODELS = [
@@ -101,15 +103,17 @@ export const ZAI_MODELS = [
   { id: 'glm-5',           label: 'GLM-5 💳 (Ücretli, En Güçlü)',       maxTokens: 8192  },
   { id: 'glm-5-turbo',     label: 'GLM-5-Turbo 💳 (Ücretli, Agentic)',  maxTokens: 8192  },
   { id: 'glm-4.7',         label: 'GLM-4.7 💳 (Ücretli)',               maxTokens: 8192  },
-  { id: 'glm-4.7-flash',   label: 'GLM-4.7-Flash 💳 (Ücretli, Hızlı)', maxTokens: 8192  },
+  { id: 'glm-4.7-flashx',  label: 'GLM-4.7-FlashX 💳 (Ücretli, Hızlı)',maxTokens: 8192  },
   { id: 'glm-4.6',         label: 'GLM-4.6 💳 (Ücretli)',               maxTokens: 8192  },
   { id: 'glm-4.5',         label: 'GLM-4.5 💳 (Ücretli, MoE)',          maxTokens: 8192  },
+  { id: 'glm-4.5-x',       label: 'GLM-4.5-X 💳 (Ücretli, Güçlü)',     maxTokens: 8192  },
   { id: 'glm-4.5-air',     label: 'GLM-4.5-Air 💳 (Ücretli, Hafif)',   maxTokens: 8192  },
   { id: 'glm-4.5-airx',    label: 'GLM-4.5-AirX 💳 (Ücretli, Hızlı)', maxTokens: 8192  },
-  { id: 'glm-4.5-flash',   label: 'GLM-4.5-Flash 💳 (Ücretli, Flash)', maxTokens: 8192  },
   // Ücretsiz (rate limit var)
+  { id: 'glm-4.7-flash',   label: 'GLM-4.7-Flash ⭐ (Ücretsiz*)',       maxTokens: 8192  },
+  { id: 'glm-4.5-flash',   label: 'GLM-4.5-Flash ⭐ (Ücretsiz*)',       maxTokens: 8192  },
   { id: 'glm-4-plus',      label: 'GLM-4-Plus ⭐ (Ücretsiz*)',          maxTokens: 8192  },
-  { id: 'glm-4-32b',       label: 'GLM-4-32B ⭐ (Ücretsiz*, 128K ctx)', maxTokens: 8192  },
+  { id: 'glm-4-32b-0414-128k', label: 'GLM-4-32B ⭐ (Ücretsiz*, 128K)',  maxTokens: 8192  },
 ];
 // * Ücretsiz tier: z.ai üzerinde concurrency bazlı rate limit var
 
@@ -136,8 +140,8 @@ export const QWEN_MODELS = [
 
 export const DEEPSEEK_MODELS = [
   // Hepsi ücretli (çok düşük fiyatlı ama ücretsiz değil)
-  { id: 'deepseek-chat',     label: 'DeepSeek-V3.2 💳 (Ücretli, 128K ctx)',      maxTokens: 8192  },
-  { id: 'deepseek-reasoner', label: 'DeepSeek-R2 💳 (Ücretli, Thinking 64K)',    maxTokens: 65536 },
+  { id: 'deepseek-v3.2',     label: 'DeepSeek V3.2 💳 (Ücretli, 128K ctx)',    maxTokens: 8192  },
+  { id: 'deepseek-reasoner', label: 'DeepSeek R1 💳 (Ücretli, Thinking 64K)',  maxTokens: 65536 },
 ];
 
 export const PIAPI_MODELS = [
@@ -454,7 +458,7 @@ async function callDeepSeekAPI(prompt, systemInstruction, apiKey, model) {
   const maxTokens = modelConfig?.maxTokens ?? 8192;
 
   const payload = {
-    model: model || 'deepseek-chat',
+    model: model || 'deepseek-v3.2',
     messages: [
       { role: 'system', content: systemInstruction },
       { role: 'user', content: prompt },
