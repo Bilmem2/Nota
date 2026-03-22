@@ -1022,10 +1022,16 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       return;
     }
 
+    // materialChunks boşsa (eski session'lardan yüklendi) savedMaterial'dan yeniden oluştur
+    const chunks = materialChunks.length > 0 ? materialChunks : chunkText(savedMaterial);
+    if (materialChunks.length === 0 && chunks.length > 0) {
+      setMaterialChunks(chunks);
+    }
+
     // Groq için chunk'lar arası context: önceki chunk'ın kısa özetini tut
     let prevChunkSummary = '';
 
-    for (let i = 0; i < materialChunks.length; i++) {
+    for (let i = 0; i < chunks.length; i++) {
       if (content[type] && content[type][i]) {
         continue;
       }
@@ -1036,12 +1042,12 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       let systemInstruction = '';
       let isJson = false;
 
-      const textToAnalyze = materialChunks[i];
-      const partInfo = materialChunks.length > 1 ? `(Bölüm ${i + 1}/${materialChunks.length})` : '';
+      const textToAnalyze = chunks[i];
+      const partInfo = chunks.length > 1 ? `(Bölüm ${i + 1}/${chunks.length})` : '';
       const isGroq = provider === 'groq' || apiKey.startsWith('gsk_');
 
       // Groq için önceki chunk context'i
-      const groqContextPrefix = (isGroq && prevChunkSummary && materialChunks.length > 1)
+      const groqContextPrefix = (isGroq && prevChunkSummary && chunks.length > 1)
         ? `[ÖNCEKİ BÖLÜM ÖZETİ: ${prevChunkSummary}]\n\n`
         : '';
 
@@ -1135,7 +1141,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
           [type]: { ...prev[type], [i]: finalData },
         }));
         // Groq için bir sonraki chunk'a context aktarımı: metin çıktısının ilk ~200 karakterini özet olarak sakla
-        if (isGroq && typeof finalData === 'string' && materialChunks.length > 1) {
+        if (isGroq && typeof finalData === 'string' && chunks.length > 1) {
           prevChunkSummary = finalData.replace(/\[TÜYO\]|\[DİKKAT\]|\[ÖNEMLİ\]/g, '').replace(/#+\s/g, '').slice(0, 200).trim();
         }
       } catch (error) {
@@ -2097,7 +2103,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 2: DERS ANLATIMI */}
           {activeTab === 'lesson' &&
             (() => {
-              const isStarted = Object.keys(content.lesson).length > 0 || generatingIndex.lesson !== -1;
+              const isStarted = Object.keys(content.lesson).length > 0 || generatingIndex.lesson !== -1 || loading.lesson;
               const isFinished = Object.keys(content.lesson).length === materialChunks.length && materialChunks.length > 0;
 
               return (
@@ -2204,7 +2210,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 3: DERS NOTLARI (ÇALIŞMA REHBERİ) */}
           {activeTab === 'notes' &&
             (() => {
-              const isStarted = Object.keys(content.notes).length > 0 || generatingIndex.notes !== -1;
+              const isStarted = Object.keys(content.notes).length > 0 || generatingIndex.notes !== -1 || loading.notes;
               const isFinished = Object.keys(content.notes).length === materialChunks.length && materialChunks.length > 0;
 
               return (
@@ -2298,7 +2304,7 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 3.5: GÖRSEL ÖZET */}
           {activeTab === 'visual' &&
             (() => {
-              const isStarted = Object.keys(content.visual).length > 0 || generatingIndex.visual !== -1;
+              const isStarted = Object.keys(content.visual).length > 0 || generatingIndex.visual !== -1 || loading.visual;
               const isFinished = Object.keys(content.visual).length === materialChunks.length && materialChunks.length > 0;
 
               return (
