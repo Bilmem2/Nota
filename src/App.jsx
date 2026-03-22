@@ -337,6 +337,7 @@ export default function App() {
   });
   const [mindMapData, setMindMapData] = useState(null);
   const [mindMapFullscreen, setMindMapFullscreen] = useState(false);
+  const [mindMapLayout, setMindMapLayout] = useState(() => localStorage.getItem('mindmap_layout') || 'radial');
   const [toast, setToast] = useState(null); // { message, type: 'error'|'warning'|'info', detail? }
 
   const showToast = (message, type = 'error', detail = null) => {
@@ -3017,9 +3018,24 @@ ${savedMaterial.slice(0, 10000)}`;
                 )}
                 {content.mindMap && !loading.mindmap && (
                   <div className={mindMapFullscreen ? 'flex-1 flex flex-col p-4 overflow-hidden' : ''} style={{ minHeight: mindMapFullscreen ? undefined : 700 }}>
-                    <div className="flex items-center justify-between mb-4 shrink-0">
-                      <p className="text-xs text-slate-400 dark:text-slate-500">{t.mindMapHint}</p>
+                    <div className="flex flex-wrap items-center justify-between mb-4 gap-3 shrink-0">
+                      {/* Layout seçici */}
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/60 rounded-xl p-1">
+                        {[
+                          { id: 'radial', label: appLang === 'tr' ? 'Dairesel' : 'Radial' },
+                          { id: 'tree',   label: appLang === 'tr' ? 'Ağaç'     : 'Tree'   },
+                          { id: 'force',  label: appLang === 'tr' ? 'Serbest'  : 'Force'  },
+                        ].map(opt => (
+                          <button key={opt.id}
+                            onMouseDown={e => e.stopPropagation()}
+                            onClick={() => { setMindMapLayout(opt.id); localStorage.setItem('mindmap_layout', opt.id); }}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${mindMapLayout === opt.id ? 'bg-violet-600 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                       <div className="flex items-center gap-2">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">{t.mindMapHint}</p>
                         <button
                           onClick={() => setMindMapFullscreen(f => !f)}
                           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-700 rounded-lg transition-colors"
@@ -3038,7 +3054,7 @@ ${savedMaterial.slice(0, 10000)}`;
                     </div>
                     <div className={mindMapFullscreen ? 'flex-1' : ''}>
                       <ErrorBoundary>
-                        <MindMapComponent data={content.mindMap} darkMode={darkMode} lang={appLang} />
+                        <MindMapComponent data={content.mindMap} darkMode={darkMode} lang={appLang} layoutMode={mindMapLayout} />
                       </ErrorBoundary>
                     </div>
                   </div>
