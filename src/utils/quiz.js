@@ -34,14 +34,12 @@ export function parseJSON(text) {
     const parsed = JSON.parse(cleaned);
 
     // Groq json_object mode wraps arrays in an object — unwrap it
+    // Only unwrap if the object has a SINGLE key whose value is an array
+    // (visual summary objects like {title, layout, items} must NOT be unwrapped)
     if (parsed && !Array.isArray(parsed) && typeof parsed === 'object') {
       const values = Object.values(parsed);
       if (values.length === 1 && Array.isArray(values[0])) {
         return values[0];
-      }
-      // Also handle nested arrays like { questions: [...] }
-      for (const val of values) {
-        if (Array.isArray(val) && val.length > 0) return val;
       }
     }
 
