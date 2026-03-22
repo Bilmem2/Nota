@@ -319,7 +319,10 @@ export default function App() {
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [weakAnalysis, setWeakAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
+  // 'auto' | 'light' | 'dark'  — null/undefined → 'auto' (ilk ziyaret)
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('theme_mode') || 'auto');
+  const systemDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const darkMode = themeMode === 'dark' || (themeMode === 'auto' && systemDark);
   const [appLang, setAppLang] = useState(() => {
     const saved = localStorage.getItem('app_lang');
     if (saved) return saved;
@@ -418,8 +421,20 @@ export default function App() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('dark_mode', darkMode);
-  }, [darkMode]);
+    localStorage.setItem('theme_mode', themeMode);
+  }, [darkMode, themeMode]);
+
+  // Sistem teması değişince 'auto' modda güncelle
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      if (themeMode === 'auto') {
+        document.documentElement.classList.toggle('dark', mq.matches);
+      }
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [themeMode]);
 
   useEffect(() => {
     localStorage.setItem('app_lang', appLang);
@@ -1098,9 +1113,13 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
           ...prev,
           [type]: {
             ...prev[type],
-            [i]: type === 'visual' ? null : '> ⚠️ *Sistem bu bölümü sentezlerken geçici bir hata yaşadı. Lütfen metnin orijinaline veya bir sonraki bölüme başvurunuz.*',
+            [i]: '__ERROR__',
           },
         }));
+        // Hata durumunda döngüyü durdur
+        setGeneratingIndex((prev) => ({ ...prev, [type]: -1 }));
+        setLoading((prev) => ({ ...prev, [type]: false }));
+        return;
       }
     }
 
@@ -1649,22 +1668,46 @@ ${savedMaterial.slice(0, 10000)}`;
             {/* --- APPEARANCE TAB --- */}
             {activeSettingsTab === 'appearance' && (
               <div className="tab-content space-y-2.5">
-                {[
-                  {
-                    icon: darkMode ? '☀️' : '🌙',
-                    label: t.darkMode,
-                    desc: darkMode ? (appLang === 'tr' ? 'Karanlık tema aktif' : 'Dark theme active') : (appLang === 'tr' ? 'Açık tema aktif' : 'Light theme active'),
-                    checked: darkMode,
-                    onChange: () => setDarkMode(d => !d),
-                  },
-                  {
+                {/* Theme mode — 3-way: auto / light / dark */}
+                <div className="px-4 py-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xl w-8 text-center">{themeMode === 'dark' ? '🌙' : themeMode === 'light' ? '☀️' : '🌓'}</span>
+                    <div>
+                      <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">{t.darkMode}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                        {themeMode === 'auto' ? (appLang === 'tr' ? 'Sistem tercihine göre' : 'Follows system preference') : themeMode === 'dark' ? (appLang === 'tr' ? 'Karanlık tema' : 'Dark theme') : (appLang === 'tr' ? 'Açık tema' : 'Light theme')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {[
+                      { val: 'auto', icon: '🌓', label: appLang === 'tr' ? 'Otomatik' : 'Auto' },
+                      { val: 'light', icon: '☀️', label: appLang === 'tr' ? 'Açık' : 'Light' },
+                      { val: 'dark', icon: '🌙', label: appLang === 'tr' ? 'Koyu' : 'Dark' },
+                    ].map(({ val, icon, label }) => (
+                      <button
+                        key={val}
+                        onClick={() => setThemeMode(val)}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 ${
+                          themeMode === val
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        <span>{icon}</span>{label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sound */}
+                {[{
                     icon: soundEnabled ? '🔊' : '🔇',
                     label: t.soundEffects,
                     desc: t.soundEffectsDesc,
                     checked: soundEnabled,
                     onChange: () => setSoundEnabled(s => !s),
-                  },
-                ].map(({ icon, label, desc, checked, onChange }) => (
+                }].map(({ icon, label, desc, checked, onChange }) => (
                   <div
                     key={label}
                     onClick={onChange}
@@ -2034,17 +2077,31 @@ ${savedMaterial.slice(0, 10000)}`;
                         <div id="lesson-content-area" className="space-y-12">
                           {materialChunks.map((_, idx) => {
                             if (!content.lesson[idx]) return null;
+                            const isError = content.lesson[idx] === '__ERROR__';
                             return (
                               <div key={idx} className={`page-break ${idx > 0 ? 'pt-12 border-t-2 border-slate-100' : ''}`}>
                                 {materialChunks.length > 1 && (
                                   <h2 className="text-2xl font-extrabold mb-8 text-indigo-900 flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
-                                      {idx + 1}
-                                    </div>
+                                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
                                     {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
-                                {renderMarkdown(content.lesson[idx])}
+                                {isError ? (
+                                  <div className="flex flex-col items-center gap-4 py-10 px-6 bg-rose-50 dark:bg-rose-900/20 border-2 border-dashed border-rose-200 dark:border-rose-800 rounded-2xl text-center">
+                                    <AlertCircle size={32} className="text-rose-400" />
+                                    <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
+                                    <div className="flex gap-3">
+                                      <button onClick={() => { setContent(p => ({ ...p, lesson: { ...p.lesson, [idx]: undefined } })); generateContent('lesson'); }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
+                                      </button>
+                                      <button onClick={() => setContent(p => ({ ...p, lesson: { ...p.lesson, [idx]: undefined } }))}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <X size={15} /> {appLang === 'tr' ? 'İptal' : 'Cancel'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : renderMarkdown(content.lesson[idx])}
                               </div>
                             );
                           })}
@@ -2127,17 +2184,31 @@ ${savedMaterial.slice(0, 10000)}`;
                         <div id="notes-content-area" className="bg-white p-6 md:p-12 rounded-3xl shadow-sm border border-amber-100 space-y-12">
                           {materialChunks.map((_, idx) => {
                             if (!content.notes[idx]) return null;
+                            const isError = content.notes[idx] === '__ERROR__';
                             return (
                               <div key={idx} className={`page-break ${idx > 0 ? 'pt-12 border-t-2 border-amber-100' : ''}`}>
                                 {materialChunks.length > 1 && (
                                   <h2 className="text-2xl font-extrabold mb-8 text-amber-900 flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
-                                      {idx + 1}
-                                    </div>
+                                    <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
                                     {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
-                                {renderMarkdown(content.notes[idx])}
+                                {isError ? (
+                                  <div className="flex flex-col items-center gap-4 py-10 px-6 bg-rose-50 dark:bg-rose-900/20 border-2 border-dashed border-rose-200 dark:border-rose-800 rounded-2xl text-center">
+                                    <AlertCircle size={32} className="text-rose-400" />
+                                    <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
+                                    <div className="flex gap-3">
+                                      <button onClick={() => { setContent(p => ({ ...p, notes: { ...p.notes, [idx]: undefined } })); generateContent('notes'); }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
+                                      </button>
+                                      <button onClick={() => setContent(p => ({ ...p, notes: { ...p.notes, [idx]: undefined } }))}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <X size={15} /> {appLang === 'tr' ? 'İptal' : 'Cancel'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : renderMarkdown(content.notes[idx])}
                               </div>
                             );
                           })}
@@ -2210,17 +2281,31 @@ ${savedMaterial.slice(0, 10000)}`;
                         <div id="visual-content-area" className="min-w-full md:min-w-[600px] space-y-12">
                           {materialChunks.map((_, idx) => {
                             if (!content.visual[idx]) return null;
+                            const isError = content.visual[idx] === '__ERROR__';
                             return (
                               <div key={idx} className={`page-break ${idx > 0 ? 'pt-12 border-t-2 border-teal-200/50' : ''}`}>
                                 {materialChunks.length > 1 && (
                                   <h2 className="text-2xl font-extrabold mb-8 text-teal-900 flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
-                                      {idx + 1}
-                                    </div>
+                                    <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">{idx + 1}</div>
                                     {t.chapterLabel(idx + 1)}
                                   </h2>
                                 )}
-                                <VisualSummaryComponent data={content.visual[idx]} />
+                                {isError ? (
+                                  <div className="flex flex-col items-center gap-4 py-10 px-6 bg-rose-50 dark:bg-rose-900/20 border-2 border-dashed border-rose-200 dark:border-rose-800 rounded-2xl text-center">
+                                    <AlertCircle size={32} className="text-rose-400" />
+                                    <p className="text-rose-700 dark:text-rose-300 font-semibold">{appLang === 'tr' ? 'Bu bölüm oluşturulurken hata oluştu.' : 'An error occurred while generating this section.'}</p>
+                                    <div className="flex gap-3">
+                                      <button onClick={() => { setContent(p => ({ ...p, visual: { ...p.visual, [idx]: undefined } })); generateContent('visual'); }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <RotateCw size={15} /> {appLang === 'tr' ? 'Yeniden Dene' : 'Retry'}
+                                      </button>
+                                      <button onClick={() => setContent(p => ({ ...p, visual: { ...p.visual, [idx]: undefined } }))}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-all active:scale-95">
+                                        <X size={15} /> {appLang === 'tr' ? 'İptal' : 'Cancel'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : <VisualSummaryComponent data={content.visual[idx]} />}
                               </div>
                             );
                           })}
