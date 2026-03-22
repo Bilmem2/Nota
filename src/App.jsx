@@ -1334,9 +1334,11 @@ ${savedMaterial.slice(0, 10000)}`;
     // Kaydet butonu aktif mi?
     // - Yeni key girilmişse → kaydet
     // - Key girilmemiş ama bu provider için kayıtlı key varsa ve aktif provider değilse → geçiş yap
+    // - Aynı provider, key yok ama model değiştiyse → model güncelle
     const hasNewKey = inputKey.trim().length > 0;
     const canSwitch = !hasNewKey && savedKeyForProvider && settingsProvider !== provider;
-    const canSave = hasNewKey || canSwitch;
+    const modelChanged = currentModelList && localModel !== openRouterModel && settingsProvider === provider;
+    const canSave = hasNewKey || canSwitch || modelChanged || keyWasReset;
 
     const handleSave = () => {
       const newKey = inputKey.trim();
@@ -1367,7 +1369,12 @@ ${savedMaterial.slice(0, 10000)}`;
         setApiKey(savedKeyForProvider);
         setProvider(settingsProvider);
         setShowSettings(false);
-      } else if (keyWasReset && !newKey) {
+      } else if (modelChanged) {
+        // Sadece model değişti
+        localStorage.setItem('openrouter_model', localModel);
+        setOpenRouterModel(localModel);
+        setShowSettings(false);
+      } else if (keyWasReset) {
         setApiKey('');
         setShowSettings(false);
       }

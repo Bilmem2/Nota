@@ -147,18 +147,18 @@ async function callOpenRouterAPI(prompt, systemInstruction, apiKey, model, isJso
   });
 
   if (response.status === 429) return { rateLimited: true };
-
-  const data = await response.json();
-
-  // OpenRouter hata mesajını HTTP 200 ile de döndürebilir
-  if (data.error) {
-    throw new Error(`OpenRouter error: ${data.error.message || JSON.stringify(data.error)}`);
-  }
-
+  if (response.status === 401 || response.status === 403) throw new Error('OpenRouter API anahtarı geçersiz veya yetkisiz (401/403).');
+  if (response.status === 404) throw new Error('OpenRouter model bulunamadı (404). Lütfen farklı bir model seçin.');
   if (!response.ok) throw new Error(`OpenRouter HTTP error: ${response.status}`);
 
+  let data;
+  try { data = await response.json(); } catch { throw new Error('OpenRouter geçersiz yanıt döndürdü.'); }
+
+  // OpenRouter hata mesajını HTTP 200 ile de döndürebilir
+  if (data.error) throw new Error(`OpenRouter: ${data.error.message || JSON.stringify(data.error)}`);
+
   const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('OpenRouter boş yanıt döndürdü');
+  if (!text) throw new Error('OpenRouter boş yanıt döndürdü.');
   return { text };
 }
 
@@ -383,6 +383,11 @@ export async function callGemini(prompt, systemInstruction, apiKey, inlineData =
     } catch (error) {
       if (i === 4) {
         return 'Bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip daha sonra tekrar deneyin.';
+      }
+      // Kalıcı hatalar (auth, model bulunamadı) — retry yapma, direkt fırlat
+      const msg = error.message || '';
+      if (msg.includes('401') || msg.includes('403') || msg.includes('404') || msg.includes('geçersiz') || msg.includes('bulunamadı')) {
+        throw error;
       }
       await new Promise(res => setTimeout(res, delays[i]));
     }
