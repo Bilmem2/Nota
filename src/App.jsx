@@ -1532,7 +1532,7 @@ ${savedMaterial.slice(0, 10000)}`;
       gemini:      { label: 'Google Gemini', placeholder: 'AIzaSy...', hint: '2.5 Flash ücretsiz · 2.5 Pro ücretli', category: 'free' },
       groq:        { label: 'Groq',          placeholder: 'gsk_...',   hint: 'Ücretsiz · Llama 3.3 70B · Hızlı',    category: 'free' },
       openrouter:  { label: 'OpenRouter',    placeholder: 'sk-or-...', hint: 'Çok model · Ücretsiz seçenekler',     category: 'free' },
-      zai:         { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4-Plus / GLM-4.5-Flash ücretsiz', category: 'free' },
+      zai:         { label: 'z.ai (GLM)',    placeholder: 'Bearer ...', hint: 'GLM-4.7-Flash ücretsiz · GLM-4.5-Flash ücretsiz', category: 'free' },
       llm7:        { label: 'llm7.io',       placeholder: 'llm7-...', hint: 'Ücretsiz token · 100 req/h · token.llm7.io', category: 'free' },
       openai:      { label: 'OpenAI',        placeholder: 'sk-...',    hint: 'GPT-5, GPT-4o, o3...',               category: 'paid' },
       anthropic:   { label: 'Anthropic',     placeholder: 'sk-ant-...', hint: 'Claude Opus / Sonnet',              category: 'paid' },

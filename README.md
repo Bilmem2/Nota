@@ -27,7 +27,7 @@
 | **Anthropic** | 💳 Ücretli | [Anthropic Console](https://console.anthropic.com/) |
 | **xAI (Grok)** | 💳 Ücretli | [xAI Console](https://console.x.ai/) |
 | **Perplexity** | 💳 Ücretli | [Perplexity API](https://www.perplexity.ai/settings/api) |
-| **z.ai (GLM)** | 💳 Ücretli | [Zhipu AI](https://open.bigmodel.cn/) |
+| **z.ai (GLM)** | ✅ Ücretsiz modeller var | [z.ai](https://z.ai/manage-apikey/apikey-list) |
 | **Kimi AI** | 💳 Ücretli | [Moonshot Platform](https://platform.moonshot.cn/) |
 | **Qwen** | 💳 Ücretli | [Alibaba Cloud](https://dashscope.aliyuncs.com/) |
 | **DeepSeek** | 💳 Ücretli | [DeepSeek Platform](https://platform.deepseek.com/) |

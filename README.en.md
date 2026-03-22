@@ -27,7 +27,7 @@
 | **Anthropic** | 💳 Paid | [Anthropic Console](https://console.anthropic.com/) |
 | **xAI (Grok)** | 💳 Paid | [xAI Console](https://console.x.ai/) |
 | **Perplexity** | 💳 Paid | [Perplexity API](https://www.perplexity.ai/settings/api) |
-| **z.ai (GLM)** | 💳 Paid | [Zhipu AI](https://open.bigmodel.cn/) |
+| **z.ai (GLM)** | ✅ Free models available | [z.ai](https://z.ai/manage-apikey/apikey-list) |
 | **Kimi AI** | 💳 Paid | [Moonshot Platform](https://platform.moonshot.cn/) |
 | **Qwen** | 💳 Paid | [Alibaba Cloud](https://dashscope.aliyuncs.com/) |
 | **DeepSeek** | 💳 Paid | [DeepSeek Platform](https://platform.deepseek.com/) |
