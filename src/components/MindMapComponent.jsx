@@ -250,6 +250,26 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
               {label}
             </button>
           ))}
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={() => {
+              const svgEl = svgRef.current;
+              if (!svgEl) return;
+              const serializer = new XMLSerializer();
+              const svgStr = serializer.serializeToString(svgEl);
+              const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'mindmap.svg';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            title={lang === 'en' ? 'Download SVG' : 'SVG İndir'}
+            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center"
+          >
+            ↓
+          </button>
         </div>
 
         <div className="absolute bottom-3 left-3 z-10 text-xs text-slate-400 dark:text-slate-500 pointer-events-none select-none">

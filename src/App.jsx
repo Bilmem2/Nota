@@ -42,7 +42,7 @@ import { chunkText } from './utils/chunking';
 import { parseJSON, isAnswerCorrect } from './utils/quiz';
 import { renderMarkdown } from './utils/markdown';
 import { playSound } from './utils/sound';
-import { handlePrint } from './utils/print';
+import { handlePrint, downloadQuizReport } from './utils/print';
 import OnboardingScreen from './components/OnboardingScreen';
 import VisualSummaryComponent from './components/VisualSummaryComponent';
 import MindMapComponent from './components/MindMapComponent';
@@ -2848,6 +2848,9 @@ ${savedMaterial.slice(0, 10000)}`;
                               <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: quizConfig.examMode, currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); generateContent('quiz'); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 text-white font-bold text-lg rounded-2xl hover:bg-slate-900 transition-colors shadow-lg">
                                   <RotateCw size={20} /> {t.quizNewExam}
+                                </button>
+                                <button onClick={() => downloadQuizReport({ quiz: content.quiz, answers: quizState.answers, verdicts: quizState.verdicts, isAnswerCorrect, studyTitle: studyTitle || 'Sınav', appLang })} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-2xl hover:bg-indigo-700 transition-colors shadow-lg">
+                                  <FileText size={20} /> {appLang === 'en' ? 'Download Report' : 'Raporu İndir'}
                                 </button>
                                 <button onClick={() => { playSound('select', soundEnabled); setWeakAnalysis(null); setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false }); setContent((prev) => ({ ...prev, quiz: null })); }} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
                                   <Settings2 size={20} /> {t.quizBackSettings}
