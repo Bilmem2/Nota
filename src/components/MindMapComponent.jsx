@@ -6,69 +6,51 @@ function computeLayout(data) {
   const edges = [];
   const nodeMap = {};
 
-  // Root
   const root = { id: 'root', label: data.root, description: data.rootDescription || '', level: 0, x: 0, y: 0, children: [] };
   nodes.push(root);
   nodeMap['root'] = root;
 
-  // Kategoriler (level 1)
   const cats = data.nodes || [];
   const catCount = cats.length;
   cats.forEach((cat, ci) => {
     const angle = (2 * Math.PI * ci) / catCount - Math.PI / 2;
-    const r1 = 220;
+    const r1 = 240;
     const catNode = {
-      id: cat.id,
-      label: cat.label,
-      description: cat.description || '',
-      example: cat.example || '',
-      level: 1,
-      x: Math.cos(angle) * r1,
-      y: Math.sin(angle) * r1,
-      children: [],
-      angle,
+      id: cat.id, label: cat.label, description: cat.description || '',
+      example: cat.example || '', level: 1,
+      x: Math.cos(angle) * r1, y: Math.sin(angle) * r1,
+      children: [], angle,
     };
     nodes.push(catNode);
     nodeMap[cat.id] = catNode;
     edges.push({ from: 'root', to: cat.id, label: cat.relation || '' });
 
-    // Alt kavramlar (level 2)
     const children = cat.children || [];
     const childCount = children.length;
     children.forEach((child, chi) => {
-      const spread = Math.min(Math.PI * 0.7, (childCount * 0.35));
+      const spread = Math.min(Math.PI * 0.7, childCount * 0.35);
       const childAngle = angle - spread / 2 + (spread / Math.max(childCount - 1, 1)) * chi;
-      const r2 = 420;
+      const r2 = 460;
       const childNode = {
-        id: child.id,
-        label: child.label,
-        description: child.description || '',
-        example: child.example || '',
-        level: 2,
-        x: Math.cos(childAngle) * r2,
-        y: Math.sin(childAngle) * r2,
-        children: [],
-        angle: childAngle,
+        id: child.id, label: child.label, description: child.description || '',
+        example: child.example || '', level: 2,
+        x: Math.cos(childAngle) * r2, y: Math.sin(childAngle) * r2,
+        children: [], angle: childAngle,
       };
       nodes.push(childNode);
       nodeMap[child.id] = childNode;
       edges.push({ from: cat.id, to: child.id, label: child.relation || '' });
 
-      // Detaylar (level 3)
       const details = child.children || [];
       const detailCount = details.length;
       details.forEach((detail, di) => {
         const dSpread = Math.min(Math.PI * 0.4, detailCount * 0.25);
         const dAngle = childAngle - dSpread / 2 + (dSpread / Math.max(detailCount - 1, 1)) * di;
-        const r3 = 620;
+        const r3 = 680;
         const detailNode = {
-          id: detail.id,
-          label: detail.label,
-          description: detail.description || '',
-          example: detail.example || '',
-          level: 3,
-          x: Math.cos(dAngle) * r3,
-          y: Math.sin(dAngle) * r3,
+          id: detail.id, label: detail.label, description: detail.description || '',
+          example: detail.example || '', level: 3,
+          x: Math.cos(dAngle) * r3, y: Math.sin(dAngle) * r3,
           children: [],
         };
         nodes.push(detailNode);
@@ -78,7 +60,6 @@ function computeLayout(data) {
     });
   });
 
-  // Cross-links (kavramlar arası ilişkiler)
   (data.crossLinks || []).forEach(link => {
     if (nodeMap[link.from] && nodeMap[link.to]) {
       edges.push({ from: link.from, to: link.to, label: link.label || '', isCross: true });
@@ -88,7 +69,6 @@ function computeLayout(data) {
   return { nodes, edges, nodeMap };
 }
 
-// Renk paleti seviyeye göre
 const LEVEL_COLORS = {
   0: { bg: '#6366f1', text: '#fff', border: '#4f46e5', shadow: 'rgba(99,102,241,0.4)' },
   1: { bg: '#0ea5e9', text: '#fff', border: '#0284c7', shadow: 'rgba(14,165,233,0.35)' },
@@ -96,30 +76,40 @@ const LEVEL_COLORS = {
   3: { bg: '#f59e0b', text: '#fff', border: '#d97706', shadow: 'rgba(245,158,11,0.3)' },
 };
 
-const NODE_RADIUS = [52, 42, 34, 26];
+const NODE_RADIUS = [54, 44, 36, 28];
 
 export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
   const svgRef = useRef(null);
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef(null);
+  const containerRef = useRef(null);
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 0.85 });
   const [selected, setSelected] = useState(null);
   const [layout, setLayout] = useState(null);
+  // Node pozisyonları: { [id]: {x, y} }
+  const [nodePos, setNodePos] = useState({});
+
+  // Canvas drag state
+  const canvasDrag = useRef(null);
+  // Node drag state
+  const nodeDrag = useRef(null); // { id, startX, startY, origX, origY }
 
   useEffect(() => {
     if (data) {
       const l = computeLayout(data);
       setLayout(l);
       setSelected(null);
-      // Başlangıç transform: ortala
       setTransform({ x: 0, y: 0, scale: 0.85 });
+      // Pozisyonları başlat
+      const pos = {};
+      l.nodes.forEach(n => { pos[n.id] = { x: n.x, y: n.y }; });
+      setNodePos(pos);
     }
   }, [data]);
 
+  // Wheel zoom
   const onWheel = useCallback((e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setTransform(t => ({ ...t, scale: Math.min(3, Math.max(0.2, t.scale * delta)) }));
+    setTransform(t => ({ ...t, scale: Math.min(4, Math.max(0.15, t.scale * delta)) }));
   }, []);
 
   useEffect(() => {
@@ -129,61 +119,175 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
     return () => el.removeEventListener('wheel', onWheel);
   }, [onWheel]);
 
-  const onMouseDown = (e) => {
-    if (e.target.closest('.mind-node')) return;
-    setDragging(true);
-    dragStart.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
-  };
-  const onMouseMove = (e) => {
-    if (!dragging) return;
-    setTransform(t => ({ ...t, x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y }));
-  };
-  const onMouseUp = () => setDragging(false);
+  // SVG koordinatına çevir
+  const toSVGCoords = useCallback((clientX, clientY) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    const svgW = rect.width;
+    const svgH = rect.height;
+    const cx = svgW / 2 + transform.x;
+    const cy = svgH / 2 + transform.y;
+    return {
+      x: (clientX - rect.left - cx) / transform.scale,
+      y: (clientY - rect.top - cy) / transform.scale,
+    };
+  }, [transform]);
 
-  const onTouchStart = (e) => {
-    if (e.touches.length === 1) {
-      setDragging(true);
-      dragStart.current = { x: e.touches[0].clientX - transform.x, y: e.touches[0].clientY - transform.y };
+  // --- Mouse handlers ---
+  const onMouseDown = useCallback((e) => {
+    // Node drag başlatıldıysa canvas drag yapma
+    if (nodeDrag.current) return;
+    if (e.button !== 0) return;
+    canvasDrag.current = { startX: e.clientX - transform.x, startY: e.clientY - transform.y };
+  }, [transform]);
+
+  const onNodeMouseDown = useCallback((e, nodeId) => {
+    e.stopPropagation();
+    const svgCoords = toSVGCoords(e.clientX, e.clientY);
+    nodeDrag.current = {
+      id: nodeId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: svgCoords.x,
+      origY: svgCoords.y,
+      moved: false,
+    };
+  }, [toSVGCoords]);
+
+  const onMouseMove = useCallback((e) => {
+    if (nodeDrag.current) {
+      const dx = e.clientX - nodeDrag.current.startX;
+      const dy = e.clientY - nodeDrag.current.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) nodeDrag.current.moved = true;
+      const svgCoords = toSVGCoords(e.clientX, e.clientY);
+      setNodePos(prev => ({
+        ...prev,
+        [nodeDrag.current.id]: { x: svgCoords.x, y: svgCoords.y },
+      }));
+    } else if (canvasDrag.current) {
+      setTransform(t => ({
+        ...t,
+        x: e.clientX - canvasDrag.current.startX,
+        y: e.clientY - canvasDrag.current.startY,
+      }));
     }
-  };
-  const onTouchMove = (e) => {
-    if (!dragging || e.touches.length !== 1) return;
-    setTransform(t => ({ ...t, x: e.touches[0].clientX - dragStart.current.x, y: e.touches[0].clientY - dragStart.current.y }));
-  };
+  }, [toSVGCoords]);
+
+  const onMouseUp = useCallback((e) => {
+    if (nodeDrag.current) {
+      if (!nodeDrag.current.moved) {
+        // Click olarak say
+        const id = nodeDrag.current.id;
+        setSelected(prev => prev === id ? null : id);
+      }
+      nodeDrag.current = null;
+    }
+    canvasDrag.current = null;
+  }, []);
+
+  // --- Touch handlers ---
+  const onTouchStart = useCallback((e) => {
+    if (e.touches.length === 1) {
+      canvasDrag.current = {
+        startX: e.touches[0].clientX - transform.x,
+        startY: e.touches[0].clientY - transform.y,
+      };
+    }
+  }, [transform]);
+
+  const onNodeTouchStart = useCallback((e, nodeId) => {
+    e.stopPropagation();
+    if (e.touches.length === 1) {
+      const svgCoords = toSVGCoords(e.touches[0].clientX, e.touches[0].clientY);
+      nodeDrag.current = {
+        id: nodeId,
+        startX: e.touches[0].clientX,
+        startY: e.touches[0].clientY,
+        origX: svgCoords.x,
+        origY: svgCoords.y,
+        moved: false,
+      };
+    }
+  }, [toSVGCoords]);
+
+  const onTouchMove = useCallback((e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    if (nodeDrag.current) {
+      const dx = touch.clientX - nodeDrag.current.startX;
+      const dy = touch.clientY - nodeDrag.current.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) nodeDrag.current.moved = true;
+      const svgCoords = toSVGCoords(touch.clientX, touch.clientY);
+      setNodePos(prev => ({
+        ...prev,
+        [nodeDrag.current.id]: { x: svgCoords.x, y: svgCoords.y },
+      }));
+    } else if (canvasDrag.current) {
+      setTransform(t => ({
+        ...t,
+        x: touch.clientX - canvasDrag.current.startX,
+        y: touch.clientY - canvasDrag.current.startY,
+      }));
+    }
+  }, [toSVGCoords]);
+
+  const onTouchEnd = useCallback((e) => {
+    if (nodeDrag.current) {
+      if (!nodeDrag.current.moved) {
+        const id = nodeDrag.current.id;
+        setSelected(prev => prev === id ? null : id);
+      }
+      nodeDrag.current = null;
+    }
+    canvasDrag.current = null;
+  }, []);
 
   if (!layout) return null;
   const { nodes, edges } = layout;
-
   const selectedNode = selected ? nodes.find(n => n.id === selected) : null;
+
+  const isDraggingNode = () => nodeDrag.current !== null;
+  const isDraggingCanvas = () => canvasDrag.current !== null;
 
   return (
     <div className="relative w-full h-full flex flex-col" style={{ minHeight: 520 }}>
-      {/* SVG Canvas */}
       <div
+        ref={containerRef}
         className="flex-1 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
-        style={{ background: darkMode ? '#0f172a' : '#f8fafc', cursor: dragging ? 'grabbing' : 'grab', minHeight: 480 }}
+        style={{
+          background: darkMode ? '#0f172a' : '#f8fafc',
+          cursor: 'grab',
+          minHeight: 480,
+          userSelect: 'none',
+        }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
-        onTouchEnd={onMouseUp}
+        onTouchEnd={onTouchEnd}
       >
         {/* Zoom controls */}
         <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
           {[['＋', 1.2], ['－', 0.8], ['⊙', 'reset']].map(([label, val]) => (
             <button
               key={label}
+              onMouseDown={e => e.stopPropagation()}
               onClick={() => setTransform(t => val === 'reset'
                 ? { x: 0, y: 0, scale: 0.85 }
-                : { ...t, scale: Math.min(3, Math.max(0.2, t.scale * val)) }
+                : { ...t, scale: Math.min(4, Math.max(0.15, t.scale * val)) }
               )}
               className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-bold shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
               {label}
             </button>
           ))}
+        </div>
+
+        {/* Hint */}
+        <div className="absolute bottom-3 left-3 z-10 text-xs text-slate-400 dark:text-slate-500 pointer-events-none select-none">
+          {lang === 'en' ? 'Drag nodes • Scroll to zoom • Click for details' : 'Düğümleri sürükle • Kaydır = zoom • Tıkla = detay'}
         </div>
 
         <svg
@@ -201,48 +305,47 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
             {nodes.map(n => {
               const c = LEVEL_COLORS[n.level];
               return (
-                <filter key={`shadow-${n.id}`} id={`shadow-${n.id}`} x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor={c.shadow} floodOpacity="0.6" />
+                <filter key={`shadow-${n.id}`} id={`shadow-${n.id}`} x="-40%" y="-40%" width="180%" height="180%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor={c.shadow} floodOpacity="0.6" />
                 </filter>
               );
             })}
           </defs>
 
           <g transform={`translate(${(svgRef.current?.clientWidth || 800) / 2 + transform.x}, ${(svgRef.current?.clientHeight || 500) / 2 + transform.y}) scale(${transform.scale})`}>
-            {/* Edges */}
+            {/* Edges — pozisyonları nodePos'tan al */}
             {edges.map((edge, i) => {
-              const from = nodes.find(n => n.id === edge.from);
-              const to = nodes.find(n => n.id === edge.to);
-              if (!from || !to) return null;
-              const mx = (from.x + to.x) / 2;
-              const my = (from.y + to.y) / 2;
+              const fromPos = nodePos[edge.from];
+              const toPos = nodePos[edge.to];
+              const toNode = nodes.find(n => n.id === edge.to);
+              if (!fromPos || !toPos || !toNode) return null;
+              const mx = (fromPos.x + toPos.x) / 2;
+              const my = (fromPos.y + toPos.y) / 2;
               const isCross = edge.isCross;
               const strokeColor = isCross ? '#f59e0b' : (darkMode ? '#334155' : '#cbd5e1');
-              const r = NODE_RADIUS[to.level] || 26;
-              const dx = to.x - from.x, dy = to.y - from.y;
+              const r = NODE_RADIUS[toNode.level] || 28;
+              const dx = toPos.x - fromPos.x, dy = toPos.y - fromPos.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              const tx = to.x - (dx / dist) * r;
-              const ty = to.y - (dy / dist) * r;
+              const tx = toPos.x - (dx / dist) * r;
+              const ty = toPos.y - (dy / dist) * r;
 
               return (
                 <g key={i}>
                   <path
-                    d={`M${from.x},${from.y} Q${mx + (isCross ? 60 : 0)},${my + (isCross ? -60 : 0)} ${tx},${ty}`}
+                    d={`M${fromPos.x},${fromPos.y} Q${mx + (isCross ? 60 : 0)},${my + (isCross ? -60 : 0)} ${tx},${ty}`}
                     fill="none"
                     stroke={strokeColor}
-                    strokeWidth={isCross ? 1.5 : (to.level === 1 ? 2.5 : 1.5)}
+                    strokeWidth={isCross ? 1.5 : (toNode.level === 1 ? 2.5 : 1.5)}
                     strokeDasharray={isCross ? '5,4' : 'none'}
                     markerEnd={`url(#${isCross ? 'arrow-cross' : 'arrow'})`}
                     opacity={0.7}
                   />
                   {edge.label && (
                     <text
-                      x={mx + (isCross ? 30 : 0)}
-                      y={my + (isCross ? -30 : -6)}
-                      textAnchor="middle"
-                      fontSize={isCross ? 9 : 10}
+                      x={mx + (isCross ? 30 : 0)} y={my + (isCross ? -30 : -6)}
+                      textAnchor="middle" fontSize={isCross ? 9 : 10}
                       fill={isCross ? '#f59e0b' : (darkMode ? '#64748b' : '#94a3b8')}
-                      fontStyle="italic"
+                      fontStyle="italic" style={{ pointerEvents: 'none' }}
                     >
                       {edge.label}
                     </text>
@@ -253,6 +356,7 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
 
             {/* Nodes */}
             {nodes.map(n => {
+              const pos = nodePos[n.id] || { x: n.x, y: n.y };
               const c = LEVEL_COLORS[n.level];
               const r = NODE_RADIUS[n.level];
               const isSelected = selected === n.id;
@@ -269,24 +373,23 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
               return (
                 <g
                   key={n.id}
-                  className="mind-node"
-                  style={{ cursor: 'pointer' }}
-                  onClick={(e) => { e.stopPropagation(); setSelected(isSelected ? null : n.id); }}
+                  style={{ cursor: 'grab' }}
+                  onMouseDown={e => onNodeMouseDown(e, n.id)}
+                  onTouchStart={e => onNodeTouchStart(e, n.id)}
                 >
                   <circle
-                    cx={n.x} cy={n.y} r={isSelected ? r + 5 : r}
+                    cx={pos.x} cy={pos.y} r={isSelected ? r + 5 : r}
                     fill={isSelected ? c.border : c.bg}
                     stroke={isSelected ? '#fff' : c.border}
                     strokeWidth={isSelected ? 3 : 1.5}
                     filter={`url(#shadow-${n.id})`}
-                    style={{ transition: 'all 0.2s' }}
+                    style={{ transition: 'r 0.15s, fill 0.15s' }}
                   />
                   {lines.map((line, li) => (
                     <text
                       key={li}
-                      x={n.x} y={n.y + (li - (lines.length - 1) / 2) * (n.level === 0 ? 14 : 12)}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
+                      x={pos.x} y={pos.y + (li - (lines.length - 1) / 2) * (n.level === 0 ? 14 : 12)}
+                      textAnchor="middle" dominantBaseline="middle"
                       fontSize={n.level === 0 ? 13 : n.level === 1 ? 11 : n.level === 2 ? 10 : 9}
                       fontWeight={n.level <= 1 ? 'bold' : '600'}
                       fill={c.text}
