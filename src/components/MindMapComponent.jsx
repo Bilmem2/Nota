@@ -250,14 +250,14 @@ export default function MindMapComponent({ data, darkMode, lang = 'tr' }) {
   const isDraggingCanvas = () => canvasDrag.current !== null;
 
   return (
-    <div className="relative w-full h-full flex flex-col" style={{ minHeight: 520 }}>
+    <div className="relative w-full h-full flex flex-col" style={{ minHeight: 700 }}>
       <div
         ref={containerRef}
         className="flex-1 relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
         style={{
           background: darkMode ? '#0f172a' : '#f8fafc',
           cursor: 'grab',
-          minHeight: 480,
+          minHeight: 640,
           userSelect: 'none',
         }}
         onMouseDown={onMouseDown}

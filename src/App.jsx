@@ -2732,7 +2732,7 @@ ${savedMaterial.slice(0, 10000)}`;
                   </div>
                 )}
                 {mindMapData && !loading.mindmap && (
-                  <div>
+                  <div style={{ minHeight: 700 }}>
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-xs text-slate-400 dark:text-slate-500">{t.mindMapHint}</p>
                       <button
