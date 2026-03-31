@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightbulb, AlertCircle, Target } from 'lucide-react';
+import { Lightbulb, AlertCircle, Target, Sparkles } from 'lucide-react';
 import { renderToString } from 'katex';
 
 // --- GELİŞMİŞ MARKDOWN RENDERER ---
@@ -105,6 +105,35 @@ export function renderMarkdown(text) {
 
   while (i < lines.length) {
     let line = lines[i];
+
+    // Fenced code blocks: ```lang ... ```
+    if (line.trim().startsWith('```')) {
+      const lang = line.trim().replace(/^```/, '').trim().toLowerCase();
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // closing ```
+      const codeContent = codeLines.join('\n');
+      // text/plain blokları monospace preformatted (pedigree, dallanma hesapları için)
+      if (lang === 'text' || lang === 'plain' || lang === '') {
+        elements.push(
+          <pre key={`code-${i}`} className="my-4 bg-slate-900 dark:bg-slate-950 text-slate-100 p-4 rounded-xl overflow-x-auto font-mono text-sm leading-relaxed border border-slate-700 whitespace-pre break-inside-avoid">
+            {codeContent}
+          </pre>
+        );
+      } else {
+        elements.push(
+          <div key={`code-${i}`} className="my-4 bg-slate-900 dark:bg-slate-950 text-slate-100 p-4 rounded-xl overflow-x-auto font-mono text-sm leading-relaxed border border-slate-700 break-inside-avoid">
+            <pre><code>{codeContent}</code></pre>
+          </div>
+        );
+      }
+      continue;
+    }
+
     let cleanLine = line.trim().replace(/^[-*\d+.]\s+/, '').trim();
 
     // GitHub-style callouts: > [!TIP], > [!NOTE], > [!WARNING], > [!IMPORTANT], > [!CAUTION]
@@ -167,8 +196,8 @@ export function renderMarkdown(text) {
       }
     }
 
-    // Normalize: **[TÜYO]**, **[DİKKAT]**, **[ÖNEMLİ]** → strip bold markers
-    cleanLine = cleanLine.replace(/^\*\*(\[(?:TÜYO|DİKKAT|ÖNEMLİ)\])\*\*/, '$1');
+    // Normalize: **[TÜYO]**, **[DİKKAT]**, **[ÖNEMLİ]**, **[METAFOR]** → strip bold markers
+    cleanLine = cleanLine.replace(/^\*\*(\[(?:TÜYO|DİKKAT|ÖNEMLİ|METAFOR)\])\*\*/, '$1');
 
     // [TÜYO] — mor/indigo
     if (cleanLine.startsWith('[TÜYO]')) {
@@ -220,6 +249,25 @@ export function renderMarkdown(text) {
             <div>
               <span className="font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Kritik Vurgu</span>
               <p className="text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed">{formatInline(cleanLine.replace('[ÖNEMLİ]', '').trim())}</p>
+            </div>
+          </div>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // [METAFOR] — mavi/cyan
+    if (cleanLine.startsWith('[METAFOR]')) {
+      elements.push(
+        <div key={i} className="my-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:bg-blue-950 dark:from-blue-950 dark:to-cyan-950 border border-blue-100 dark:border-blue-800 p-5 rounded-2xl shadow-sm relative overflow-hidden break-inside-avoid">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 dark:bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm no-print shrink-0">
+              <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+            </div>
+            <div>
+              <span className="font-extrabold text-blue-700 dark:text-blue-300 uppercase tracking-widest text-xs mb-1.5 block opacity-80">Akılda Kalıcı Analoji</span>
+              <p className="text-blue-900 dark:text-blue-100 font-medium leading-relaxed">{formatInline(cleanLine.replace('[METAFOR]', '').trim())}</p>
             </div>
           </div>
         </div>
@@ -296,7 +344,7 @@ export function renderMarkdown(text) {
 
       while (i < lines.length && lines[i].trim().match(/^\d+\.\s/)) {
         let currentCleanLine = lines[i].trim().replace(/^\d+\.\s/, '').trim();
-        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]')) {
+        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]') || currentCleanLine.startsWith('[METAFOR]')) {
           break;
         }
         listItems.push(currentCleanLine);
@@ -314,7 +362,7 @@ export function renderMarkdown(text) {
       const listItems = [];
       while (i < lines.length && lines[i].trim().match(/^[-*]\s/)) {
         let currentCleanLine = lines[i].trim().replace(/^[-*]\s/, '').trim();
-        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]')) {
+        if (currentCleanLine.startsWith('[TÜYO]') || currentCleanLine.startsWith('[DİKKAT]') || currentCleanLine.startsWith('[ÖNEMLİ]') || currentCleanLine.startsWith('[METAFOR]')) {
           break;
         }
         listItems.push(currentCleanLine);

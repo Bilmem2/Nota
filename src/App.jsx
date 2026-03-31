@@ -35,6 +35,10 @@ import {
   Trash2,
   FolderOpen,
   Key,
+  Brain,
+  PanelLeft,
+  PanelLeftClose,
+  Eraser,
 } from 'lucide-react';
 
 import { callGemini, GEMINI_MODELS, OPENROUTER_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, XAI_MODELS, PERPLEXITY_MODELS, ZAI_MODELS, KIMI_MODELS, QWEN_MODELS, DEEPSEEK_MODELS, PIAPI_MODELS, LLM7_MODELS, MIMO_MODELS, TOGETHER_MODELS } from './utils/gemini';
@@ -78,7 +82,7 @@ const T = {
     settings: 'Ayarlar', darkMode: 'Karanlık Tema', language: 'Dil', fullscreen: 'Tam Ekran',
     normalScreen: 'Normal Ekran', newStudy: 'Yeni Çalışma', importFile: 'İçeri Aktar',
     saveMaterial: 'Materyali Kaydet ve Analiz Et', generating: 'Oluşturuluyor...',
-    generate: 'Oluştur', mindMap: 'Kavram Haritası',
+    generate: 'Oluştur',
     chatPlaceholder: 'Konuyla ilgili kafanıza takılanı sorun...',
     chatWelcome: 'Ben senin yapay öğretmeninim. Yüklediğin materyalle ilgili aklına takılan her soruyu bana sorabilirsin.',
     chatMaterialLoaded: 'Yeni materyal başarıyla sisteme aktarıldı. Hazırsan çalışmaya başlayalım.',
@@ -88,7 +92,7 @@ const T = {
     mockSubmit: 'Gönder ve Değerlendir',
     aiEvaluating: 'AI Değerlendiriyor...',
     pdfLoading: "Nota PDF'i inceliyor, lütfen bekleyin...",
-    author: '© Can Sevilmiş', version: 'Nota v1.0',
+    author: '© Can Sevilmiş', version: 'Nota v2.0',
     // Archive
     archiveTitle: 'Çalışma Arşivi', importBtn: 'İçeri Aktar', newStudyBtn: 'Yeni Çalışma',
     archiveEmpty: 'Henüz Kayıtlı Bir Çalışmanız Yok',
@@ -194,7 +198,7 @@ const T = {
     settings: 'Settings', darkMode: 'Dark Mode', language: 'Language', fullscreen: 'Fullscreen',
     normalScreen: 'Exit Fullscreen', newStudy: 'New Study', importFile: 'Import',
     saveMaterial: 'Save & Analyze Material', generating: 'Generating...',
-    generate: 'Generate', mindMap: 'Concept Map',
+    generate: 'Generate',
     chatPlaceholder: 'Ask anything about the material...',
     chatWelcome: 'I am your AI teacher. Feel free to ask me anything about the material you uploaded.',
     chatMaterialLoaded: 'New material loaded successfully. Ready to start whenever you are.',
@@ -204,7 +208,7 @@ const T = {
     mockSubmit: 'Submit & Evaluate',
     aiEvaluating: 'AI Evaluating...',
     pdfLoading: "Nota is reading the PDF, please wait...",
-    author: '© Can Sevilmiş', version: 'Nota v1.0',
+    author: '© Can Sevilmiş', version: 'Nota v2.0',
     // Archive
     archiveTitle: 'Study Archive', importBtn: 'Import', newStudyBtn: 'New Study',
     archiveEmpty: 'No Saved Studies Yet',
@@ -427,7 +431,7 @@ export default function App() {
     finished: false,
   });
 
-  const [chatMessages, setChatMessages] = useState(() => {
+  const [chatThreads, setChatThreads] = useState(() => {
     const saved = localStorage.getItem('app_lang');
     const defaultLang = saved || (() => {
       try {
@@ -435,9 +439,24 @@ export default function App() {
       } catch (_) {}
       return 'en';
     })();
-    return [{ role: 'model', text: T[defaultLang].chatWelcome, isSystem: true }];
+    const welcomeMsg = T[defaultLang].chatWelcome;
+    return [{ id: Date.now().toString(), title: T[defaultLang].chatTitle || 'Akademik Sohbet', messages: [{ role: 'model', text: welcomeMsg, isSystem: true }] }];
   });
+  const [activeChatThreadId, setActiveChatThreadId] = useState(() => {
+    const saved = localStorage.getItem('app_lang');
+    const defaultLang = saved || (() => {
+      try {
+        if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Istanbul') return 'tr';
+      } catch (_) {}
+      return 'en';
+    })();
+    return Date.now().toString();
+  });
+  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
   const [currentMessage, setCurrentMessage] = useState('');
+
+  const activeChatThread = chatThreads.find(t => t.id === activeChatThreadId) || chatThreads[0];
+  const chatMessages = activeChatThread?.messages || [];
 
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -467,21 +486,23 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('app_lang', appLang);
-    // Sistem mesajlarını dil değişince güncelle (kullanıcı mesajı yoksa)
-    setChatMessages((prev) => {
-      const hasUserMessages = prev.some((m) => m.role === 'user');
-      if (hasUserMessages) return prev; // Gerçek konuşma varsa dokunma
-      // Tüm sistem mesajlarını yeni dile çevir
-      return prev.map((msg) => {
-        if (!msg.isSystem) return msg;
-        const txt = msg.text;
-        const isMaterialLoaded = txt === T.tr.chatMaterialLoaded || txt === T.en.chatMaterialLoaded;
-        const isNewSession = txt === T.tr.chatNewSession || txt === T.en.chatNewSession;
-        if (isMaterialLoaded) return { ...msg, text: T[appLang].chatMaterialLoaded };
-        if (isNewSession) return { ...msg, text: T[appLang].chatNewSession };
-        return { ...msg, text: T[appLang].chatWelcome };
-      });
-    });
+    // Aktif thread'deki sistem mesajlarını dil değişince güncelle (kullanıcı mesajı yoksa)
+    setChatThreads((prev) => prev.map((thread) => {
+      const hasUserMessages = thread.messages.some((m) => m.role === 'user');
+      if (hasUserMessages) return thread;
+      return {
+        ...thread,
+        messages: thread.messages.map((msg) => {
+          if (!msg.isSystem) return msg;
+          const txt = msg.text;
+          const isMaterialLoaded = txt === T.tr.chatMaterialLoaded || txt === T.en.chatMaterialLoaded;
+          const isNewSession = txt === T.tr.chatNewSession || txt === T.en.chatNewSession;
+          if (isMaterialLoaded) return { ...msg, text: T[appLang].chatMaterialLoaded };
+          if (isNewSession) return { ...msg, text: T[appLang].chatNewSession };
+          return { ...msg, text: T[appLang].chatWelcome };
+        }),
+      };
+    }));
   }, [appLang]);
 
   useEffect(() => {
@@ -515,7 +536,7 @@ export default function App() {
       savedMaterial,
       materialChunks,
       content,
-      chatMessages,
+      chatThreads,
     };
 
     setSessionsList((prev) => {
@@ -529,10 +550,12 @@ export default function App() {
       localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
       return newList;
     });
-  }, [savedMaterial, content, chatMessages, studyTitle, activeSessionId, materialChunks]);
+  }, [savedMaterial, content, chatThreads, studyTitle, activeSessionId, materialChunks]);
 
   const createNewSession = () => {
     const newId = Date.now().toString();
+    const threadId = Date.now().toString() + '_t';
+    const defaultThread = { id: threadId, title: t.chatTitle || 'Akademik Sohbet', messages: [{ role: 'model', text: t.chatNewSession, isSystem: true }] };
     const newSession = {
       id: newId,
       title: 'İsimsiz Çalışma',
@@ -540,7 +563,7 @@ export default function App() {
       savedMaterial: '',
       materialChunks: [],
       content: { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null },
-      chatMessages: [{ role: 'model', text: t.chatNewSession, isSystem: true }],
+      chatThreads: [defaultThread],
     };
     setSessionsList((prev) => {
       const newList = [newSession, ...prev];
@@ -553,7 +576,8 @@ export default function App() {
     setSavedMaterial('');
     setMaterialChunks([]);
     setContent({ lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null });
-    setChatMessages([{ role: 'model', text: t.chatNewSession, isSystem: true }]);
+    setChatThreads([defaultThread]);
+    setActiveChatThreadId(threadId);
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
     setActiveTab('material');
@@ -566,18 +590,30 @@ export default function App() {
     setSavedMaterial(session.savedMaterial);
     setMaterialText(session.savedMaterial);
     setMaterialChunks(session.materialChunks || []);
-    setContent(session.content || { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null });
-    // Eski kayıtlarda isSystem flag'i olmayabilir — sistem mesajlarını normalize et
-    const normalizedMessages = (session.chatMessages || []).map(msg => {
-      if (msg.role === 'model' && !msg.isSystem) {
-        const isSysMsg = Object.values(T).some(lang =>
-          msg.text === lang.chatMaterialLoaded || msg.text === lang.chatNewSession || msg.text === lang.chatWelcome
-        );
-        if (isSysMsg) return { ...msg, isSystem: true };
-      }
-      return msg;
-    });
-    setChatMessages(normalizedMessages);
+    setContent(session.content
+      ? {
+          lesson: session.content.lesson || {},
+          notes: session.content.notes || {},
+          visual: session.content.visual || {},
+          quiz: session.content.quiz || null,
+          quizHistory: session.content.quizHistory || [],
+          mindMap: session.content.mindMap || null,
+        }
+      : { lesson: {}, notes: {}, visual: {}, quiz: null, quizHistory: [], mindMap: null });
+    // chatThreads varsa yükle, yoksa eski chatMessages'tan migrate et
+    if (session.chatThreads && session.chatThreads.length > 0) {
+      setChatThreads(session.chatThreads);
+      setActiveChatThreadId(session.chatThreads[0].id);
+    } else if (session.chatMessages) {
+      const legacyThread = { id: Date.now().toString(), title: 'Geçmiş Sohbet', messages: session.chatMessages };
+      setChatThreads([legacyThread]);
+      setActiveChatThreadId(legacyThread.id);
+    } else {
+      const threadId = Date.now().toString();
+      const defaultThread = { id: threadId, title: t.chatTitle || 'Akademik Sohbet', messages: [{ role: 'model', text: t.chatNewSession, isSystem: true }] };
+      setChatThreads([defaultThread]);
+      setActiveChatThreadId(threadId);
+    }
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
     setActiveTab('lesson');
@@ -994,8 +1030,12 @@ ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question
     setQuizState({ activeMode: 'interactive', currentIndex: 0, answers: {}, verdicts: {}, isChecked: false, isEvaluating: false, hintLevel: 0, finished: false });
     setQuizConfig((p) => ({ ...p, quizScope: 'current', selectedSessions: [] }));
 
-    // Materyal yüklenince her zaman chat'i sıfırla ve yeni dilde karşılama mesajı göster
-    setChatMessages([{ role: 'model', text: t.chatMaterialLoaded, isSystem: true }]);
+    // Materyal yüklenince aktif thread'i sıfırla ve yeni dilde karşılama mesajı göster
+    setChatThreads((prev) => prev.map((thread) =>
+      thread.id === activeChatThreadId
+        ? { ...thread, messages: [{ role: 'model', text: t.chatMaterialLoaded, isSystem: true }] }
+        : thread
+    ));
     setActiveTab('lesson');
   };
 
@@ -1188,22 +1228,20 @@ Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
       switch (type) {
         case 'lesson':
           if (isGroq) {
-            // Sistem prompt: sadece rol + format. User prompt: görev + yapı + materyal.
-            // Yapıyı önceden açmak modeli "tamamlama moduna" sokar → token israfı sıfır.
-            systemInstruction = `Sen üniversite düzeyinde ders anlatan bir akademisyensin. Markdown kullan, selamlama yapma, materyaldeki her kavramı eksiksiz açıkla. [TÜYO] [DİKKAT] [ÖNEMLİ] etiketlerini yerinde kullan.`;
+            systemInstruction = `Sen üniversite düzeyinde ders anlatan bir akademisyensin. Markdown kullan, selamlama yapma, materyaldeki her kavramı eksiksiz açıkla. [TÜYO] [DİKKAT] [ÖNEMLİ] [METAFOR] etiketlerini yerinde kullan. Teknik terimleri (Chi-square gibi) orijinal veya yaygın akademik Türkçesiyle bırak. Tablolar için Markdown formatı kullan. Formüllerde LaTeX yerine Unicode düz metin kullan. Soyağacı/pedigree ve dallanma hesaplamalarını \`\`\`text bloğuna al.`;
             prompt = `${groqContextPrefix}Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, eksiksiz ve detaylı biçimde anlat. Materyaldeki hiçbir kavramı, terimi veya süreci atlama. Çıktını şu yapıda ver:
 
 ## Giriş
 [Konunun akademik önemi ve bağlamı — doğrudan başla]
 
 ## Detaylı Anlatım
-[Materyaldeki tüm kavramları alt başlıklarla açıkla. Gerekirse tablolar kullan.]
+[Materyaldeki tüm kavramları alt başlıklarla açıkla. Punnett karesi gibi matrisler için Markdown tablosu kullan. Soyağacı/dallanma hesaplamalarını \`\`\`text bloğuna al.]
 
 ## Kavramlar Arası İlişkiler
 [Konular arasındaki bağlantılar ve neden-sonuç ilişkileri]
 
 ## Kritik Noktalar
-[TÜYO], [DİKKAT], [ÖNEMLİ] etiketleriyle öne çıkan bilgiler
+[TÜYO], [DİKKAT], [ÖNEMLİ], [METAFOR] etiketleriyle öne çıkan bilgiler
 
 ---
 MATERYAL:
@@ -1212,15 +1250,24 @@ ${textToAnalyze}`;
             prompt = `Aşağıdaki ders materyalini ${partInfo} üniversite seviyesinde, akıcı, akademik ama abartıdan uzak bir dille detaylıca anlat. Materyaldeki hiçbir konuyu atlama:\n\n${textToAnalyze}`;
             systemInstruction = `Sen üniversite öğrencilerine ders anlatan saygın bir eğitmensin. Karşındaki 3. sınıf bir üniversite öğrencisi. Anlatımında çocukça, zorlama analojilerden kaçın. "Merhaba" gibi selamlamalar YAPMADAN doğrudan konuya gir.
 Lütfen dersi şu yapıya sadık kalarak detaylıca anlat:
-1. **Doğrudan Giriş:** Bu konunun akademik özü ve önemi nedir? 
+1. **Doğrudan Giriş:** Bu konunun akademik özü ve önemi nedir?
 2. **Kapsamlı ve Eksiksiz Anlatım:** Sana verilen materyaldeki HİÇBİR BİLGİYİ atlama. Gerekirse alt başlıklar ve TABLOLAR kullanarak mantığını detaylıca anlat.
 3. **Stratejik Vurgular:** Konuyu anlatırken aralara uyarılar serpiştir.
 
-ÖNEMLİ: Akademik metinleri zenginleştirmek için şu 3 özel etiketi satır başında (başka bir işaret olmadan) YERİ GELDİKÇE kullan:
+ÖNEMLİ KURALLAR:
+- [TERİMLER VE FORMÜLLER]: 'Chi-square' gibi evrensel teknik terimleri 'kay kare' gibi tuhaf şekillerde çevirme; orijinal dilinde (Chi-square) veya en yaygın akademik Türkçe (Ki-kare) haliyle bırak.
+- [TABLOLAR]: Punnett karesi gibi matris/tablo gerektiren verileri KESİNLİKLE Markdown tablosu ( | Sütun | Sütun | ) formatında çiz. Asla düz metin olarak bırakma.
+- [MATEMATİK]: Karmaşık LaTeX kodları (\\frac, \\sum, \\times) KULLANMA. Bunun yerine formülleri herkesin doğrudan okuyabileceği düz metin ve Unicode sembolleri (X² = Σ ((O-E)² / E) veya 1/4 AA x 1/4 bb) formatında yaz.
+- [GÖRSELLEŞTİRME VE HESAPLAMALAR]: Soyağacı (pedigree) çizimlerini ve Trihibrit/Dallanma (Forked-Line) hesaplamalarını KESİNLİKLE \`\`\`text ... \`\`\` kod blokları içine al. Bu çok kritik, yoksa boşluklar kayar! Pedigri çizerken ┌, ┬, ┐, ├, ┼, ┤, └, ┴, ┘, │, ─ gibi profesyonel kutu çizim karakterlerini kullan. Hesaplamaları hiyerarşik ve alt alta yaz.
+
+Akademik metinleri zenginleştirmek için şu 4 özel etiketi satır başında (başka bir işaret olmadan) YERİ GELDİKÇE kullan:
 - [TÜYO] : Sınavlarda çıkması muhtemel stratejik ipuçları için.
 - [DİKKAT] : Sık düşülen kavram yanılgıları ve tuzaklar için.
 - [ÖNEMLİ] : Kesinlikle bilinmesi gereken kritik tanımlar için.
-UYARI: Bu etiketleri SADECE köşeli parantez formatında yaz: [TÜYO], [DİKKAT], [ÖNEMLİ]. Asla > [!TIP], > [!NOTE], > [!WARNING] gibi GitHub callout formatı KULLANMA.`;
+- [METAFOR] : Karmaşık bir süreci, mekanizmayı veya kavramı anlatırken zorlama olmadan, zihinde canlanacak günlük hayattan ufak bir analoji kurmak için.
+UYARI: Bu etiketleri SADECE köşeli parantez formatında yaz. Asla > [!TIP], > [!NOTE], > [!WARNING] gibi GitHub callout formatı KULLANMA.
+
+Not: Sana verilen metin daha büyük bir materyalin parçası (bölümü) olabilir ve önceki/sonraki bölümlerle anlam bütünlüğü için ortak cümleler içerebilir. Lütfen konuyu sanki kesintisiz bir akışın parçasıymış gibi ele alarak doğrudan anlatıma geç.`;
           }
           break;
         case 'notes':
@@ -1331,12 +1378,58 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     });
   };
 
+  const handleNewChatThread = () => {
+    playSound('select', soundEnabled);
+    const newId = Date.now().toString();
+    const newThread = {
+      id: newId,
+      title: appLang === 'tr' ? 'Yeni Sohbet' : 'New Chat',
+      messages: [{ role: 'model', text: appLang === 'tr' ? 'Ben Nota. Bu konuyla ilgili yeni bir sohbet başlattın. Aklına takılanları sorabilirsin.' : "I'm Nota. You've started a new chat. Feel free to ask anything.", isSystem: true }],
+    };
+    setChatThreads((prev) => [newThread, ...prev]);
+    setActiveChatThreadId(newId);
+    if (window.innerWidth < 768) setIsChatSidebarOpen(false);
+  };
+
+  const handleDeleteChatThread = (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm(appLang === 'tr' ? 'Bu sohbeti tamamen silmek istediğinize emin misiniz?' : 'Are you sure you want to delete this chat?')) return;
+    playSound('select', soundEnabled);
+    setChatThreads((prev) => {
+      const filtered = prev.filter((t) => t.id !== id);
+      if (filtered.length === 0) {
+        const newId = Date.now().toString();
+        const newThread = { id: newId, title: appLang === 'tr' ? 'Yeni Sohbet' : 'New Chat', messages: [{ role: 'model', text: appLang === 'tr' ? 'Sohbet geçmişi temizlendi.' : 'Chat history cleared.', isSystem: true }] };
+        setActiveChatThreadId(newId);
+        return [newThread];
+      }
+      if (id === activeChatThreadId) setActiveChatThreadId(filtered[0].id);
+      return filtered;
+    });
+  };
+
+  const handleClearCurrentChat = () => {
+    if (!window.confirm(appLang === 'tr' ? 'Mevcut sohbetin tüm mesajlarını temizlemek istediğinize emin misiniz?' : 'Clear all messages in this chat?')) return;
+    playSound('select', soundEnabled);
+    setChatThreads((prev) => prev.map((thread) =>
+      thread.id === activeChatThreadId
+        ? { ...thread, messages: [{ role: 'model', text: appLang === 'tr' ? 'Sohbet temizlendi. Yeni sorularını bekliyorum.' : 'Chat cleared. Ready for your questions.', isSystem: true }] }
+        : thread
+    ));
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!currentMessage.trim() || !savedMaterial) return;
     const userMsg = currentMessage;
     setCurrentMessage('');
-    setChatMessages((prev) => [...prev, { role: 'user', text: userMsg }]);
+
+    setChatThreads((prev) => prev.map((thread) => {
+      if (thread.id !== activeChatThreadId) return thread;
+      const isFirstMsg = thread.messages.length <= 1;
+      const newTitle = isFirstMsg ? (userMsg.length > 25 ? userMsg.substring(0, 25) + '...' : userMsg) : thread.title;
+      return { ...thread, title: newTitle, messages: [...thread.messages, { role: 'user', text: userMsg }] };
+    }));
     setLoading((prev) => ({ ...prev, chat: true }));
 
     let historyStats = '';
@@ -1352,7 +1445,19 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
           .join('\n');
     }
 
-    const systemInstruction = `Sen üniversite öğrencilerine rehberlik eden akademik bir asistansın. Aşağıdaki referans materyali ve öğrencinin sınav geçmişini kullanarak soruları yanıtla. Zayıf yönlerini analiz edip tavsiye verebilirsin.\n\nREFERANS MATERYAL:\n${savedMaterial}\n\n${historyStats}`;
+    const systemInstruction = `Sen üniversite öğrencilerine rehberlik eden akademik bir asistansın. Aşağıdaki referans materyali ve öğrencinin sınav geçmişini kullanarak soruları yanıtla. Zayıf yönlerini analiz edip tavsiye verebilirsin.
+
+ÖNEMLİ KURALLAR:
+- [TERİMLER VE FORMÜLLER]: 'Chi-square' gibi evrensel teknik terimleri 'kay kare' gibi tuhaf şekillerde çevirme; orijinal dilinde (Chi-square) veya en yaygın akademik Türkçe (Ki-kare) haliyle bırak.
+- [MATEMATİK]: Karmaşık LaTeX kodları (\\frac, \\sum, \\times, \\mathbf, \\approx, $ ve $ sembolleri) KESİNLİKLE KULLANMA. Bunun yerine formülleri herkesin doğrudan okuyabileceği düz metin ve Unicode sembolleri (Örn: X² = Σ ((O-E)² / E) veya 1/4 AA x 1/4 bb) formatında yaz.
+- [GÖRSELLEŞTİRME VE HESAPLAMALAR]: Soyağacı (pedigree) çizimlerini ve Trihibrit/Dallanma (Forked-Line) hesaplamalarını KESİNLİKLE \`\`\`text ... \`\`\` kod blokları içine al. Bu çok kritik, yoksa boşluklar kayar! Pedigri çizerken ┌, ┬, ┐, ├, ┼, ┤, └, ┴, ┘, │, ─ gibi profesyonel kutu çizim karakterlerini kullan. Hesaplamaları hiyerarşik ve alt alta yaz.
+- Sokratik sorgulama yapabilir, öğrenciyi düşündürebilirsin.
+
+REFERANS MATERYAL:
+${savedMaterial}
+
+${historyStats}`;
+
     const chatHistoryText = chatMessages
       .slice(-5)
       .map((m) => `${m.role === 'user' ? 'Öğrenci' : 'Öğretmen'}: ${m.text}`)
@@ -1361,10 +1466,18 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
 
     try {
       const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, selectedModelForProvider);
-      setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
+      setChatThreads((prev) => prev.map((thread) =>
+        thread.id === activeChatThreadId
+          ? { ...thread, messages: [...thread.messages, { role: 'model', text: response }] }
+          : thread
+      ));
     } catch (err) {
       console.error('Chat error:', err);
-      setChatMessages((prev) => [...prev, { role: 'model', text: appLang === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'An error occurred. Please try again.' }]);
+      setChatThreads((prev) => prev.map((thread) =>
+        thread.id === activeChatThreadId
+          ? { ...thread, messages: [...thread.messages, { role: 'model', text: appLang === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'An error occurred. Please try again.' }] }
+          : thread
+      ));
     } finally {
       setLoading((prev) => ({ ...prev, chat: false }));
     }
@@ -2504,8 +2617,9 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 2: DERS ANLATIMI */}
           {activeTab === 'lesson' &&
             (() => {
-              const isStarted = Object.keys(content.lesson).length > 0 || generatingIndex.lesson !== -1 || loading.lesson;
-              const isFinished = Object.keys(content.lesson).length > 0 && generatingIndex.lesson === -1 && !loading.lesson;
+              const lesson = content.lesson || {};
+              const isStarted = Object.keys(lesson).length > 0 || generatingIndex.lesson !== -1 || loading.lesson;
+              const isFinished = Object.keys(lesson).length > 0 && generatingIndex.lesson === -1 && !loading.lesson;
 
               return (
                 <div className="animate-in fade-in duration-500">
@@ -2622,8 +2736,9 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 3: DERS NOTLARI (ÇALIŞMA REHBERİ) */}
           {activeTab === 'notes' &&
             (() => {
-              const isStarted = Object.keys(content.notes).length > 0 || generatingIndex.notes !== -1 || loading.notes;
-              const isFinished = Object.keys(content.notes).length > 0 && generatingIndex.notes === -1 && !loading.notes;
+              const notes = content.notes || {};
+              const isStarted = Object.keys(notes).length > 0 || generatingIndex.notes !== -1 || loading.notes;
+              const isFinished = Object.keys(notes).length > 0 && generatingIndex.notes === -1 && !loading.notes;
 
               return (
                 <div className="animate-in fade-in duration-500">
@@ -2727,8 +2842,9 @@ ${savedMaterial.slice(0, 10000)}`;
           {/* TAB 3.5: GÖRSEL ÖZET */}
           {activeTab === 'visual' &&
             (() => {
-              const isStarted = Object.keys(content.visual).length > 0 || generatingIndex.visual !== -1 || loading.visual;
-              const isFinished = Object.keys(content.visual).length > 0 && generatingIndex.visual === -1 && !loading.visual;
+              const visual = content.visual || {};
+              const isStarted = Object.keys(visual).length > 0 || generatingIndex.visual !== -1 || loading.visual;
+              const isFinished = Object.keys(visual).length > 0 && generatingIndex.visual === -1 && !loading.visual;
 
               return (
                 <div className="animate-in fade-in duration-500">
@@ -3498,66 +3614,166 @@ ${savedMaterial.slice(0, 10000)}`;
 
           {/* TAB 5: SOHBET (SORU SOR) */}
           {activeTab === 'chat' && (
-            <div className="animate-in fade-in duration-500 flex flex-col" style={{ height: 'calc(100dvh - 9rem)' }}>
+            <div className="animate-in fade-in duration-500 flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100dvh-6rem)]">
               <div className="flex items-center gap-3 mb-6 px-2 shrink-0">
                 <MessageSquare size={32} className="text-indigo-600" />
-                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.chatTitle}</h2>
+                <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{t.chatTitle}</h2>
               </div>
 
-              <div className="flex-1 bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50">
-                  {chatMessages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div
-                        className={`
-                          max-w-[85%] md:max-w-[75%] rounded-3xl p-5 shadow-sm text-base
-                          ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none font-medium' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'}
-                        `}
+              <div className="flex-1 flex overflow-hidden relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-sm">
+
+                {/* Sol Panel: Sohbet Geçmişi */}
+                <div className={`
+                  absolute md:relative z-30 h-full bg-slate-50 dark:bg-slate-900 flex flex-col transition-all duration-300 ease-in-out shrink-0
+                  ${isChatSidebarOpen ? 'w-72 md:w-72 translate-x-0 border-r border-slate-200 dark:border-slate-700 shadow-2xl md:shadow-none' : 'w-72 md:w-0 -translate-x-full md:translate-x-0 border-r-0'}
+                  overflow-hidden
+                `}>
+                  <div className="w-72 h-full flex flex-col shrink-0">
+                    <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <Library size={16} className="text-indigo-600" />
+                        {appLang === 'tr' ? 'Sohbet Geçmişi' : 'Chat History'}
+                      </h3>
+                      <button className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg" onClick={() => setIsChatSidebarOpen(false)}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="p-3">
+                      <button
+                        onClick={handleNewChatThread}
+                        className="w-full py-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl flex items-center justify-center gap-2 transition-all border border-indigo-200 dark:border-indigo-700 shadow-sm text-sm"
                       >
-                        {msg.role === 'model' ? (
-                          <div className="prose prose-indigo max-w-none">{renderMarkdown(msg.text)}</div>
-                        ) : (
-                          <p className="leading-relaxed">{msg.text}</p>
-                        )}
-                      </div>
+                        <PlusCircle size={16} /> {appLang === 'tr' ? 'Yeni Sohbet' : 'New Chat'}
+                      </button>
                     </div>
-                  ))}
-                  {loading.chat && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 text-slate-500 rounded-3xl rounded-tl-none p-5 shadow-sm flex items-center gap-3 font-medium">
-                        <Loader2 size={20} className="animate-spin text-indigo-500" />
-                        <span>{t.chatTyping}</span>
-                      </div>
+                    <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5">
+                      {chatThreads.map((thread) => (
+                        <div
+                          key={thread.id}
+                          onClick={() => { playSound('select', soundEnabled); setActiveChatThreadId(thread.id); if (window.innerWidth < 768) setIsChatSidebarOpen(false); }}
+                          className={`group cursor-pointer p-3 rounded-xl flex items-center justify-between transition-all border text-sm ${
+                            activeChatThreadId === thread.id
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                              : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <MessageSquare size={14} className={`shrink-0 ${activeChatThreadId === thread.id ? 'text-indigo-200' : 'text-slate-400'}`} />
+                            <span className="truncate font-semibold">{thread.title}</span>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteChatThread(e, thread.id)}
+                            className={`p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100 shrink-0 ${
+                              activeChatThreadId === thread.id
+                                ? 'hover:bg-indigo-500 text-indigo-200'
+                                : 'hover:bg-rose-100 dark:hover:bg-rose-900/30 text-slate-400 hover:text-rose-600'
+                            }`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  <div ref={chatEndRef} />
+                  </div>
                 </div>
 
-                <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-200">
-                  <div className="relative flex items-end gap-3">
-                    <textarea
-                      value={currentMessage}
-                      onChange={(e) => setCurrentMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage(e);
-                        }
-                      }}
-                      placeholder={t.chatPlaceholder}
-                      className="w-full bg-slate-100 border-none rounded-2xl pl-5 pr-14 py-4 focus:ring-4 focus:ring-indigo-500/20 resize-none min-h-[60px] max-h-[200px] text-lg text-slate-700 font-medium"
-                      rows={1}
-                    />
+                {/* Mobil Overlay */}
+                {isChatSidebarOpen && (
+                  <div
+                    className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-20 md:hidden"
+                    onClick={() => setIsChatSidebarOpen(false)}
+                  />
+                )}
+
+                {/* Sağ Panel: Ana Sohbet */}
+                <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative z-10">
+
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <button
+                        className={`p-2 border rounded-xl shadow-sm transition-all ${isChatSidebarOpen ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
+                        onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)}
+                        title={isChatSidebarOpen ? (appLang === 'tr' ? 'Geçmişi Gizle' : 'Hide History') : (appLang === 'tr' ? 'Geçmişi Göster' : 'Show History')}
+                      >
+                        {isChatSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+                      </button>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 truncate">{activeChatThread?.title || t.chatTitle}</h3>
+                    </div>
                     <button
-                      type="submit"
-                      disabled={!currentMessage.trim() || loading.chat}
-                      className="absolute right-3 bottom-3 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-md shadow-indigo-600/20"
+                      onClick={handleClearCurrentChat}
+                      className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-xl transition-all shadow-sm shrink-0"
                     >
-                      <Send size={20} />
+                      <Eraser size={15} /> <span className="hidden sm:inline">{appLang === 'tr' ? 'Temizle' : 'Clear'}</span>
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-3 text-center font-medium">{t.chatDisclaimer}</p>
-                </form>
+
+                  {/* Mesajlar */}
+                  <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6 bg-slate-50 dark:bg-slate-900/50">
+                    {chatMessages.map((msg, index) => (
+                      <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`
+                          max-w-[90%] md:max-w-[80%] rounded-3xl p-5 shadow-sm text-base relative
+                          ${msg.role === 'user'
+                            ? 'bg-indigo-600 text-white rounded-tr-none font-medium'
+                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-tl-none'}
+                        `}>
+                          {msg.role === 'model' && (
+                            <div className="absolute -left-3 -top-3 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm">
+                              <Brain size={15} />
+                            </div>
+                          )}
+                          {msg.role === 'model' ? (
+                            <div className="prose prose-indigo max-w-none prose-p:leading-relaxed">
+                              {renderMarkdown(msg.text)}
+                            </div>
+                          ) : (
+                            <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {loading.chat && (
+                      <div className="flex justify-start pl-2">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 rounded-3xl rounded-tl-none p-5 shadow-sm flex items-center gap-3 font-medium relative">
+                          <div className="absolute -left-3 -top-3 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm">
+                            <Brain size={15} />
+                          </div>
+                          <Loader2 size={20} className="animate-spin text-indigo-500" />
+                          <span>{t.chatTyping}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Input */}
+                  <form onSubmit={handleSendMessage} className="p-4 md:p-6 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+                    <div className="relative flex items-end gap-3 max-w-4xl mx-auto">
+                      <textarea
+                        value={currentMessage}
+                        onChange={(e) => setCurrentMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                          }
+                        }}
+                        placeholder={t.chatPlaceholder}
+                        className="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 focus:border-indigo-400 rounded-2xl pl-5 pr-16 py-4 focus:ring-4 focus:ring-indigo-500/10 resize-none min-h-[60px] max-h-[200px] text-base md:text-lg text-slate-700 dark:text-slate-100 font-medium transition-all outline-none"
+                        rows={1}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!currentMessage.trim() || loading.chat}
+                        className="absolute right-3 bottom-3 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
+                      >
+                        <Send size={20} />
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3 text-center font-medium">{t.chatDisclaimer}</p>
+                  </form>
+                </div>
               </div>
             </div>
           )}
