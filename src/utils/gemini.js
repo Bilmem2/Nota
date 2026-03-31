@@ -13,8 +13,8 @@ const TOGETHER_URL = 'https://api.together.xyz/v1/chat/completions';
 const MIMO_URL = 'https://api.xiaomimimo.com/anthropic/v1/messages';
 
 export const GEMINI_MODELS = [
-  { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash ⭐ (Ücretsiz*, Hızlı)' },
+  { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro 💳 (Ücretli, En Güçlü)' },
   { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Ücretsiz*, Kararlı)' },
   { id: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro (Ücretsiz*, Eski)' },
 ];
@@ -200,7 +200,7 @@ export const LLM7_MODELS = [
 // llm7: token.llm7.io'dan ücretsiz token al · 100 req/h, 20 req/min, 2 req/s
 
 async function callGeminiAPI(prompt, systemInstruction, apiKey, inlineData, isJson, model) {
-  const geminiModel = model || 'gemini-2.0-flash';
+  const geminiModel = model || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
   const parts = [{ text: prompt }];
   if (inlineData) parts.push({ inlineData });

@@ -307,8 +307,16 @@ const T = {
 
 // --- ANA UYGULAMA BİLEŞENİ ---
 export default function App() {
-  // API Key state - loaded from localStorage
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  // API Key state - prefer per-provider storage (provider_keys), fall back to legacy gemini_api_key
+  const [apiKey, setApiKey] = useState(() => {
+    try {
+      const keys = JSON.parse(localStorage.getItem('provider_keys') || '{}');
+      const prov = localStorage.getItem('ai_provider') || 'gemini';
+      return keys[prov] || localStorage.getItem('gemini_api_key') || '';
+    } catch {
+      return localStorage.getItem('gemini_api_key') || '';
+    }
+  });
   const [onboardingDone, setOnboardingDone] = useState(() => localStorage.getItem('onboarding_done') === 'true');
   const [provider, setProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
   const [openRouterModel, setOpenRouterModel] = useState(() => {
@@ -321,7 +329,14 @@ export default function App() {
   const [providerKeys, setProviderKeys] = useState(() => {
     try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; }
   });
+  // Per-provider selected models (provider -> modelId)
+  const [providerModels, setProviderModels] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('provider_models') || '{}'); } catch { return {}; }
+  });
   const [showSettings, setShowSettings] = useState(false);
+
+  // Selected model for the currently active provider (fallback to legacy openRouterModel)
+  const selectedModelForProvider = (providerModels && providerModels[provider]) || openRouterModel;
   const [activeSettingsTab, setActiveSettingsTab] = useState('api');
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [editingSessionId, setEditingSessionId] = useState(null);
@@ -358,6 +373,8 @@ export default function App() {
   const [materialText, setMaterialText] = useState('');
 
   const [sessionsList, setSessionsList] = useState([]);
+  const [selectedSessions, setSelectedSessions] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [studyTitle, setStudyTitle] = useState('');
 
@@ -479,6 +496,15 @@ export default function App() {
     }
   }, []);
 
+  // Keep selection in sync when sessions change (remove ids that no longer exist)
+  useEffect(() => {
+    if (!sessionsList || sessionsList.length === 0) {
+      setSelectedSessions([]);
+      return;
+    }
+    setSelectedSessions((prev) => prev.filter((id) => sessionsList.find((s) => s.id === id)));
+  }, [sessionsList]);
+
   useEffect(() => {
     if (!activeSessionId || !savedMaterial) return;
 
@@ -596,32 +622,121 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // Support importing multiple .akademik files or a bundle (array) file
+  const handleImportFiles = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const importedSession = JSON.parse(event.target.result);
-        if (!importedSession.id || !importedSession.savedMaterial) {
-          throw new Error('Geçersiz format');
+    const readFileAsText = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+
+    try {
+      const results = await Promise.all(Array.from(files).map(readFileAsText));
+      const imported = [];
+      results.forEach((txt) => {
+        try {
+          const parsed = JSON.parse(txt);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((sess) => {
+              if (sess && sess.savedMaterial) {
+                sess.id = Date.now().toString() + Math.random().toString(36).slice(2, 8);
+                sess.title = (sess.title || (appLang === 'tr' ? 'İsimsiz Çalışma' : 'Untitled Study')) + t.importedSuffix;
+                imported.push(sess);
+              }
+            });
+          } else if (parsed && parsed.savedMaterial) {
+            parsed.id = Date.now().toString() + Math.random().toString(36).slice(2, 8);
+            parsed.title = (parsed.title || (appLang === 'tr' ? 'İsimsiz Çalışma' : 'Untitled Study')) + t.importedSuffix;
+            imported.push(parsed);
+          }
+        } catch (err) {
+          console.error('Import parse error', err);
         }
-        importedSession.id = Date.now().toString();
-        importedSession.title = importedSession.title + t.importedSuffix;
+      });
 
-        setSessionsList((prev) => {
-          const newList = [importedSession, ...prev];
-          localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
-          return newList;
-        });
-        loadSession(importedSession);
-      } catch (err) {
-        showToast('Dosya okunamadı. Lütfen geçerli bir .akademik yedek dosyası seçin.', 'error');
+      if (imported.length === 0) {
+        showToast('Hiç geçerli yedek bulunamadı.', 'error');
+        e.target.value = null;
+        return;
       }
-    };
-    reader.readAsText(file);
-    e.target.value = null;
+
+      setSessionsList((prev) => {
+        const newList = [...imported, ...prev];
+        localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+        return newList;
+      });
+
+      // Load the first imported session
+      loadSession(imported[0]);
+      showToast(`${imported.length} çalışma içeri aktarıldı.`, 'info');
+    } catch (err) {
+      console.error('Import failed', err);
+      showToast('İçe aktarma başarısız oldu.', 'error');
+    } finally {
+      e.target.value = null;
+    }
+  };
+
+  const downloadAllSessions = () => {
+    try {
+      const bundle = JSON.stringify(sessionsList || [], null, 2);
+      const blob = new Blob([bundle], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `nota_backups_${date}.akademikbundle`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download all failed', err);
+      showToast('Tüm yedekler indirilemedi.', 'error');
+    }
+  };
+
+  // Selection helpers for bulk delete/import UI
+  const toggleSelectSession = (id, e) => {
+    if (e) e.stopPropagation();
+    setSelectedSessions((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const selectAllToggle = () => {
+    if (!sessionsList || sessionsList.length === 0) return;
+    if (selectedSessions.length === sessionsList.length) {
+      setSelectedSessions([]);
+    } else {
+      setSelectedSessions(sessionsList.map((s) => s.id));
+    }
+  };
+
+  const deleteSelectedSessions = (e) => {
+    if (e) e.stopPropagation();
+    if (!selectedSessions || selectedSessions.length === 0) return;
+    if (!window.confirm(appLang === 'tr' ? 'Seçili çalışmaları silmek istediğine emin misin?' : 'Are you sure you want to delete selected studies?')) return;
+    setSessionsList((prev) => {
+      const newList = prev.filter((s) => !selectedSessions.includes(s.id));
+      localStorage.setItem('akademik_asistan_sessions', JSON.stringify(newList));
+      return newList;
+    });
+    if (selectedSessions.includes(activeSessionId)) {
+      createNewSession();
+      setActiveTab('archive');
+    }
+    setSelectedSessions([]);
+  };
+
+  const deleteAllSessions = (e) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm(appLang === 'tr' ? 'Tüm çalışmaları silmek istediğine emin misin? Bu işlem geri alınamaz.' : 'Are you sure you want to delete all studies? This cannot be undone.')) return;
+    setSessionsList([]);
+    localStorage.removeItem('akademik_asistan_sessions');
+    createNewSession();
+    setActiveTab('archive');
+    setSelectedSessions([]);
   };
 
   const handleCheckAnswer = async () => {
@@ -643,7 +758,7 @@ Beklenen Doğru Cevap / Anahtar Noktalar: "${currentQ.dogruCevap}"
 Öğrenci beklenen cevabın ana fikrini yakalamışsa isCorrect: true yap. Kısmen doğruysa tolerans gösterip doğru sayabilirsin ancak eksiklerini feedback kısmında kibarca belirt. Essay (kompozisyon) ise argümanların sağlamlığına ve beklenen anahtar noktalara değinip değinmediğine bak. Tamamen alakasızsa isCorrect: false yap. 
 Çıktın SADECE geçerli bir JSON olmalıdır.
 { "isCorrect": true/false, "feedback": "Öğrenciye özel değerlendirme cümlen" }`;
-        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider, openRouterModel);
+        const result = await callGemini(prompt, 'Sen adil bir akademik değerlendiricisin. SADECE JSON formatında yanıt ver.', apiKey, null, true, provider, selectedModelForProvider);
         const parsed = parseJSON(result);
 
         // parsed null ise (JSON parse hatası) fallback'e düş
@@ -711,7 +826,7 @@ Cevaplar:
 ${questionsToEvaluate.map((item) => `Index: ${item.index} | Tip: ${item.question.tip} | Soru: ${item.question.soru} | Beklenen: ${item.question.dogruCevap} | Verilen: ${item.answer}`).join('\n')}`;
 
       try {
-        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider, openRouterModel);
+        const result = await callGemini(prompt, 'Sen adil bir değerlendiricisin. SADECE JSON dizisi dön.', apiKey, null, true, provider, selectedModelForProvider);
         const parsed = parseJSON(result);
         // parseJSON obje döndürebilir (AI {results:[...]} şeklinde sardıysa) — içindeki array'i bul
         let evalArray = null;
@@ -996,7 +1111,7 @@ Format:
 Tam ${quizConfig.count} soru hazırla. Başka hiçbir metin ekleme.`;
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider, openRouterModel);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, true, provider, selectedModelForProvider);
         const finalData = parseJSON(result);
         if (!finalData) throw new Error('JSON_PARSE_FAILED');
         setQuizState((p) => ({ ...p, activeMode: quizConfig.examMode, hintLevel: 0 }));
@@ -1172,7 +1287,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
       }
 
       try {
-        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson, provider, openRouterModel);
+        const result = await callGemini(prompt, systemInstruction, apiKey, null, isJson, provider, selectedModelForProvider);
         let finalData = result;
         if (isJson) {
           finalData = parseJSON(result);
@@ -1245,7 +1360,7 @@ Sadece içeriğe en uygun tek bir formatı seç ve JSON olarak ver. Başka metin
     const prompt = `Önceki Sohbet:\n${chatHistoryText}\n\nÖğrenci: ${userMsg}\n\nCevabın:`;
 
     try {
-      const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, openRouterModel);
+      const response = await callGemini(prompt, systemInstruction, apiKey, null, false, provider, selectedModelForProvider);
       setChatMessages((prev) => [...prev, { role: 'model', text: response }]);
     } catch (err) {
       console.error('Chat error:', err);
@@ -1404,7 +1519,7 @@ ${savedMaterial.slice(0, 10000)}`;
       const result = await callGemini(
         isGroq ? groqPrompt : fullPrompt,
         systemMsg,
-        apiKey, null, true, provider, openRouterModel
+        apiKey, null, true, provider, selectedModelForProvider
       );
       if (!result) throw new Error('Boş yanıt');
       // <think> bloğunu, code fence'leri ve olası prefix metinleri temizle
@@ -1494,13 +1609,16 @@ ${savedMaterial.slice(0, 10000)}`;
     return (
       <OnboardingScreen
         onApiKeySubmit={(key, prov) => {
-          localStorage.setItem('gemini_api_key', key);
-          localStorage.setItem('ai_provider', prov);
-          localStorage.setItem('onboarding_done', 'true');
-          // Per-provider keys'e de kaydet
+          // Per-provider keys'e kaydet (tek bir provider'ın anahtarı saklanır)
           const existing = (() => { try { return JSON.parse(localStorage.getItem('provider_keys') || '{}'); } catch { return {}; } })();
           const updated = { ...existing, [prov]: key };
           localStorage.setItem('provider_keys', JSON.stringify(updated));
+          // Aktif sağlayıcıyı ayarla
+          localStorage.setItem('ai_provider', prov);
+          // Geriye dönük uyumluluk: sadece gemini için legacy key kaydet
+          if (prov === 'gemini') localStorage.setItem('gemini_api_key', key);
+          else localStorage.removeItem('gemini_api_key');
+          localStorage.setItem('onboarding_done', 'true');
           setProviderKeys(updated);
           setApiKey(key);
           setProvider(prov);
@@ -1530,7 +1648,11 @@ ${savedMaterial.slice(0, 10000)}`;
       together: TOGETHER_MODELS,
     };
     const [localModel, setLocalModel] = React.useState(
-      () => modelLists[provider]?.[0]?.id ? (openRouterModel || modelLists[provider][0].id) : ''
+      () => {
+        const list = modelLists[provider];
+        if (!list || !list[0]?.id) return '';
+        return (providerModels && providerModels[provider]) || list[0].id;
+      }
     );
     const [inputKey, setInputKey] = React.useState('');
 
@@ -1586,7 +1708,7 @@ ${savedMaterial.slice(0, 10000)}`;
     const noKeyRequired = false;
     const hasNewKey = inputKey.trim().length > 0;
     const canSwitch = !hasNewKey && (savedKeyForProvider || noKeyRequired) && settingsProvider !== provider;
-    const modelChanged = currentModelList && localModel !== openRouterModel && settingsProvider === provider;
+    const modelChanged = currentModelList && localModel !== ((providerModels && providerModels[settingsProvider]) || openRouterModel) && settingsProvider === provider;
     const canSave = hasNewKey || canSwitch || modelChanged || keyWasReset || noKeyRequired;
 
     const handleSave = () => {
@@ -1595,27 +1717,55 @@ ${savedMaterial.slice(0, 10000)}`;
         // API key gerektirmeyen provider'lar — 'no-key' sentinel ile kaydet
         const updated = { ...providerKeys, [settingsProvider]: 'no-key' };
         localStorage.setItem('provider_keys', JSON.stringify(updated));
-        localStorage.setItem('gemini_api_key', 'no-key');
         localStorage.setItem('ai_provider', settingsProvider);
-        if (currentModelList) { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        if (settingsProvider === 'gemini') localStorage.setItem('gemini_api_key', 'no-key'); else localStorage.removeItem('gemini_api_key');
+        if (currentModelList) {
+          const updatedModels = { ...providerModels, [settingsProvider]: localModel };
+          localStorage.setItem('provider_models', JSON.stringify(updatedModels));
+          setProviderModels(updatedModels);
+          if (settingsProvider === 'openrouter') { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        }
         setProviderKeys(updated); setApiKey('no-key'); setProvider(settingsProvider);
         setShowSettings(false);
       } else if (newKey) {
         const updated = { ...providerKeys, [settingsProvider]: newKey };
         localStorage.setItem('provider_keys', JSON.stringify(updated));
-        localStorage.setItem('gemini_api_key', newKey);
         localStorage.setItem('ai_provider', settingsProvider);
-        if (currentModelList) { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        if (settingsProvider === 'gemini') localStorage.setItem('gemini_api_key', newKey); else localStorage.removeItem('gemini_api_key');
+        if (currentModelList) {
+          const updatedModels = { ...providerModels, [settingsProvider]: localModel };
+          localStorage.setItem('provider_models', JSON.stringify(updatedModels));
+          setProviderModels(updatedModels);
+          if (settingsProvider === 'openrouter') { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        }
         setProviderKeys(updated); setApiKey(newKey); setProvider(settingsProvider);
         setSettingsApiKey(''); setShowSettings(false);
       } else if (canSwitch) {
-        localStorage.setItem('gemini_api_key', savedKeyForProvider);
+        // switching to a saved provider key
+        const updated = { ...providerKeys };
+        localStorage.setItem('provider_keys', JSON.stringify(updated));
         localStorage.setItem('ai_provider', settingsProvider);
-        if (currentModelList) { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        if (settingsProvider === 'gemini') localStorage.setItem('gemini_api_key', savedKeyForProvider); else localStorage.removeItem('gemini_api_key');
+        if (currentModelList) {
+          const updatedModels = { ...providerModels, [settingsProvider]: localModel };
+          localStorage.setItem('provider_models', JSON.stringify(updatedModels));
+          setProviderModels(updatedModels);
+          if (settingsProvider === 'openrouter') { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        }
         setApiKey(savedKeyForProvider); setProvider(settingsProvider); setShowSettings(false);
       } else if (modelChanged) {
-        localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); setShowSettings(false);
+        const updatedModels = { ...providerModels, [settingsProvider]: localModel };
+        localStorage.setItem('provider_models', JSON.stringify(updatedModels));
+        setProviderModels(updatedModels);
+        if (settingsProvider === 'openrouter') { localStorage.setItem('openrouter_model', localModel); setOpenRouterModel(localModel); }
+        setShowSettings(false);
       } else if (keyWasReset) {
+        // remove provider key
+        const updated = { ...providerKeys };
+        delete updated[settingsProvider];
+        localStorage.setItem('provider_keys', JSON.stringify(updated));
+        if (settingsProvider === 'gemini') localStorage.removeItem('gemini_api_key');
+        setProviderKeys(updated);
         setApiKey(''); setShowSettings(false);
       }
     };
@@ -2091,17 +2241,74 @@ ${savedMaterial.slice(0, 10000)}`;
             <div className="animate-in fade-in duration-500">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 px-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <Library size={32} className="text-indigo-700" />
-                  <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.archiveTitle}</h2>
-                </div>
+                    <Library size={32} className="text-indigo-700" />
+                    <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">{t.archiveTitle}</h2>
+
+                    {/* Selection toggle moved to left as requested */}
+                    {!selectionMode ? (
+                      <button
+                        onClick={() => setSelectionMode(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm ml-4"
+                        title={appLang === 'tr' ? 'Seçim Modu Aç' : 'Enter selection mode'}
+                      >
+                        <Check size={16} /> <span className="hidden sm:inline">{appLang === 'tr' ? 'Seç' : 'Select'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setSelectionMode(false); setSelectedSessions([]); }}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm ml-4"
+                        title={appLang === 'tr' ? 'Seçim Modunu Kapat' : 'Exit selection mode'}
+                      >
+                        <XIcon size={16} /> <span className="hidden sm:inline">{appLang === 'tr' ? 'Vazgeç' : 'Cancel'}</span>
+                      </button>
+                    )}
+                  </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => importFileRef.current?.click()}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
                   >
                     <Upload size={18} /> <span className="hidden sm:inline">{t.importBtn}</span>
                   </button>
-                  <input type="file" accept=".akademik" className="hidden" ref={importFileRef} onChange={handleImportFile} />
+
+                  <button
+                    onClick={downloadAllSessions}
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
+                  >
+                    <Download size={18} /> <span className="hidden sm:inline">Tümünü İndir</span>
+                  </button>
+
+                  <input type="file" accept=".akademik,.akademikbundle,application/json" className="hidden" ref={importFileRef} onChange={handleImportFiles} multiple />
+                  <input type="file" accept=".akademik,.akademikbundle,application/json" className="hidden" ref={importFileRef} onChange={handleImportFiles} multiple />
+
+                  {selectionMode && (
+                    <>
+                      <button
+                        onClick={selectAllToggle}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-600 font-bold rounded-xl transition-all shadow-sm"
+                        title={selectedSessions.length === sessionsList.length ? (appLang === 'tr' ? 'Seçimi Kaldır' : 'Clear selection') : (appLang === 'tr' ? 'Tümünü Seç' : 'Select all')}
+                      >
+                        <Check size={16} /> <span className="hidden sm:inline">{selectedSessions.length === sessionsList.length ? (appLang === 'tr' ? 'Seçimi Kaldır' : 'Clear') : (appLang === 'tr' ? 'Tümünü Seç' : 'Select All')}</span>
+                      </button>
+
+                      <button
+                        onClick={deleteSelectedSessions}
+                        disabled={!selectedSessions || selectedSessions.length === 0}
+                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all ${selectedSessions && selectedSessions.length > 0 ? 'bg-rose-50 border-2 border-rose-200 text-rose-700 hover:bg-rose-100' : 'bg-white border-2 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'}`}
+                        title={appLang === 'tr' ? 'Seçilenleri Sil' : 'Delete Selected'}
+                      >
+                        <Trash2 size={16} /> <span className="hidden sm:inline">{appLang === 'tr' ? 'Seçilenleri Sil' : 'Delete Selected'}</span>
+                      </button>
+
+                      <button
+                        onClick={deleteAllSessions}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-rose-200 hover:bg-rose-50 text-rose-700 font-bold rounded-xl transition-all shadow-sm"
+                        title={appLang === 'tr' ? 'Tümünü Sil' : 'Delete All'}
+                      >
+                        <Trash2 size={16} /> <span className="hidden sm:inline">{appLang === 'tr' ? 'Tümünü Sil' : 'Delete All'}</span>
+                      </button>
+                    </>
+                  )}
 
                   <button
                     onClick={createNewSession}
@@ -2141,6 +2348,17 @@ ${savedMaterial.slice(0, 10000)}`;
                           ${isActive ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300'}
                         `}
                       >
+                        {/* Selection checkbox for bulk actions (only visible in selection mode) */}
+                        {selectionMode && (
+                          <label className="absolute top-4 left-4 z-20 inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedSessions.includes(session.id)}
+                              onChange={(e) => toggleSelectSession(session.id, e)}
+                              className="w-4 h-4 rounded cursor-pointer"
+                            />
+                          </label>
+                        )}
                         {isActive && (
                           <div className="absolute top-4 right-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">
                             {t.activeLabel}</div>
@@ -2904,7 +3122,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                         value={uAns || ''}
                                         onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [p.currentIndex]: e.target.value } }))}
                                         placeholder={t.quizEssayPlaceholder}
-                                        className={`w-full h-48 p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 resize-none outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-red-500 bg-red-50 text-red-900') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
+                                        className={`w-full h-48 p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 resize-none outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-100' : 'border-red-500 bg-red-50 text-red-900 dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-100') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
                                       />
                                     ) : (
                                       <div className="relative">
@@ -2914,7 +3132,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                           value={uAns || ''}
                                           onChange={(e) => setQuizState((p) => ({ ...p, answers: { ...p.answers, [p.currentIndex]: e.target.value } }))}
                                           placeholder={t.quizAnswerPlaceholder}
-                                          className={`w-full p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold' : 'border-red-500 bg-red-50 text-red-900 font-bold') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
+                                          className={`w-full p-6 text-lg rounded-2xl border-2 transition-all focus:ring-4 focus:ring-rose-500/20 outline-none ${quizState.isChecked ? (isCurrentCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-100' : 'border-red-500 bg-red-50 text-red-900 font-bold dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-100') : 'border-slate-300 focus:border-rose-500 bg-slate-50 text-slate-800 font-medium'} ${quizState.isEvaluating ? 'opacity-50' : ''}`}
                                         />
                                         {quizState.isChecked && isCurrentCorrect && <CheckCircle2 size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-emerald-500" />}
                                         {quizState.isChecked && uAns && !isCurrentCorrect && <XIcon size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-red-500" />}
@@ -2939,20 +3157,20 @@ ${savedMaterial.slice(0, 10000)}`;
                                 )}
 
                                 {quizState.isChecked && (
-                                  <div className={`mb-8 p-6 rounded-2xl flex gap-4 text-base animate-in fade-in slide-in-from-bottom-2 ${isCurrentCorrect ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-red-50 border border-red-200 text-red-900'}`}>
-                                    {isCurrentCorrect ? <CheckCircle2 size={32} className="shrink-0 text-emerald-600" /> : <XIcon size={32} className="shrink-0 text-red-600" />}
+                                  <div className={`mb-8 p-6 rounded-2xl flex gap-4 text-base animate-in fade-in slide-in-from-bottom-2 ${isCurrentCorrect ? 'bg-emerald-50 border border-emerald-200 text-emerald-900 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-100' : 'bg-red-50 border border-red-200 text-red-900 dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-100'}`}>
+                                    {isCurrentCorrect ? <CheckCircle2 size={32} className="shrink-0 text-emerald-600" /> : <XIcon size={32} className="shrink-0 text-rose-600" />}
                                     <div className="w-full">
                                       <p className="font-extrabold text-lg mb-2">
                                         {isCurrentCorrect ? t.quizCorrect : t.quizWrong}
                                       </p>
                                       {currentVerdict?.feedback ? (
                                         <div className="space-y-3 mt-3">
-                                          <div className="bg-white/60 p-4 rounded-xl border border-current/10">
+                                          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200">
                                             <p className="font-bold mb-1 flex items-center gap-2"><Target size={16} /> {t.quizAiEval}</p>
                                             <p className="leading-relaxed">{currentVerdict.feedback}</p>
                                           </div>
                                           {!isCurrentCorrect && (
-                                            <div className="pt-2 border-t border-current/10">
+                                            <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
                                               <p className="text-sm opacity-80 font-bold uppercase tracking-wider mb-1">{t.quizExpected}</p>
                                               <p className="font-medium">{currentQ.dogruCevap}</p>
                                             </div>
@@ -3070,13 +3288,13 @@ ${savedMaterial.slice(0, 10000)}`;
                               </div>
 
                               <div className="grid grid-cols-3 gap-6 mb-12">
-                                <div className="bg-emerald-50 border-2 border-emerald-100 p-4 md:p-6 rounded-3xl text-center">
-                                  <div className="text-3xl md:text-4xl font-black text-emerald-600 mb-2">{correctCount}</div>
-                                  <div className="text-sm md:text-base font-bold text-emerald-800 uppercase tracking-wide">{t.quizCorrectLabel}</div>
+                                <div className="bg-emerald-50 border-2 border-emerald-100 p-4 md:p-6 rounded-3xl text-center dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-100">
+                                  <div className="text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-200 mb-2">{correctCount}</div>
+                                  <div className="text-sm md:text-base font-bold text-emerald-800 dark:text-emerald-100 uppercase tracking-wide">{t.quizCorrectLabel}</div>
                                 </div>
-                                <div className="bg-rose-50 border-2 border-rose-100 p-4 md:p-6 rounded-3xl text-center">
-                                  <div className="text-3xl md:text-4xl font-black text-rose-600 mb-2">{wrongCount}</div>
-                                  <div className="text-sm md:text-base font-bold text-rose-800 uppercase tracking-wide">{t.quizWrongLabel}</div>
+                                <div className="bg-rose-50 border-2 border-rose-100 p-4 md:p-6 rounded-3xl text-center dark:bg-rose-900/10 dark:border-rose-800 dark:text-rose-100">
+                                  <div className="text-3xl md:text-4xl font-black text-rose-600 dark:text-rose-200 mb-2">{wrongCount}</div>
+                                  <div className="text-sm md:text-base font-bold text-rose-800 dark:text-rose-100 uppercase tracking-wide">{t.quizWrongLabel}</div>
                                 </div>
                                 <div className="bg-slate-50 border-2 border-slate-200 p-4 md:p-6 rounded-3xl text-center">
                                   <div className="text-3xl md:text-4xl font-black text-slate-600 mb-2">{emptyCount}</div>
@@ -3091,8 +3309,8 @@ ${savedMaterial.slice(0, 10000)}`;
                                   const verdict = quizState.verdicts[i];
                                   const isCorrect = verdict ? verdict.isCorrect : isAnswerCorrect(uAnswer, q.dogruCevap);
                                   const isEmpty = !uAnswer || uAnswer.toString().trim() === '';
-                                  return (
-                                    <div key={i} className={`p-6 border-2 rounded-2xl transition-all ${isCorrect ? 'bg-white border-emerald-200 shadow-sm' : 'bg-rose-50/50 border-rose-100'}`}>
+                                    return (
+                                    <div key={i} className={`p-6 border-2 rounded-2xl transition-all ${isCorrect ? 'bg-white border-emerald-200 shadow-sm dark:bg-slate-800 dark:border-emerald-700' : 'bg-rose-50/50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-800'}`}>
                                       <p className="font-bold text-slate-800 mb-4 text-lg leading-relaxed">
                                         <span className="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-xs rounded-lg uppercase mr-3 tracking-widest font-bold">{q.tip.replace('_', ' ')}</span>
                                         {i + 1}. {q.soru}
@@ -3114,14 +3332,14 @@ ${savedMaterial.slice(0, 10000)}`;
                                                 <span className="font-bold text-lg whitespace-pre-wrap">{q.dogruCevap}</span>
                                               </div>
                                             </div>
-                                            <div className="mt-5 p-5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-base">
+                                            <div className="mt-5 p-5 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-900 text-base dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-100">
                                               <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> {verdict?.feedback ? t.quizAiEval : t.quizAcademic}</span>
                                               {verdict?.feedback || q.aciklama}
                                             </div>
                                           </>
                                         )}
                                         {isCorrect && verdict?.feedback && q.tip !== 'multiple_choice' && q.tip !== 'true_false' && (
-                                          <div className="mt-5 p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 text-base">
+                                          <div className="mt-5 p-5 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-900 text-base dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-100">
                                             <span className="font-black flex items-center gap-2 mb-2 uppercase tracking-wide text-xs"><BookOpen size={16} /> {t.quizAiFeedback}</span>
                                             {verdict.feedback}
                                           </div>
@@ -3168,7 +3386,7 @@ ${savedMaterial.slice(0, 10000)}`;
                                           return `Sınav ${idx + 1} (${qh.config.difficulty}, ${qh.quiz.length} soru):\nYanlış soruların konuları: ${wrongs.map(q => q.soru.slice(0, 80)).join(' | ') || 'Yok'}`;
                                         }).join('\n\n');
                                         const prompt = `Öğrencinin sınav geçmişi:\n${historyText}\n\nBu verilere dayanarak öğrencinin güçlü ve zayıf yönlerini analiz et. Hangi konularda tekrar çalışması gerektiğini somut olarak belirt. 3-4 cümle, Türkçe, samimi bir dille yaz.`;
-                                        const result = await callGemini(prompt, 'Sen bir akademik danışmansın. Kısa, net ve motive edici bir analiz yap.', apiKey, null, false, provider, openRouterModel);
+                                        const result = await callGemini(prompt, 'Sen bir akademik danışmansın. Kısa, net ve motive edici bir analiz yap.', apiKey, null, false, provider, selectedModelForProvider);
                                         setWeakAnalysis(result);
                                         setLoadingAnalysis(false);
                                       }}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lightbulb, AlertCircle, Target } from 'lucide-react';
+import { renderToString } from 'katex';
 
 // --- GELİŞMİŞ MARKDOWN RENDERER ---
 
@@ -15,6 +16,7 @@ export function formatSubSup(str) {
 export function formatInline(text) {
   if (!text) return "";
 
+  // Replace a few common LaTeX commands with unicode as a convenience
   let processedText = text
     .replace(/\\alpha/g, 'α')
     .replace(/\\beta/g, 'β')
@@ -24,21 +26,66 @@ export function formatInline(text) {
     .replace(/\\mu/g, 'μ')
     .replace(/\\pi/g, 'π')
     .replace(/\\sigma/g, 'σ')
-    .replace(/\\rightarrow/g, '→')
-    .replace(/\$([^\$]+)\$/g, '$1');
+    .replace(/\\rightarrow/g, '→');
 
   const parts = processedText.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+
+  // Helper: render a text segment, replacing math with KaTeX HTML while escaping and
+  // formatting the rest using formatSubSup.
+  function renderTextWithMath(s) {
+    if (!s) return '';
+    // Match $$...$$ (display), $...$ (inline), \[...\] (display), \(...\) (inline)
+    const mathRegex = /(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\[[\s\S]+?\\\]|\\\([^\n]+?\\\))/g;
+    let lastIndex = 0;
+    let result = '';
+    let match;
+    while ((match = mathRegex.exec(s)) !== null) {
+      const idx = match.index;
+      const matchText = match[0];
+      const before = s.substring(lastIndex, idx);
+      result += formatSubSup(before);
+
+      let mathContent = matchText;
+      let display = false;
+      if (matchText.startsWith('$$') && matchText.endsWith('$$')) {
+        mathContent = matchText.slice(2, -2);
+        display = true;
+      } else if (matchText.startsWith('\\[') && matchText.endsWith('\\]')) {
+        mathContent = matchText.slice(2, -2);
+        display = true;
+      } else if (matchText.startsWith('$') && matchText.endsWith('$')) {
+        mathContent = matchText.slice(1, -1);
+        display = false;
+      } else if (matchText.startsWith('\\(') && matchText.endsWith('\\)')) {
+        mathContent = matchText.slice(2, -2);
+        display = false;
+      }
+
+      try {
+        result += renderToString(mathContent, { throwOnError: false, displayMode: display });
+      } catch (e) {
+        // Fallback: show the raw (escaped) math if KaTeX fails
+        result += formatSubSup(matchText);
+      }
+
+      lastIndex = idx + matchText.length;
+    }
+
+    result += formatSubSup(s.substring(lastIndex));
+    return result;
+  }
+
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-bold text-slate-800 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: formatSubSup(part.slice(2, -2)) }} />;
+      return <strong key={i} className="font-bold text-slate-800 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: renderTextWithMath(part.slice(2, -2)) }} />;
     }
     if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} className="italic text-slate-700 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: formatSubSup(part.slice(1, -1)) }} />;
+      return <em key={i} className="italic text-slate-700 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: renderTextWithMath(part.slice(1, -1)) }} />;
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return <code key={i} className="bg-slate-100 dark:bg-slate-700 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-md font-mono text-sm">{part.slice(1, -1)}</code>;
     }
-    return <span key={i} dangerouslySetInnerHTML={{ __html: formatSubSup(part) }} />;
+    return <span key={i} dangerouslySetInnerHTML={{ __html: renderTextWithMath(part) }} />;
   });
 }
 
@@ -201,10 +248,13 @@ export function renderMarkdown(text) {
       i++; continue;
     }
 
-    // Tablo
-    if (line.trim().startsWith('|') && i + 1 < lines.length && lines[i + 1].trim().startsWith('|') && lines[i + 1].includes('---')) {
+    // Tablo — daha esnek algılama: hem |...| hem de pipe-less ("a | b") stilleri
+    const nextLine = i + 1 < lines.length ? lines[i + 1] : '';
+    const looksLikeTableHeader = line.includes('|') && nextLine.includes('---');
+    if (looksLikeTableHeader) {
       const tableRows = [];
-      while (i < lines.length && lines[i].trim().startsWith('|')) {
+      // Topla: satırlar ya pipe içeriyorsa ya da ayırıcı (---) satırıysa tabloya dahil et
+      while (i < lines.length && (lines[i].includes('|') || lines[i].includes('---'))) {
         tableRows.push(lines[i]);
         i++;
       }
